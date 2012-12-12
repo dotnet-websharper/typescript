@@ -3,6 +3,7 @@
 open System
 open System.Diagnostics
 
+/// Represents the logging facility.
 [<AbstractClass>]
 type Log() =
     abstract Warn : message: string -> unit
@@ -11,6 +12,7 @@ type Log() =
     override this.Warn(message: string, [<ParamArray>] par: obj []) =
         this.Warn(String.Format(message, par))
 
+    /// Logs to stderr and System.Diagnsostics.Trace.
     static member Default =
         {
             new Log() with

@@ -2,7 +2,7 @@
 /// TypeScript declarations (.d.ts) files. Based on the 0.8
 /// version of the TypeScript Language Spec, see:
 /// http://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf
-module IntelliFactory.TypeScript.Declarations.Syntax
+module internal IntelliFactory.TypeScript.Declarations.Syntax
 
 type Identifier =
     | Identifier of string

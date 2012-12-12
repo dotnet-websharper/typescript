@@ -6,7 +6,7 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{f5f2f4fa-524c-47f5-848a-86d8060b8d67}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <Name>IntelliFactory.TypeScript</Name>
     <RootNamespace>$(Name)</RootNamespace>
     <AssemblyName>$(Name)</AssemblyName>
@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IntelliFactory.Parsec">
-      <HintPath>..\..\if-parsec\Parsec\bin\Release\IntelliFactory.Parsec.dll</HintPath>
+      <HintPath>..\..\if-parsec\Parsec\bin\Release\IntelliFactory.ParserCombinators.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core, Version=4.3.0.0">
@@ -59,9 +59,7 @@
     <Compile Include="Reduced.fs" />
     <Compile Include="Builder.fsi" />
     <Compile Include="Builder.fs" />
-    <Compile Include="Main.fs" />
-    <None Include="Test.fsx" />
-    <None Include="App.config" />
+    <Compile Include="Public.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" />
 </Project>
