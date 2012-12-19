@@ -361,8 +361,6 @@ let getPosition (lexeme: L.Lexeme) =
     lexeme.SourcePosition
 
 let Parse log loc : ParseResult<S.DeclarationSourceFile,unit,int> =
-    let a = Resolver.Resolve log loc
-    printfn "TOKENS: %i" a.Length
-    a
+    Resolver.Resolve log loc
     |> ParseInput.FromLexedArray () (string loc) getPosition
     |> pDeclarationSourceFile.Parse
