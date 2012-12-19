@@ -46,6 +46,7 @@ type Token =
     | TokenEllipsis
     | TokenEquals
     | TokenIdentifier of S.Identifier
+    | TokenInt of int
     | TokenKeyword of Keyword
     | TokenParenClose
     | TokenParenOpen

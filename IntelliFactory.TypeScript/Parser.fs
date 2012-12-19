@@ -295,9 +295,19 @@ let pAmbientClassDeclaration : P<S.AmbientClassDeclaration> =
 (* Extra: Enums *)
 
 let pEnumDeclaration : P<S.EnumDeclaration> =
+    let explicitValue : P<unit> =
+        (
+            pToken L.TokenEquals >*>
+            P.Satisfy (fun x ->
+                match x.Token with
+                | L.TokenInt _ -> true
+                | L.TokenStringLiteral _ -> true
+                | _ -> false)
+        )
+        |> P.Optional
     (fun x y -> S.EnumDeclaration (x, y))
     <^> (pKeyword L.KeywordEnum >*> pIdentifier)
-    <*> pBlock (P.SepBy1 pComma pIdentifier)
+    <*> pBlock (P.SepEndBy1 pComma (pIdentifier <*< explicitValue))
 
 (* See 10.1.4 *)
 

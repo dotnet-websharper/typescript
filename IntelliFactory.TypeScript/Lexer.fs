@@ -77,6 +77,7 @@ type Token =
     | TokenEllipsis
     | TokenEquals
     | TokenIdentifier of S.Identifier
+    | TokenInt of int
     | TokenKeyword of Keyword
     | TokenParenClose
     | TokenParenOpen
@@ -97,6 +98,7 @@ type Token =
         | TokenEllipsis -> "..."
         | TokenEquals -> "="
         | TokenIdentifier (S.Identifier id) -> id
+        | TokenInt x -> string x
         | TokenKeyword kw -> string kw
         | TokenParenClose -> ")"
         | TokenParenOpen -> "("
@@ -290,10 +292,17 @@ let lexPunctuation : L<Token> =
         | '}' -> curlyClose
         | _   -> P.Zero)
 
+let lexIntLiteral : L<Token> =
+    let digit (xs: seq<char>) =
+        let add (s: int) (x: char) : int = 10 * s + int x - int '0'
+        Seq.fold add 0 xs
+    P.Many1 P.Digit |> P.Map (digit >> TokenInt)
+
 let lexToken : L<Token> =
     lexStringLiteral
     <|> lexWord
     <|> lexPunctuation
+    <|> lexIntLiteral
 
 let skipBOM : L<unit> =
     P.SkipMany (P.Char (char 65279))
