@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ivy-module version="2.0">
+  <info organisation="IntelliFactory" module="if-typescript" revision="0.1" />
+  <publications>
+    <artifact name="IntelliFactory.TypeScript" ext="dll" type="bin" />
+    <artifact name="IntelliFactory.TypeScript" ext="xml" type="doc" />
+    <artifact name="IntelliFactory.TypeScript" ext="pdb" type="debug" />
+  </publications>
+  <dependencies>
+    <dependency name="if-parsec" rev="latest.integration" />
+  </dependencies>
+</ivy-module>

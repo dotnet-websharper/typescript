@@ -1,2 +1,3 @@
-(bin|obj)/(Debug|Release)
 (\.suo|\~)$
+(bin|obj)/(Debug|Release)
+^\.build
