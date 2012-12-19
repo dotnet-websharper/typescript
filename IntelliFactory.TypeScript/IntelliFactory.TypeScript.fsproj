@@ -34,6 +34,7 @@
     <DocumentationFile>bin\Release\$(Name).XML</DocumentationFile>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
+  <Import Project="$(INTELLIFACTORY)\build\IntelliFactory.FSharp.targets" />
   <ItemGroup>
     <Compile Include="Log.fs" />
     <Compile Include="Syntax.fs" />
@@ -56,5 +57,4 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
-  <Import Project="$(INTELLIFACTORY)\build\IntelliFactory.FSharp.targets" />
 </Project>

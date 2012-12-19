@@ -31,18 +31,21 @@ type Location =
 
     /// Creates a new location.
     static member Create(spec: string) =
-        match Uri.TryCreate(spec, UriKind.Absolute) with
-        | true, u -> Location.Create(u)
-        | _ ->
+        if File.Exists(spec) then
             let abs = Path.GetFullPath(spec)
             let dir = Path.GetDirectoryName(abs)
             let file = Path.GetFileName(abs)
             FileLocation(dir, file)
+        else
+            let u = Uri(spec, UriKind.Absolute)
+            Location.Create(u)
 
 let private load (log: Log) (loc: Location) =
     try
         match loc with
-        | FileLocation (d, f) -> File.ReadAllText(Path.Combine(d, f))
+        | FileLocation (d, f) ->
+            let p = Path.Combine(d, f)
+            File.ReadAllText(p)
         | NetworkLocation x ->
             use client = new WebClient()
             client.DownloadString(x)
