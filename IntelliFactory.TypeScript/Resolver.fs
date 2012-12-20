@@ -4,8 +4,15 @@ open System
 open System.Collections.Generic
 open System.IO
 open System.Net
+open System.Text.RegularExpressions
 open IntelliFactory.Parsec
 open IntelliFactory.TypeScript
+
+let private networkPathPattern =
+    Regex(@"^(\w+\:\/\/)")
+
+let private absolutePathPattern =
+    Regex(@"^(\w+\:|[\\/])")
 
 /// Represents network and local filesystem locations.
 type Location =
@@ -20,25 +27,27 @@ type Location =
 
     /// Resolves a relative location.
     member this.Resolve(relative: string) =
-        match this with
-        | FileLocation (dir, _) ->
-            Location.Create(Path.Combine(dir, relative))
-        | NetworkLocation x ->
-            Location.Create(Uri(Uri(x), relative))
+        if absolutePathPattern.IsMatch(relative) then
+            Location.Create(relative)
+        else
+            match this with
+            | FileLocation (dir, _) ->
+                Location.Create(Path.Combine(dir, relative))
+            | NetworkLocation x ->
+                Location.Create(Uri(Uri(x), relative))
 
     static member private Create(u: Uri) =
         NetworkLocation (string u)
 
     /// Creates a new location.
     static member Create(spec: string) =
-        if File.Exists(spec) then
+        if networkPathPattern.IsMatch(spec) then
+            Location.Create(Uri(spec, UriKind.Absolute))
+        else
             let abs = Path.GetFullPath(spec)
             let dir = Path.GetDirectoryName(abs)
             let file = Path.GetFileName(abs)
             FileLocation(dir, file)
-        else
-            let u = Uri(spec, UriKind.Absolute)
-            Location.Create(u)
 
 let private load (log: Log) (loc: Location) =
     try
