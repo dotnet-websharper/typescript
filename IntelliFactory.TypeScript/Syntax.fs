@@ -17,6 +17,11 @@ type Name =
         Namespace : list<Identifier>
     }
 
+    member this.Globalize() =
+        match this.Namespace with
+        | [] -> { this with Namespace = [Identifier "$global"] }
+        | _ -> this
+
     member this.Item
         with get (x: Identifier) =
             {

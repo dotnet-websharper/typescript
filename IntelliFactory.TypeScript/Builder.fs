@@ -35,11 +35,6 @@ type MethodVariant =
 
 module Attribute =
 
-    let Stub : CSharp.Attribute =
-        CSharp.Name.Create("IntelliFactory", "WebSharper", "Core", "Attributes", "StubAttribute")
-        |> CSharp.Type.Named
-        |> CSharp.Attribute.Create
-
     let private inlineType : CSharp.Type =
         CSharp.Name.Create("IntelliFactory", "WebSharper", "Core", "Attributes", "InlineAttribute")
         |> CSharp.Type.Named
@@ -96,6 +91,30 @@ let ( |S1|_| ) x =
     | [| x |] -> Some x
     | _ -> None
 
+type PropertyVariant =
+    | PropertyInstance of S.Identifier
+    | PropertyStatic of S.Name
+
+    member this.Build(ty: CSharp.Type) : CSharp.Property =
+        match this with
+        | PropertyInstance id ->
+            let gA = [Attribute.Inline (String.Format("$0.{0}", id))]
+            let sA = [Attribute.Inline (String.Format("void ($0.{0} = $1)", id))]
+            {
+                GetAttributes = gA
+                SetAttributes = sA
+                Type = ty
+            }
+        | PropertyStatic name ->
+            let name = name.Globalize()
+            let gA = [Attribute.Inline (string name)]
+            let sA = [Attribute.Inline (String.Format("void ({0} = $1)", name))]
+            {
+                GetAttributes = gA
+                SetAttributes = sA
+                Type = ty
+            }
+
 type Context =
     {
         AnonymousTypes : ResizeArray<CSharp.Id * CSharp.Interface>
@@ -133,7 +152,11 @@ type Context =
                 | CSharp.Instance -> RegularInstance id
             this.BuildMethod(v, ss, fun o -> CSharp.ClassMethod(kind, o))
         | R.ClassProperty (kind, id, ty) ->
-            this.BuildProperty([Attribute.Stub], id, ty, fun x ->
+            let v =
+                match kind with
+                | CSharp.Instance -> PropertyInstance id
+                | CSharp.Static -> PropertyStatic n.[id]
+            this.BuildProperty(v, id, ty, fun x ->
                 CSharp.ClassProperty(kind, x))
 
     member this.BuildFunType(defs: seq<R.InterfaceMember>) : option<CSharp.Type> =
@@ -194,7 +217,8 @@ type Context =
                             let t2 = this.BuildType(t2)
                             for t1 in this.BuildTypes(t1) do
                                 yield {
-                                    Attributes = []
+                                    GetAttributes = []
+                                    SetAttributes = []
                                     Parameter = CSharp.Parameter.Create(id, t1)
                                     Type = t2
                                 }
@@ -204,7 +228,7 @@ type Context =
         | R.InterfaceMethod (id, ss) ->
             this.BuildMethod(RegularInterface id, ss, CSharp.InterfaceMethod)
         | R.InterfaceProperty (id, ty) ->
-            this.BuildProperty([], id, ty, CSharp.InterfaceProperty)
+            this.BuildProperty(PropertyInstance id, id, ty, CSharp.InterfaceProperty)
 
     member this.BuildMethod(variant: MethodVariant, ss: seq<R.Signature>) : CSharp.Id * CSharp.Overloads =
         let kind =
@@ -282,7 +306,8 @@ type Context =
             let n = this.GetName(id)
             this.BuildMethod(RegularStatic(n), s, fun ov -> CSharp.ClassMethod(CSharp.Static, ov))
         | R.ModuleProperty (id, ty) ->
-            this.BuildProperty([Attribute.Stub], id, ty, fun p -> CSharp.ClassProperty(CSharp.Static, p))
+            let n = this.GetName(id)
+            this.BuildProperty(PropertyStatic n, id, ty, fun p -> CSharp.ClassProperty(CSharp.Static, p))
 
     member this.BuildObjectType(defs: seq<S.TypeMember>, prefix: option<string>) : CSharp.Type =
         let defs = R.CompileType defs
@@ -296,16 +321,12 @@ type Context =
         | Some ts -> ts
         | None -> [this.BuildAnonymousType(defs, prefix)]
 
-    member this.BuildProperty<'T>(attr: list<CSharp.Attribute>, id: S.Identifier, ty: CSharp.Type, k: CSharp.Property -> 'T) : CSharp.Id * 'T =
-        let r =
-            k {
-                Attributes = attr
-                Type = ty
-            }
+    member this.BuildProperty<'T>(v: PropertyVariant, id: S.Identifier, ty: CSharp.Type, k: CSharp.Property -> 'T) : CSharp.Id * 'T =
+        let r = k (v.Build(ty))
         (CSharp.Id.Create(id), r)
 
-    member this.BuildProperty<'T>(attr: list<CSharp.Attribute>, id: S.Identifier, ty: S.Type, k: CSharp.Property -> 'T) : CSharp.Id * 'T =
-        this.BuildProperty(attr, id, this.BuildType(ty, string id), k)
+    member this.BuildProperty<'T>(v: PropertyVariant, id: S.Identifier, ty: S.Type, k: CSharp.Property -> 'T) : CSharp.Id * 'T =
+        this.BuildProperty(v, id, this.BuildType(ty, string id), k)
 
     member this.BuildSignature(req: seq<S.Parameter>) : CSharp.Signature =
         CSharp.Signature.Create [
@@ -385,12 +406,13 @@ type Context =
                 Type = t.Type
             }
         | R.EnumKind e ->
+            let n = this.GetName(t.Id)
             CSharp.ClassNested {
                 Attributes = []
                 ClassMembers =
                     e
                     |> Seq.map (fun id ->
-                        this.BuildProperty([Attribute.Stub], id, t.Type, fun x ->
+                        this.BuildProperty(PropertyStatic n.[id], id, t.Type, fun x ->
                             CSharp.ClassProperty(CSharp.Static, x)))
                     |> CSharp.Scope.Build
                 Implements = [||]

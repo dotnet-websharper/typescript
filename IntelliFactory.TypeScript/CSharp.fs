@@ -232,7 +232,7 @@ type Attribute =
         AttributeType : Type
     }
 
-    member this.Build(c: CodeAttributeDeclarationCollection) =
+    member this.Build() =
         let t = this.AttributeType.Build()
         let a =
             [|
@@ -241,8 +241,9 @@ type Attribute =
                     CodeAttributeArgument(x)
             |]
         CodeAttributeDeclaration(t, a)
-        |> c.Add
-        |> ignore
+
+    member this.Build(c: CodeAttributeDeclarationCollection) =
+        c.Add(this.Build()) |> ignore
 
     static member Create(t: Type, [<ParamArray>] xs: string []) =
         {
@@ -260,43 +261,89 @@ type Overloads private (variants: IDictionary<Signature,option<Type>*list<Attrib
     static member Build(variants: seq<Signature * option<Type> * list<Attribute>>) : Overloads =
         Overloads (dict (seq { for (s, t, a) in variants -> (s, (t, a)) }))
 
+/// Generates code from a `CodeAttributeDeclaration`.
+let GenerateCodeFromAttributeDeclaration (attr: CodeAttributeDeclaration) =
+    let t = CodeMemberMethod()
+    t.CustomAttributes.Add(attr) |> ignore
+    use buffer = new StringWriter()
+    provider.GenerateCodeFromMember(t, buffer, CodeGeneratorOptions())
+    let s = buffer.ToString()
+    s.Substring(0, s.IndexOf("private")).Trim()
+
+type Attrs = list<CodeAttributeDeclaration>
+
+/// Adds attribute annotations to property getters and setters.
+let AnnotateProperty (onInterface: bool) (getter: Attrs) (setter: Attrs) (prop: CodeMemberProperty) =
+    use writer = new StringWriter()
+    let opts = CodeGeneratorOptions()
+    provider.GenerateCodeFromMember(prop, writer, opts)
+    let generate etter =
+        use writer = new StringWriter()
+        for x in etter do
+            GenerateCodeFromAttributeDeclaration x
+            |> writer.WriteLine
+        writer.ToString().Trim()
+    let code =
+        Regex.Replace(writer.ToString(), @"(\s+)(get|set)",
+            MatchEvaluator(fun m ->
+                let x =
+                    if m.Groups.[2].Value = "get" then getter else setter
+                    |> generate
+                m.Groups.[1].Value + x + m.Groups.[0].Value))
+    let code =
+        if onInterface then
+            Regex.Replace(code, @"private|[gs]et\s*\{\s*\}",
+                MatchEvaluator(fun m ->
+                    match m.Groups.[0].Value with
+                    | s when s.StartsWith("get") -> "get;"
+                    | s when s.StartsWith("set") -> "set;"
+                    | _ -> ""))
+        else code
+    new CodeSnippetTypeMember(code)
+
 type Property =
     {
-        Attributes : list<Attribute>
+        GetAttributes : list<Attribute>
+        SetAttributes : list<Attribute>
         Type : Type
     }
 
-    member this.Build(id: Id) =
-        let p = CodeMemberProperty(Name = string id)
+    member this.Build(onInterface, p: CodeMemberProperty) =
         p.HasGet <- true
         p.HasSet <- true
         p.Type <- this.Type.Build()
-        for a in this.Attributes do
-            a.Build(p.CustomAttributes)
-        p
+        let g = [for x in this.GetAttributes -> x.Build()]
+        let s = [for x in this.SetAttributes -> x.Build()]
+        AnnotateProperty onInterface g s p
+
+    member this.Build(onInterface, id: Id, ?par: CodeParameterDeclarationExpression) =
+        let p = CodeMemberProperty(Name = string id)
+        par |> Option.iter (fun x -> p.Parameters.Add(x) |> ignore)
+        this.Build(onInterface, p)
 
 type IndexSignature =
     {
-        Attributes : list<Attribute>
+        GetAttributes : list<Attribute>
         Parameter : Parameter
+        SetAttributes : list<Attribute>
         Type : Type
     }
 
 [<Sealed>]
-type IndexerOverloads private (variants: IDictionary<Type,Id * Type * list<Attribute>>) =
+type IndexerOverloads private (variants: IDictionary<Type,Id * Type * list<Attribute> * list<Attribute>>) =
 
     static member Create(xs: seq<IndexSignature>) =
         let d =
             seq {
                 for x in xs ->
-                    (x.Parameter.Type, (x.Parameter.Id, x.Type, x.Attributes))
+                    (x.Parameter.Type, (x.Parameter.Id, x.Type, x.GetAttributes, x.SetAttributes))
             }
             |> dict
         IndexerOverloads(d)
 
     member this.Iterate(k) =
-        for KeyValue (pT, (pN, rT, atts)) in variants do
-            k pN pT rT atts
+        for KeyValue (pT, (pN, rT, gA, sA)) in variants do
+            k pN pT rT gA sA
 
 type Interface =
     {
@@ -334,18 +381,16 @@ and InterfaceMember =
     member this.Build(self: CodeTypeDeclaration, id: Id) =
         match this with
         | InterfaceIndex overloads ->
-            overloads.Iterate(fun id t1 t2 atts ->
+            overloads.Iterate(fun id t1 t2 gA sA ->
                 let p : Property =
                     {
-                        Attributes = atts
+                        GetAttributes = gA
+                        SetAttributes = sA
                         Type = t2
                     }
-                let p = p.Build(Id.Create("Item"))
-                Parameter.Create(id, t1).Build()
-                |> p.Parameters.Add
-                |> ignore
-                self.Members.Add(p)
-                |> ignore)
+                let x = Parameter.Create(id, t1).Build()
+                let p = p.Build(true, Id.Create("Item"), x)
+                self.Members.Add(p) |> ignore)
         | InterfaceMethod overloads ->
             overloads.Build(fun s r a ->
                 let m = CodeMemberMethod(Name = string id)
@@ -357,7 +402,7 @@ and InterfaceMember =
                 | None -> m.ReturnType <- CodeTypeReference(typeof<Void>)
                 self.Members.Add(m) |> ignore)
         | InterfaceProperty p ->
-            let p = p.Build(id)
+            let p = p.Build(true, id)
             self.Members.Add(p) |> ignore
 
 let throwException =
@@ -437,10 +482,10 @@ and ClassMember =
         | ClassNestedInterface i ->
             self.Members.Add(i.Build(id)) |> ignore
         | ClassProperty (kind, p) ->
-            let p = p.Build(id)
-            kind.Build(p)
-            p.GetStatements.Add(throwException) |> ignore
-            self.Members.Add(p) |> ignore
+            let prop = CodeMemberProperty(Name = string id)
+            prop.GetStatements.Add(throwException) |> ignore
+            kind.Build(prop)
+            self.Members.Add(p.Build(false, prop)) |> ignore
 
 type Namespace =
     {
