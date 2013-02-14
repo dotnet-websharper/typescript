@@ -1,4 +1,5 @@
-﻿module internal IntelliFactory.TypeScript.Declarations.Resolver
+﻿/// Takes care of resolving comment-based imports in TypeScript files.
+module internal IntelliFactory.TypeScript.Resolver
 
 open System
 open System.Collections.Generic
@@ -49,7 +50,7 @@ type Location =
             let file = Path.GetFileName(abs)
             FileLocation(dir, file)
 
-let private load (log: Log) (loc: Location) =
+let private load (log: Logging.Log) (loc: Location) =
     try
         match loc with
         | FileLocation (d, f) ->
@@ -60,10 +61,10 @@ let private load (log: Log) (loc: Location) =
             client.DownloadString(x)
         |> Some
     with _ ->
-        log.Warn("Failed to load: {0}", loc)
+        log.Warning("Failed to load: {0}", loc)
         None
 
-let Resolve (log: Log) (loc: Location) : Lexer.Lexeme [] =
+let Resolve (log: Logging.Log) (loc: Location) : Lexer.Lexeme [] =
     let visited = HashSet()
     let rec loop (acc: list<Lexer.Lexeme[]>) (loc: Location) : list<Lexer.Lexeme[]> =
         if visited.Add(loc) then
@@ -72,7 +73,7 @@ let Resolve (log: Log) (loc: Location) : Lexer.Lexeme [] =
                 let input = ParseInput.FromString [] (string loc) text
                 match Lexer.Lex.Parse input with
                 | ParseFailed f ->
-                    log.Warn("Failed to process {0}: {1}", loc, f)
+                    log.Warning("Failed to process {0}: {1}", loc, f)
                     acc
                 | Parsed (r, _, refs, _) ->
                     seq { for x in refs -> loc.Resolve(x) }

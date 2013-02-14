@@ -8,5 +8,6 @@
   </publications>
   <dependencies>
     <dependency name="if-parsec" rev="latest.integration" />
+    <dependency name="WebSharper" rev="latest.integration" />
   </dependencies>
 </ivy-module>

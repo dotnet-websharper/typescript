@@ -10,7 +10,7 @@
     <Name>IntelliFactory.TypeScript</Name>
     <RootNamespace>$(Name)</RootNamespace>
     <AssemblyName>$(Name)</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -22,7 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Debug\$(Name).XML</DocumentationFile>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,28 +33,47 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\$(Name).XML</DocumentationFile>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <OtherFlags>--staticlink:IntelliFactory.ParserCombinators</OtherFlags>
   </PropertyGroup>
-  <Import Project="$(INTELLIFACTORY)\build\IntelliFactory.FSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
-    <Compile Include="Log.fs" />
+    <Compile Include="Memoization.fs" />
+    <Compile Include="Extensions.fs" />
+    <Compile Include="Logging.fs" />
     <Compile Include="Syntax.fs" />
+    <Compile Include="WebSharper.fs" />
+    <Compile Include="Signatures.fs" />
+    <Compile Include="Assembling.fs" />
+    <Compile Include="SyntaxReductions.fs" />
     <Compile Include="Lexer.fsi" />
     <Compile Include="Lexer.fs" />
     <Compile Include="Resolver.fs" />
     <Compile Include="Parser.fsi" />
     <Compile Include="Parser.fs" />
-    <Compile Include="CSharp.fs" />
-    <Compile Include="Reduced.fsi" />
-    <Compile Include="Reduced.fs" />
-    <Compile Include="Builder.fsi" />
-    <Compile Include="Builder.fs" />
-    <Compile Include="Public.fs" />
+    <Compile Include="Contexts.fsi" />
+    <Compile Include="Contexts.fs" />
+    <Compile Include="TypeDiscovery.fs" />
+    <Compile Include="NameResolution.fs" />
+    <Compile Include="Translation.fs" />
+    <Compile Include="Compiler.fs" />
+    <Compile Include="TypeProvider.fs" />
+    <None Include="Test.d.ts" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="IntelliFactory.ParserCombinators" />
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=2.0.0.0" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="FSharp.Data.TypeProviders, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="IntelliFactory.WebSharper.Core">
+      <HintPath>../.build/lib/IntelliFactory.WebSharper.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.JavaScript">
+      <HintPath>../.build/lib/IntelliFactory.JavaScript.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.ParserCombinators">
+      <HintPath>../.build/lib/IntelliFactory.ParserCombinators.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

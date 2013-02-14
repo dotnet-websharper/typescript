@@ -1,4 +1,6 @@
-﻿module internal IntelliFactory.TypeScript.Declarations.Lexer
+﻿module IntelliFactory.TypeScript.Lexer
+
+#nowarn "40"
 
 module S = Syntax
 open System
@@ -97,7 +99,7 @@ type Token =
         | TokenDoubleArrow -> "=>"
         | TokenEllipsis -> "..."
         | TokenEquals -> "="
-        | TokenIdentifier (S.Identifier id) -> id
+        | TokenIdentifier id -> id.Text
         | TokenInt x -> string x
         | TokenKeyword kw -> string kw
         | TokenParenClose -> ")"
@@ -250,7 +252,7 @@ let lexWord : L<Token> =
         | "string"      -> TokenKeyword KeywordString
         | "var"         -> TokenKeyword KeywordVar
         | "void"        -> TokenKeyword KeywordVoid
-        | x             -> TokenIdentifier (S.Identifier x)
+        | x             -> TokenIdentifier (S.Identifier.Create x)
     let mk c cs = tok (string c + cs)
     mk <^> P.Satisfy isStart <*> manyChars (P.Satisfy isPart)
 

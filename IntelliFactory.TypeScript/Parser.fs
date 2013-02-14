@@ -1,5 +1,5 @@
 ﻿/// Implements parsing of TypeScript 0.8 definitions (.d.ts) files.
-module IntelliFactory.TypeScript.Declarations.Parser
+module IntelliFactory.TypeScript.Parser
 
 #nowarn "40"
 
@@ -40,7 +40,7 @@ let pIdentifier : P<S.Identifier> =
     let f x =
         match x with
         | L.TokenIdentifier x -> Some x
-        | L.TokenKeyword w -> Some (S.Identifier (w.ToText()))
+        | L.TokenKeyword w -> Some (S.Identifier.Create (w.ToText()))
         | _ -> None
     pPrim f
 
@@ -78,12 +78,8 @@ let pName : P<S.Name> =
     |> P.SepBy1 (pToken L.TokenDot)
     |> P.Map (fun s ->
         let a = Seq.toArray s
-        {
-            Name = a.[a.Length - 1]
-            Namespace =
-                Array.sub a 0 (a.Length - 1)
-                |> List.ofArray
-        })
+        (S.Name.Global a.[0], Seq.skip 1 a)
+        ||> Seq.fold (fun x y -> x.Local(y)))
 
 let pRequirement : P<S.Requirement> =
     (S.Optional <=> pToken L.TokenQuestion)
@@ -305,7 +301,7 @@ let pEnumDeclaration : P<S.EnumDeclaration> =
                 | _ -> false)
         )
         |> P.Optional
-    (fun x y -> S.EnumDeclaration (x, y))
+    (fun x y -> { Name  = x; Variants = y })
     <^> (pKeyword L.KeywordEnum >*> pIdentifier)
     <*> pBlock (P.SepEndBy1 pComma (pIdentifier <*< explicitValue))
 
