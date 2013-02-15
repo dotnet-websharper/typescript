@@ -9,7 +9,6 @@ module M = Memoization
 module N = NameResolution
 module S = Syntax
 module SR = SyntaxReductions
-type private NN = A.NetNames.NetName
 
 let IsOptional (m: S.TypeMember) =
     match m with
@@ -22,13 +21,10 @@ let IsOptional (m: S.TypeMember) =
     | S.PropertyMember (S.PropertySignature (_, S.Optional, _)) -> true
     | S.PropertyMember (S.PropertySignature (_, _, _)) -> false
 
-let rec ContextToName (ctx: C.Context) (ending: option<S.Identifier>) : S.Name =
+let ContextToName (ctx: C.Context) (ending: option<S.Identifier>) : S.Name =
     match ctx with
-    | C.External _ | C.Global -> S.Name.Global (defaultArg ending (S.Identifier.Create "Global"))
-    | C.Nested (parent, id) ->
-        match ending with
-        | None -> ContextToName parent (Some id)
-        | Some e -> (ContextToName parent (Some id)).Local(e)
+    | C.In _ -> S.Name.Global (defaultArg ending (S.Identifier.Create "Global"))
+    | C.At loc -> loc.Name
 
 type State() =
     let contracts = Queue<A.Contract>()
@@ -208,11 +204,11 @@ type Builder(state: State, log: Logging.Log, ctx: C.Context, nr: N.INameResolver
         match node with
         | SR.Node (key, ty) ->
             let id = key.Id
-            let n = ContextToName (ctx.RelativeContext(id)) None
+            let n = ContextToName (C.At (ctx.[id])) None
             A.Singleton (n, this.BuildMember ty, None)
             |> state.AddSingleton
 
-let Translate (log: Logging.Log) (nr: N.INameResolver) (discovered: seq<D.DiscoveredEntity>) (main: NN) : A.AssemblyDefinition =
+let Translate (log: Logging.Log) (nr: N.INameResolver) (discovered: seq<D.DiscoveredEntity>) (main: A.NetName) : A.AssemblyDefinition =
     let state = State()
     let typeTable : M.Table<D.DiscoveredType,Delayed<A.Contract>> =
         let delay (a: Lazy<Delayed<A.Contract>>) : Delayed<A.Contract> =
@@ -224,7 +220,7 @@ let Translate (log: Logging.Log) (nr: N.INameResolver) (discovered: seq<D.Discov
         M.MemoizeRecursive (M.Options(Equality = cmp, Laziness = Some delay)) (fun recur ->
             let getType : D.DiscoveredType -> A.Type = fun t -> A.ContractType (recur t)
             fun dty ->
-                let ctx = dty.Location.ToContext()
+                let ctx = C.At dty.Location
                 Builder(state, log, ctx, nr, getType).BuildDiscoveredType(dty))
     for d in discovered do
         match d with

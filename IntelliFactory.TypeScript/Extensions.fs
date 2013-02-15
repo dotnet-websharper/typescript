@@ -6,6 +6,8 @@ open System
 open System.Collections.Generic
 open System.IO
 open System.Reflection
+module M = IntelliFactory.TypeScript.Memoization
+
 
 /// A wrapper around Lazy<'T> that preserves inner equality.
 [<Sealed>]

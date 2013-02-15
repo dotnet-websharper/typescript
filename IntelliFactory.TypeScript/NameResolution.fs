@@ -19,7 +19,7 @@ type private NameResolver(resolveLocation: C.Location -> Resolution) =
         member this.ResolveLocation(loc) = locationTable.[loc]
         member this.ResolveName(ctx: C.Context, name: S.Name) =
             ctx.AncestorsAndSelf()
-            |> Seq.tryPick (fun x -> locationTable.[x.RelativeLocation(name)])
+            |> Seq.tryPick (fun ctx -> locationTable.[ctx.[name]])
 
 [<Sealed>]
 type private RootNode(log: Logging.Log, pathTable: Mapping<string,Node>, entryTable: Mapping<S.Identifier,Entry>) =
@@ -35,18 +35,18 @@ type private RootNode(log: Logging.Log, pathTable: Mapping<string,Node>, entryTa
     /// Searching for X.Y.Z - recurse on the structure, trie-like.
     let rec SearchAt(loc: C.Location) : option<Entry> =
         match loc with
-        | C.At (C.Global, id) ->
+        | { Scope = C.Global; Name = Symbols.GlobalName id } ->
             FindId(id)
-        | C.At (C.Nested (p, x), id) ->
-            SearchAt (p.RelativeLocation(x))
-            |> Option.bind (SearchFor(id))
-        | C.At (C.External p, id) ->
+        | { Scope = s; Name = Symbols.LocalName (name, local) } ->
+            SearchAt { Scope = s; Name = name }
+            |> Option.bind (SearchFor(local))
+        | { Scope = C.External p; Name = Symbols.GlobalName id } ->
             match FindPath(p) with
             | None -> None
             | Some node -> node.FindId(id)
-        | C.Extern path ->
-            FindPath(path)
-            |> Option.map NodeEntry
+//        | C.Extern path ->
+//            FindPath(path)
+//            |> Option.map NodeEntry
 
     /// Searching for X in an entry - import/symlink resolution happens here.
     and SearchFor (id: S.Identifier) (result: Entry) : option<Entry> =
@@ -64,7 +64,7 @@ type private RootNode(log: Logging.Log, pathTable: Mapping<string,Node>, entryTa
     /// of X.Y.Z.A.B.C, X.Y.A.B.C, X.A.B.C, A.B.C.
     and FindName(ctx: C.Context)(name: S.Name) : option<Entry> =
         ctx.AncestorsAndSelf()
-        |> Seq.tryPick (fun x -> SearchAt(x.RelativeLocation(name)))
+        |> Seq.tryPick (fun x -> SearchAt(x.[name]))
 
     member this.Resolve(loc) =
         match SearchAt loc with
@@ -81,11 +81,19 @@ and private Entry =
     | NodeEntry of Node
 
 let ConstructResolver (log: Logging.Log) (input: seq<D.DiscoveredEntity>) : INameResolver =
+    let (|Nested|_|) (c: C.Location) =
+        match c with
+        | { Scope = C.Global; Name = Symbols.GlobalName id } ->
+            Some (C.In C.Global, id)
+        | { Scope = C.Global; Name = Symbols.LocalName (name, local) } ->
+            Some (C.At { Scope = C.Global; Name = name }, local)
+        | _ ->
+            None
     let byContext =
         input
         |> Seq.choose (fun ent ->
             match ent.Key with
-            | D.TypeLike (C.At (ctx, id)) -> Some (ctx, (id, ent))
+            | D.TypeLike (Nested (ctx, id)) -> Some (ctx, (id, ent))
             | _ -> None)
         |> Seq.groupBy fst
         |> Seq.map (fun (ctx, rest) ->
@@ -103,7 +111,7 @@ let ConstructResolver (log: Logging.Log) (input: seq<D.DiscoveredEntity>) : INam
             |> Mapping.Choose (fun (id: S.Identifier) entity ->
                 match entity with
                 | D.DiscoveredTypeEntity entity ->
-                    let nestedContext = ctx.RelativeContext(id)
+                    let nestedContext = C.At (ctx.[id])
                     Node(buildEntryTable nestedContext, entity)
                     |> NodeEntry
                     |> Some
@@ -114,19 +122,20 @@ let ConstructResolver (log: Logging.Log) (input: seq<D.DiscoveredEntity>) : INam
                 | D.DiscoveredGlobal _ ->
                     None)
 
-    let entryTable = buildEntryTable C.Context.Global
+    let entryTable = buildEntryTable (C.In C.Global)
     let pathTable =
-        input
-        |> Seq.choose (fun v ->
-            match v.Key with
-            | D.TypeLike (C.Extern path) ->
-                let ctx = C.Context.External path
-                match v with
-                | TypeDiscovery.DiscoveredTypeEntity x ->
-                    let node = Node(buildEntryTable ctx, x)
-                    Some (path, node)
-                | _ -> None
-            | _ -> None)
+        Seq.empty
+//        input
+//        |> Seq.choose (fun v ->
+//            match v.Key with
+//            | D.TypeLike { Scope = (C.External path as scope) } ->
+//                let ctx = C.In scope
+//                match v with
+//                | TypeDiscovery.DiscoveredTypeEntity x ->
+//                    let node = Node(buildEntryTable ctx, x)
+//                    Some (path, node)
+//                | _ -> None
+//            | _ -> None)
         |> Mapping.New
     let rootNode = RootNode(log, pathTable, entryTable)
     NameResolver(rootNode.Resolve) :> INameResolver

@@ -79,7 +79,7 @@ let pName : P<S.Name> =
     |> P.Map (fun s ->
         let a = Seq.toArray s
         (S.Name.Global a.[0], Seq.skip 1 a)
-        ||> Seq.fold (fun x y -> x.Local(y)))
+        ||> Seq.fold (fun x y -> x.[y]))
 
 let pRequirement : P<S.Requirement> =
     (S.Optional <=> pToken L.TokenQuestion)

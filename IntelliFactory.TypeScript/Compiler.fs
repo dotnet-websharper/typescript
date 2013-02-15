@@ -5,7 +5,6 @@ open System.IO
 open System.Reflection
 open IntelliFactory.Parsec
 module A = Assembling
-type private NN = A.NetNames.NetName
 
 type IGeneratedAssembly =
     abstract Write : Stream -> unit
@@ -16,16 +15,16 @@ type IGeneratedAssembly =
 type Compiler() =
 
     static let (!) x = A.NetId.Create(x)
-    let mutable ns = NN.Global(!"IntelliFactory").Nested(!"TypeScript")
+    let mutable ns = A.NetName.Global(!"IntelliFactory").["TypeScript"]
     let mutable tn = !"Extension"
     let mutable log = Logging.Log.Default
 
     static let parseQName (s: string) =
         match Array.toList (s.Split([| '.' |], StringSplitOptions.RemoveEmptyEntries)) with
-        | [] -> NN.Global(!"Unkonwn")
+        | [] -> A.NetName.Global(!"Unknown")
         | x :: xs ->
-            (NN.Global(!x), xs)
-            ||> List.fold (fun x y -> x.Nested(!y))
+            (A.NetName.Global(!x), xs)
+            ||> List.fold (fun x y -> x.[y])
 
     /// The log object to send warnings to.
     member this.Log
@@ -50,7 +49,7 @@ type Compiler() =
         | Parsed (syntax, pos, (), count) ->
             let discovered = log.Time "TypeDiscovery" (fun () -> TypeDiscovery.Discover log syntax)
             let resolver = log.Time "NameResolution" (fun () -> NameResolution.ConstructResolver log discovered)
-            let entryPoint = ns.Nested(tn)
+            let entryPoint = ns.[tn]
             let def = log.Time "Translation" (fun () -> Translation.Translate log resolver discovered entryPoint)
             let res = log.Time "Assembling" (fun () -> A.Assemble log def)
             Some {

@@ -99,7 +99,7 @@ type Token =
         | TokenDoubleArrow -> "=>"
         | TokenEllipsis -> "..."
         | TokenEquals -> "="
-        | TokenIdentifier id -> id.Text
+        | TokenIdentifier id -> id.Name
         | TokenInt x -> string x
         | TokenKeyword kw -> string kw
         | TokenParenClose -> ")"

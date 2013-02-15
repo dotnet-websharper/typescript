@@ -1,6 +1,6 @@
 ﻿module internal IntelliFactory.TypeScript.SyntaxReductions
 
-module A = Assembling
+module A = IntelliFactory.TypeScript.Assembling
 module S = Syntax
 
 let (|CallMember|_|) m =

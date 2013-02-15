@@ -8,36 +8,12 @@ open System.Reflection
 open System.Reflection.Emit
 open System.Text
 open System.Text.RegularExpressions
-open Microsoft.CSharp
 module A = IntelliFactory.WebSharper.Core.Attributes
 module M = Memoization
 module S = Syntax
 
-/// .NET identifiers.
-[<Sealed>]
-type NetId private (name: string) =
-    static let Provider = CSharpCodeProvider.CreateProvider("C#")
-    static let BadChar = Regex(@"[^\w]")
-    static let Unknown = NetId("Unknown")
-
-    static let clean (s: string) : NetId =
-        match s with
-        | null | "" -> Unknown
-        | _ ->
-            let s0 =
-                if Char.IsLetter(s.[0]) || s.[0] = '_'
-                    then string s.[0]
-                    else "_"
-            let sR = BadChar.Replace(s.Substring(1), "_")
-            NetId(s0.ToUpper() + sR)
-
-    static let table =
-        Memoization.Memoize (Memoization.Options()) clean
-
-    override this.ToString() = name
-    member this.Text = name
-    static member Create(name) = table.[name]
-    static member FromId(id: S.Identifier) = NetId.Create(id.Text)
+type NetId = Symbols.Symbol<Symbols.NetChecker>
+type NetName = Symbols.Name<Symbols.NetChecker>
 
 module private Identifiers =
     let Call = NetId.Create("Call")
@@ -68,7 +44,7 @@ type Key =
         | Call -> Identifiers.Call
         | ItemByNumber | ItemByString -> Identifiers.Item
         | New -> Identifiers.New
-        | Property p -> NetId.FromId(p)
+        | Property p -> Symbols.ConvertSymbol p
 
 type BuiltIn =
     | AnyType
@@ -121,68 +97,6 @@ type Singleton(fullName: S.Name, singleton: Member, suffix: option<NetId>) =
     member this.Member = singleton
     member this.Suffix = suffix
 
-/// .NET qualified names.
-[<AutoOpen>]
-module NetNames =
-
-    /// Represents a .NET qualified name.
-    [<Sealed>]
-    type NetName private (node: NetNameNode) =
-        let text = string node
-
-        static let table =
-            Memoization.Memoize (Memoization.Options()) (fun node -> NetName(node))
-
-        member this.Nested(child: NetId) : NetName =
-            NetName.Create(NetNameNested (this, child))
-
-        member this.Relative(qn: NetName) : NetName =
-            match qn.Node with
-            | NetNameGlobal x -> this.Nested(x)
-            | NetNameNested (a, b) -> this.Relative(a).Nested(b)
-
-        member this.ToList() =
-            this.ToList []
-
-        member private this.ToList(acc) =
-            match node with
-            | NetNameGlobal x -> List.rev (x :: acc)
-            | NetNameNested (p, x) -> p.ToList(x :: acc)
-
-        override this.ToString() = text
-        member private this.Node = node
-        member this.Text = text
-
-        member this.Local =
-            match node with
-            | NetNameGlobal id
-            | NetNameNested (_, id) -> id
-
-        member this.Parent =
-            match node with
-            | NetNameGlobal _ -> None
-            | NetNameNested (parent, _) -> Some parent
-
-        static member private Create(node: NetNameNode) =
-            table.[node]
-
-        static member FromName(s: S.Name) : NetName =
-            match s with
-            | S.GlobalName id -> NetName.Global(NetId.FromId(id))
-            | S.LocalName (parent, id) -> NetName.FromName(parent).Nested(NetId.FromId(id))
-
-        static member Global(id: NetId) =
-            NetName.Create(NetNameGlobal id)
-
-    and private NetNameNode =
-        | NetNameGlobal of NetId
-        | NetNameNested of NetName * NetId
-
-        override this.ToString() =
-            match this with
-            | NetNameGlobal x -> string x
-            | NetNameNested (ns, id) -> String.Format("{0}.{1}", ns, id)
-
 /// Picking names that do not conflict based on name hints.
 [<AutoOpen>]
 module private Diambiguation =
@@ -197,10 +111,10 @@ module private Diambiguation =
         static member Create(start: NetName, name: S.Name, suffix: option<NetId>) : NetNameHint =
             let (ns, n) =
                 match name with
-                | S.GlobalName glob ->
-                    (start, NetId.FromId(glob))
-                | S.LocalName (parent, local) ->
-                    (start.Relative(NetName.FromName(parent)), NetId.FromId(local))
+                | Symbols.GlobalName glob ->
+                    (start, Symbols.ConvertSymbol glob)
+                | Symbols.LocalName (parent, local) ->
+                    (start.[Symbols.ConvertName parent], Symbols.ConvertSymbol local)
             {
                 Namespace = ns
                 Name = n
@@ -209,7 +123,7 @@ module private Diambiguation =
 
     let private MakeName (hint: NetNameHint) (attempt: int) : NetName =
         match attempt with
-        | 0 -> hint.Namespace.Nested(hint.Name)
+        | 0 -> hint.Namespace.[hint.Name]
         | k ->
             let suffix =
                 match hint.Suffix with
@@ -219,7 +133,7 @@ module private Diambiguation =
                     | _ -> string x + string (k - 1)
                 | None ->
                     string k
-            hint.Namespace.Nested(NetId.Create(string hint.Name + string suffix))
+            hint.Namespace.[hint.Name.Name + suffix]
 
     let private PickName (used: HashSet<NetName>) (hint: NetNameHint) : NetName =
         let rec pick n =
@@ -316,7 +230,7 @@ type private NamedAssembly private (entryPoint: NetName, defs: seq<NamedDefiniti
             |> Seq.map (fun (name, entity) ->
                 match entity with
                 | Choice1Of2 contract ->
-                    let used = name.ToList()
+                    let used = name.List
                     let contractMap =
                         contract.Properties.GetKeys()
                         |> DisambiguateLocal used (fun x -> x.NetId())
@@ -388,12 +302,12 @@ module private Compilation =
                 let arg =
                     match name with
                     | Choice1Of2 name ->
-                        name.ToList()
+                        name.List
                         |> List.toArray
-                        |> Array.map (fun x -> x.Text)
+                        |> Array.map (fun x -> x.Name)
                         |> box
                     | Choice2Of2 id ->
-                        box id.Text
+                        box id.Name
                 let nameCtor =
                     match name with
                     | Choice1Of2 _ -> nameCtorN
@@ -442,7 +356,7 @@ module private Compilation =
                         | Some t -> yield this.BuildType(t).MakeArrayType()
                         | None -> ()
                     |]
-                let m = tb.DefineMethod(id.Text, attrs, ret, par)
+                let m = tb.DefineMethod(id.Name, attrs, ret, par)
                 match rest with
                 | Some _ -> MakeRest (m.DefineParameter(par.Length - 1, ParameterAttributes.None, "rest"))
                 | None -> ()
@@ -461,9 +375,12 @@ module private Compilation =
             let attrs = kind.MethodAttributes
             let ty = this.BuildType(ty)
             let par = Array.map this.BuildType (Seq.toArray par)
-            let prop = tb.DefineProperty(id.Text, PropertyAttributes.None, ty, par)
-            let gm = tb.DefineMethod("get_" + id.Text, attrs, ty, par)
-            let sm = tb.DefineMethod("set_" + id.Text, attrs, typeof<Void>, Array.append par [| ty |])
+
+            let smallName = id.Name
+
+            let prop = tb.DefineProperty(id.Name, PropertyAttributes.None, ty, par)
+            let gm = tb.DefineMethod("get_" + id.Name, attrs, ty, par)
+            let sm = tb.DefineMethod("set_" + id.Name, attrs, typeof<Void>, Array.append par [| ty |])
             prop.SetGetMethod(gm)
             prop.SetSetMethod(sm)
             match kind with
@@ -513,7 +430,7 @@ module private Compilation =
                         mb.DefineType(name.Text, RegularClass)
                     else
                         let parent = buildType name.Parent.Value
-                        parent.DefineNestedType(name.Local.Text, NestedClass)
+                        parent.DefineNestedType(name.Local.Name, NestedClass)
                 if not (isOpenType name) then
                     builder.DefineDefaultConstructor(MethodAttributes.Private)
                     |> ignore

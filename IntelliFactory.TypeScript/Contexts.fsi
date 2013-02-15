@@ -1,27 +1,29 @@
-﻿/// Defines contexts for name resolution.
+﻿/// Implements contexts for syntactic name resolution in TypeScript.
 module internal IntelliFactory.TypeScript.Contexts
 
+type Path = string
 module S = Syntax
 
-/// External module paths.
-type Path = string
+type Scope =
+    | External of Path
+    | Global
 
-[<Sealed>]
 type Location =
-    member ToContext : unit -> Context
-    static member External : Path -> Location
+    {
+        Name : S.Name
+        Scope : Scope
+    }
 
-and [<Sealed>] Context =
+    member Item : S.Identifier -> Location with get
+    member Item : S.Name -> Location with get
+
+type Context =
+    | At of Location
+    | In of Scope
+
     member Ancestors : unit -> list<Context>
     member AncestorsAndSelf : unit -> list<Context>
-    member RelativeContext : S.Identifier -> Context
-    member RelativeContext : S.Name -> Context
-    member RelativeLocation : S.Identifier -> Location
-    member RelativeLocation : S.Name -> Location
     member Parent : option<Context>
 
-    static member External : Path -> Context
-    static member Global : Context
-
-val (|External|Global|Nested|) : Context -> Choice<Path,unit,Context * S.Identifier>
-val (|At|Extern|) : Location -> Choice<Context * S.Identifier,Path>
+    member Item : S.Identifier -> Location with get
+    member Item : S.Name -> Location with get

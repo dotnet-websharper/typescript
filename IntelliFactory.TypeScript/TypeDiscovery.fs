@@ -33,7 +33,7 @@ type Module =
                 | S.EnumElement { Name = x } ->
                     Some x
                 | S.ModuleElement { Name = x } ->
-                    Some x.Head
+                    Some x.List.Head
                 | _ -> None)
         {
             Location = loc
@@ -120,8 +120,8 @@ type DiscoveredEntity =
 let NormalizeModuleEntry (m: S.InternalModule) =
     let rec norm (m: S.InternalModule) =
         match m.Name with
-        | S.GlobalName id -> (id, m.Members)
-        | S.LocalName (parent, local) ->
+        | Symbols.GlobalName id -> (id, m.Members)
+        | Symbols.LocalName (parent, local) ->
             norm {
                 Name = parent
                 Members = [S.ModuleElement { Name = S.Name.Global local; Members = m.Members }]
@@ -132,30 +132,30 @@ let FindTypes (file: S.DeclarationSourceFile) : seq<DiscoveredEntity> =
     let rec inME (ctx: C.Context) (mdl: S.ModuleElement) =
         match mdl with
         | S.ClassElement c ->
-            let loc = ctx.RelativeLocation(c.Name)
+            let loc = ctx.[c.Name]
             let cl = Class.Create loc c
             Seq.singleton (DiscoveredTypeEntity (DiscoveredClass cl))
         | S.EnumElement e ->
-            let loc = ctx.RelativeLocation(e.Name)
+            let loc = ctx.[e.Name]
             let en = Enum.Create loc e
             Seq.singleton (DiscoveredTypeEntity (DiscoveredEnum en))
         | S.FunctionElement fs ->
             let node = SR.FunctionNode fs
             Seq.singleton (DiscoveredGlobal (ctx, node))
         | S.ImportElement (S.ImportDeclaration.ExternalImport (id, path)) ->
-            let loc = ctx.RelativeLocation(id)
+            let loc = ctx.[id]
             Seq.singleton (DiscoveredImportExternal (loc, path))
         | S.ImportElement (S.ImportDeclaration.InternalImport (id, name)) ->
-            let loc = ctx.RelativeLocation(id)
+            let loc = ctx.[id]
             Seq.singleton (DiscoveredImportInternal (loc, ctx, name))
         | S.InterfaceElement i ->
-            let loc = ctx.RelativeLocation(i.Name)
+            let loc = ctx.[i.Name]
             let int = Interface.Create loc i
             Seq.singleton (DiscoveredTypeEntity (DiscoveredInterface int))
         | S.ModuleElement m ->
             let (id, ms) = NormalizeModuleEntry m
-            let loc = ctx.RelativeLocation(id)
-            let ctx = ctx.RelativeContext(id)
+            let loc = ctx.[id]
+            let ctx = C.At loc
             let mdl = Module.Create loc m.Members
             seq {
                 yield DiscoveredTypeEntity (DiscoveredModule mdl)
@@ -167,17 +167,18 @@ let FindTypes (file: S.DeclarationSourceFile) : seq<DiscoveredEntity> =
     seq {
         match file with
         | S.DeclarationSourceFile decls ->
+            let globalContext = C.In C.Global
             for d in decls do
                 match d with
                 | S.ExternalModuleDeclaration m ->
-                    let loc = C.Location.External m.Path
-                    let ctx = C.Context.External m.Path
-                    let mdl = Module.Create loc m.Members
-                    yield DiscoveredTypeEntity (DiscoveredModule mdl)
+//                    let loc = C.Location.External m.Path
+                    let ctx = C.In (C.External m.Path)
+//                    let mdl = Module.Create loc m.Members
+//                    yield DiscoveredTypeEntity (DiscoveredModule mdl)
                     for me in m.Members do
                         yield! inME ctx me
                 | S.RegularDeclaration me ->
-                    yield! inME C.Context.Global me
+                    yield! inME globalContext me
     }
 
 let ReduceDiscoveredType (log: Logging.Log) (a: DiscoveredType) (b: DiscoveredType) : DiscoveredType =

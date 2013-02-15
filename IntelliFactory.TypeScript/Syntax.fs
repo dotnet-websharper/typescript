@@ -2,68 +2,15 @@
 /// TypeScript declarations (.d.ts) files. Based on the 0.8
 /// version of the TypeScript Language Spec, see:
 /// http://www.typescriptlang.org/Content/TypeScript%20Language%20Specification.pdf
-module IntelliFactory.TypeScript.Syntax
+module internal IntelliFactory.TypeScript.Syntax
 
 open System
 open System.Collections.Generic
 open System.Threading
 module M = Memoization
 
-[<Sealed>]
-type Identifier private (text: string) =
-    let hash = hash text
-    static let table = M.Memoize (M.Options()) (fun x -> Identifier(x))
-    override this.Equals(other: obj) = Object.ReferenceEquals(this, other)
-    override this.GetHashCode() = hash
-    override this.ToString() = text
-    member this.Text = text
-    static member Create(text) = table.[text]
-    interface IComparable with
-        member this.CompareTo(other: obj) =
-            compare text (other :?> Identifier).Text
-
-[<Sealed>]
-type Name private (node: NameNode) =
-    static let table = M.Memoize (M.Options()) (fun x -> Name(x))
-    static let identity = HashIdentity.Reference
-    let head = node.Head
-    let text = string node
-    override this.Equals(other: obj) = Object.ReferenceEquals(this, other)
-    override this.GetHashCode() = identity.GetHashCode(this)
-    member this.Local(id: Identifier) = table.[LocalName (this, id)]
-    member this.ToList() = this.ToList []
-    member private this.ToList(acc) =
-        match node with
-        | GlobalName x -> List.rev (x :: acc)
-        | LocalName (name, x) -> name.ToList (x:: acc)
-    override this.ToString() = text
-    member this.Head = head
-    member this.Node = node
-    static member Global(id: Identifier) = table.[GlobalName id]
-
-    interface IComparable with
-        member this.CompareTo(other: obj) =
-            compare node (other :?> Name).Node
-
-and NameNode =
-    private
-    | GlobalName of Identifier
-    | LocalName of Name * Identifier
-
-    member this.Head =
-        match this with
-        | GlobalName x -> x
-        | LocalName (x, _) -> x.Head
-
-    override this.ToString() =
-        match this with
-        | GlobalName a -> string a
-        | LocalName (a, b) -> String.Format("{0}.{1}", a, b)
-
-let (|GlobalName|LocalName|) (name: Name) =
-    match name.Node with
-    | GlobalName x -> GlobalName x
-    | LocalName (x, y) -> LocalName (x, y)
+type Identifier = Symbols.Symbol<Symbols.SyntaxChecker>
+type Name = Symbols.Name<Symbols.SyntaxChecker>
 
 type Requirement =
     | Optional
