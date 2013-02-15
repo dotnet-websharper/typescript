@@ -16,7 +16,6 @@ open Microsoft.FSharp.Quotations
 type TypeProvider(config: TypeProviderConfig) =
 
     static do Assembly.InstallLoadHack()
-    static let logFile = @"C:\Users\toyvo\home\dev\tmp\TP.log"
     static let root = obj ()
     static let date = DateTimeOffset.UtcNow
     static let domainName = AppDomain.CurrentDomain.FriendlyName
@@ -27,13 +26,16 @@ type TypeProvider(config: TypeProviderConfig) =
                     lock root <| fun () ->
                         let msg = String.Format("[DOMAIN={0} @ {1}] [{2}] {3}", domainName, date, level, message)
                         stderr.WriteLine(msg)
-                        File.AppendAllLines(logFile, [| msg |])
         }
 
     let invalidation = Event<EventHandler,EventArgs>()
     let dispose () = ()
     let byteCache = Dictionary()
     let fileCache = Dictionary()
+
+    let resolveFileName (file: string) =
+        if Path.IsPathRooted(file) then file else
+            Path.GetFullPath(Path.Combine(config.ResolutionFolder, file))
 
     let doMakeType (className: string []) (typeScriptFile: string) : Type =
         log.Information("TP.doMakeType({0}, {1})", String.concat "." className, typeScriptFile)
@@ -97,10 +99,30 @@ type TypeProvider(config: TypeProviderConfig) =
     interface IDisposable with
         member this.Dispose() = dispose ()
 
+
     interface ITypeProvider with
 
         member this.ApplyStaticArguments(t: Type, className: string[], args: obj []) : Type =
-            makeType className (args.[0] :?> _)
+            match args with
+            | [| :? string as path |] ->
+                try
+                    let fullPath = resolveFileName path
+                    if File.Exists(fullPath) then
+                        try
+                            makeType className fullPath
+                        with e ->
+                            log.Error(e.ToString())
+                            invalidArg "args" ("Internal error when building " + fullPath)
+                    else
+                        invalidArg "args" (
+                            String.Format("File not found [{0}] when resolving [{1}] in [{2}]",
+                                fullPath, path, config.ResolutionFolder)
+                        )
+                with e ->
+                    log.Error(e.ToString())
+                    invalidArg "args" "Error when resolving filename"
+            | _ ->
+                invalidArg "args" "Expecting a single string argument - the filename"
 
         member this.GetGeneratedAssemblyContents(a: Assembly) : byte[] =
             let bytes =

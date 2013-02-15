@@ -10,7 +10,7 @@ type Action =
 
 module Client =
 
-    type Facebook = IntelliFactory.TypeScript.Generator<file="C:\\Users\\toyvo\\home\\dev\\if-typescript\\IntelliFactory.TypeScript\\Test.d.ts">
+    type Facebook = IntelliFactory.TypeScript.Generator<file = @"..\..\IntelliFactory.TypeScript\Test.d.ts">
 
     [<JavaScript>]
     let Main () =
