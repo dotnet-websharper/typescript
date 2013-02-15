@@ -61,7 +61,7 @@ type TypeProvider(config: TypeProviderConfig) =
 
     let makeType (className: string[]) (typeScriptFile: string) : Type =
         lock root <| fun () ->
-            let key = (String.concat "." className, typeScriptFile)
+            let key = (String.concat "." className, typeScriptFile, File.GetLastWriteTimeUtc(typeScriptFile))
             match fileCache.TryGetValue(key) with
             | true, t -> t
             | _ ->
@@ -98,7 +98,6 @@ type TypeProvider(config: TypeProviderConfig) =
 
     interface IDisposable with
         member this.Dispose() = dispose ()
-
 
     interface ITypeProvider with
 
