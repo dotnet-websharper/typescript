@@ -12,6 +12,7 @@
     <AssemblyName>$(Name)</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile />
+    <KeyOriginatorFile>$(INTELLIFACTORY)/keys/IntelliFactory.snk</KeyOriginatorFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,28 +39,27 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
     <Compile Include="Memoization.fs" />
+    <Compile Include="Mappings.fs" />
+    <Compile Include="Tries.fs" />
     <Compile Include="Symbols.fsi" />
     <Compile Include="Symbols.fs" />
-    <Compile Include="Extensions.fs" />
-    <Compile Include="Logging.fs" />
     <Compile Include="Syntax.fs" />
-    <Compile Include="WebSharper.fs" />
-    <Compile Include="Signatures.fs" />
-    <Compile Include="Assembling.fs" />
-    <Compile Include="SyntaxReductions.fs" />
     <Compile Include="Lexer.fsi" />
     <Compile Include="Lexer.fs" />
+    <Compile Include="Logging.fs" />
     <Compile Include="Resolver.fs" />
     <Compile Include="Parser.fsi" />
     <Compile Include="Parser.fs" />
-    <Compile Include="Contexts.fsi" />
-    <Compile Include="Contexts.fs" />
-    <Compile Include="TypeDiscovery.fs" />
+    <Compile Include="Signatures.fs" />
+    <Compile Include="Elaboration.fs" />
+    <Compile Include="WebSharper.fs" />
+    <Compile Include="Assembling.fs" />
     <Compile Include="NameResolution.fs" />
-    <Compile Include="Translation.fs" />
+    <Compile Include="Adaptation.fs" />
     <Compile Include="Compiler.fs" />
     <Compile Include="TypeProvider.fs" />
-    <None Include="Test.d.ts" />
+    <None Include="Test.fsx" />
+    <None Include="Example.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

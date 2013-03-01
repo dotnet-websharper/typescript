@@ -10,6 +10,13 @@ type LogLevel =
     | LogVerbose
     | LogWarning
 
+    override this.ToString() =
+        match this with
+        | LogError -> "Error"
+        | LogInformation -> "Info"
+        | LogVerbose -> "Verbose"
+        | LogWarning -> "Warn"
+
 /// Represents the logging facility.
 [<AbstractClass>]
 type Log() =

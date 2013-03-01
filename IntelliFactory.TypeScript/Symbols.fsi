@@ -55,3 +55,11 @@ type SyntaxChecker =
 type NetChecker =
     new : unit -> NetChecker
     interface ISymbolChecker
+
+module Syntax =
+    type Identifier = Symbol<SyntaxChecker>
+    type Name = Name<SyntaxChecker>
+
+module Net =
+    type Identifier = Symbol<NetChecker>
+    type Name = Name<NetChecker>

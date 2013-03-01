@@ -10,6 +10,7 @@ open System.Text
 open System.Text.RegularExpressions
 module A = IntelliFactory.WebSharper.Core.Attributes
 module M = Memoization
+module Mp = Mappings
 module S = Syntax
 
 type NetId = Symbols.Symbol<Symbols.NetChecker>
@@ -46,24 +47,21 @@ type Key =
         | New -> Identifiers.New
         | Property p -> Symbols.ConvertSymbol p
 
-type BuiltIn =
-    | AnyType
-    | BooleanType
-    | NumberType
-    | StringType
-
 [<Sealed>]
-type Contract(fullName: S.Name, properties: Mapping<Key,Member>, suffix: option<NetId>, allowConstructor: bool) =
-    static let identity = HashIdentity.Reference
-    member this.AllowConstructor = allowConstructor
-    member this.FullName = fullName
-    member this.Properties = properties
-    member this.Suffix = suffix
-    override this.Equals(other) = Object.ReferenceEquals(this, other)
-    override this.GetHashCode() = identity.GetHashCode(this)
-    interface IComparable with
-        override this.CompareTo(other: obj) =
-            compare fullName (other :?> Contract).FullName
+type Contract(def: ContractDefinition) =
+    member this.AllowsConstructor = def.AllowsConstructor
+    member this.Definition = def
+    member this.HintName = def.HintName
+    member this.Properties = def.Properties
+    member this.Suffix = def.Suffix
+
+and ContractDefinition =
+    {
+        AllowsConstructor : bool
+        HintName : NetName
+        Properties : Mp.Mapping<Key,Member>
+        Suffix : NetId
+    }
 
 and Member =
     | OverloadedMember of Overloads
@@ -81,21 +79,25 @@ and [<Sealed>] Overloads(orig: list<Signature * Type>) =
     override this.ToString() =
         sprintf "+%A" this.Variants
 
-and Signature = Signatures.Signature<Type>
+and Signature =
+    Signatures.Signature<Type>
 
 and Type =
+    | AnyType
     | ArrayType of Type
-    | BuiltInType of BuiltIn
-    | ContractType of Delayed<Contract>
-    | FunctionType of Type * Type
-    | TupleType of list<Type>
+    | BooleanType
+    | ContractType of Lazy<Contract>
+    | FunctionType of list<Type> * Type
+    | NumberType
+    | StringType
     | UnitType
 
 [<Sealed>]
-type Singleton(fullName: S.Name, singleton: Member, suffix: option<NetId>) =
-    member this.FullName = fullName
+type Singleton(hintName: NetName, synName: S.Name, singleton: Member, suffix: NetId) =
+    member this.HintName = hintName
     member this.Member = singleton
     member this.Suffix = suffix
+    member this.SyntaxName = synName
 
 /// Picking names that do not conflict based on name hints.
 [<AutoOpen>]
@@ -108,18 +110,20 @@ module private Diambiguation =
             Suffix : option<NetId>
         }
 
-        static member Create(start: NetName, name: S.Name, suffix: option<NetId>) : NetNameHint =
-            let (ns, n) =
-                match name with
-                | Symbols.GlobalName glob ->
-                    (start, Symbols.ConvertSymbol glob)
-                | Symbols.LocalName (parent, local) ->
-                    (start.[Symbols.ConvertName parent], Symbols.ConvertSymbol local)
-            {
-                Namespace = ns
-                Name = n
-                Suffix = suffix
-            }
+        static member Create(name: NetName, suffix: NetId) : NetNameHint =
+            match name.Parent with
+            | None ->
+                {
+                    Namespace = name
+                    Name = suffix
+                    Suffix = None
+                }
+            | Some ns ->
+                {
+                    Namespace = ns
+                    Name = name.Local
+                    Suffix = Some suffix
+                }
 
     let private MakeName (hint: NetNameHint) (attempt: int) : NetName =
         match attempt with
@@ -144,7 +148,7 @@ module private Diambiguation =
                 pick (n + 1)
         pick 0
 
-    let Disambiguate<'T> (used: seq<NetName>) (hint: 'T -> NetNameHint) (input: seq<'T>) : Mapping<NetName,'T> =
+    let Disambiguate<'T> (used: seq<NetName>) (hint: 'T -> NetNameHint) (input: seq<'T>) : Mp.Mapping<NetName,'T> =
         let input = Seq.toArray input
         let hints = Array.map hint input
         let namespaceNames =
@@ -154,7 +158,7 @@ module private Diambiguation =
         let pairs =
             input
             |> Seq.mapi (fun i x -> (PickName usedNames hints.[i], x))
-        Mapping(pairs)
+        Mp.Mapping(pairs)
 
     let private MakeId (hint: NetId) (attempt: int) : NetId =
         match attempt with
@@ -172,12 +176,12 @@ module private Diambiguation =
                 pick (n + 1)
         pick 0
 
-    let DisambiguateLocal<'T> (inUse: seq<NetId>) (hint: 'T -> NetId) (input: seq<'T>) : Mapping<NetId,'T> =
+    let DisambiguateLocal<'T> (inUse: seq<NetId>) (hint: 'T -> NetId) (input: seq<'T>) : Mp.Mapping<NetId,'T> =
         let used = HashSet(inUse)
         let pairs =
             input
             |> Seq.map (fun x -> (PickId used (hint x), x))
-        Mapping(pairs)
+        Mp.Mapping(pairs)
 
 type AssemblyDefinition =
     {
@@ -187,7 +191,7 @@ type AssemblyDefinition =
     }
 
 type private NamedDefinition =
-    | NamedContract of Contract * NetName * Mapping<Key,NetId>
+    | NamedContract of Contract * NetName * Mp.Mapping<Key,NetId>
     | NamedSingleton of Singleton * NetName
 
 /// Disambiguates names and constructs name mappings.
@@ -215,9 +219,9 @@ type private NamedAssembly private (entryPoint: NetName, defs: seq<NamedDefiniti
 
     static member Create(def: AssemblyDefinition) : NamedAssembly =
         let hintContract (c: Contract) : NetNameHint =
-            NetNameHint.Create(def.Start, c.FullName, c.Suffix)
+            NetNameHint.Create(c.HintName, c.Suffix)
         let hintSingleton (s: Singleton) : NetNameHint =
-            NetNameHint.Create(def.Start, s.FullName, s.Suffix)
+            NetNameHint.Create(s.HintName, s.Suffix)
         let entryPoint = def.Start
         let defs =
             Seq.append
@@ -226,7 +230,7 @@ type private NamedAssembly private (entryPoint: NetName, defs: seq<NamedDefiniti
             |> Disambiguate [entryPoint] (function
                 | Choice1Of2 x -> hintContract x
                 | Choice2Of2 x -> hintSingleton x)
-            |> Mapping.GetPairs
+            |> Mp.GetPairs
             |> Seq.map (fun (name, entity) ->
                 match entity with
                 | Choice1Of2 contract ->
@@ -234,7 +238,9 @@ type private NamedAssembly private (entryPoint: NetName, defs: seq<NamedDefiniti
                     let contractMap =
                         contract.Properties.GetKeys()
                         |> DisambiguateLocal used (fun x -> x.NetId())
-                        |> Mapping.Reverse
+                        |> Mp.GetPairs
+                        |> Seq.map (fun (a, b) -> (b, a))
+                        |> Mp.New
                     NamedContract (contract, name, contractMap)
                 | Choice2Of2 singleton ->
                     NamedSingleton (singleton, name))
@@ -331,7 +337,7 @@ module private Compilation =
                 | Property id -> MakeSingletonAttribute (Choice2Of2 id)
             | Kind.Static name -> MakeSingletonAttribute (Choice1Of2 name)
 
-        member this.BuildContract(c: Contract, n: NetName, m: Mapping<Key,NetId>) =
+        member this.BuildContract(c: Contract, n: NetName, m: Mp.Mapping<Key,NetId>) =
             let self = typesTable.[n]
             for (key, prop) in c.Properties.GetPairs() do
                 this.BuildMember(self, Instance key, m.[key], prop)
@@ -369,7 +375,7 @@ module private Compilation =
             | NamedContract (x, y, z) -> this.BuildContract(x, y, z)
             | NamedSingleton (s, n) ->
                 let parent = typesTable.[n.Parent.Value]
-                this.BuildMember(parent, Static s.FullName, n.Local, s.Member)
+                this.BuildMember(parent, Static s.SyntaxName, n.Local, s.Member)
 
         member this.BuildProperty(tb: TypeBuilder, id: NetId, ty: Type, par: seq<Type>, kind: Kind) : unit =
             let attrs = kind.MethodAttributes
@@ -400,18 +406,17 @@ module private Compilation =
             let (!) x = this.BuildType(x)
             match ty with
             | ArrayType x -> (!x).MakeArrayType()
-            | BuiltInType x ->
-                match x with
-                | AnyType -> typeof<obj>
-                | BooleanType -> typeof<bool>
-                | NumberType -> typeof<WebSharper.Number>
-                | StringType -> typeof<string>
+            | AnyType -> typeof<obj>
+            | BooleanType -> typeof<bool>
+            | NumberType -> typeof<WebSharper.Number>
+            | StringType -> typeof<string>
             | ContractType c -> typesTable.[na.Name(c.Value)] :> _
-            | FunctionType (a, b) -> typedefof<_->_>.MakeGenericType(!a, !b)
-            | TupleType [] -> typeof<Tuple>
-            | TupleType ts ->
+            | FunctionType ([], t) -> typedefof<_->_>.MakeGenericType(typeof<unit>, !t)
+            | FunctionType ([x], t) -> typedefof<_->_>.MakeGenericType(!x, !t)
+            | FunctionType (ts, t) ->
                 let td = System.Type.GetType(String.Format("System.Tuple`{0}", ts.Length), true)
-                td.MakeGenericType(Array.map (!) (List.toArray ts))
+                let tt = td.MakeGenericType(Array.map (!) (List.toArray ts))
+                typedefof<_->_>.MakeGenericType(tt, !t)
             | UnitType -> typeof<unit>
 
     let Compile (na: NamedAssembly) (mb: ModuleBuilder) : unit =
@@ -420,7 +425,7 @@ module private Compilation =
                 na.Definitions
                 |> Seq.choose (function
                     | NamedContract (contract, name, mapping) ->
-                        if contract.AllowConstructor then Some name else None
+                        if contract.AllowsConstructor then Some name else None
                     | _ -> None)
             HashSet(defs).Contains
         let typeTable =

@@ -182,7 +182,7 @@ and pPropertySignature : P<S.PropertySignature> =
 and pFunctionSignature : P<S.FunctionSignature> =
     pIdentifier
     |> P.Map (fun a b c d -> S.FunctionSignature (a, b, c, d))
-    |> P.WithDefault (fun x y z -> S.FunctionCallSignature (x, y, z))
+//    |> P.WithDefault (fun x y z -> S.FunctionCallSignature (x, y, z))
     <*> pRequirement
     <*> pParameters
     <*> pReturnTypeAnnotation
@@ -307,8 +307,16 @@ let pEnumDeclaration : P<S.EnumDeclaration> =
 
 (* See 10.1.4 *)
 
-let pAmbientFunctionDeclaration : P<S.FunctionSignature> =
-    P.Between (pKeyword L.KeywordFunction) pSemi pFunctionSignature
+let pAmbientFunctionDeclaration : P<S.ModuleElement> =
+    P.Between (pKeyword L.KeywordFunction) pSemi
+        (
+            (S.CallElement <^> pCallSignature)
+            <|>
+            (S.FunctionElement <^> pFunctionSignature)
+        )
+
+let pAmbientCallDeclaration : P<S.CallSignature> =
+    P.Between (pKeyword L.KeywordFunction) pSemi pCallSignature
 
 let pAmbientVariableDeclaration : P<S.Parameter> =
     P.Between (pKeyword L.KeywordVar) pSemi pRequiredParameter
@@ -319,7 +327,7 @@ let pGenericDeclaration p =
 
 let pNonModuleElement : P<S.ModuleElement> =
     (S.ClassElement <^> pAmbientClassDeclaration)
-    <|> (S.FunctionElement <^> pAmbientFunctionDeclaration)
+    <|> pAmbientFunctionDeclaration
     <|> (S.VariableElement <^> pAmbientVariableDeclaration)
     <|> (S.InterfaceElement <^> pInterfaceDeclaration)
     <|> (S.EnumElement <^> pEnumDeclaration)

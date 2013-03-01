@@ -151,3 +151,11 @@ type NetChecker() =
     interface ISymbolChecker with
         override this.Check(name) = clean name
         override this.Join(ss) = String.concat "." ss
+
+module Syntax =
+    type Identifier = Symbol<SyntaxChecker>
+    type Name = Name<SyntaxChecker>
+
+module Net =
+    type Identifier = Symbol<NetChecker>
+    type Name = Name<NetChecker>

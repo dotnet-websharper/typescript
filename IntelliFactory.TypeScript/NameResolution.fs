@@ -1,141 +1,186 @@
-﻿/// Builds INameResolver by constructing a name trie.
+﻿/// Building upon the results of the Elaboration pass,
+/// constructs a table for resolving type-or-module names.
 module internal IntelliFactory.TypeScript.NameResolution
 
-module C = Contexts
-module D = TypeDiscovery
-module M = Memoization
+open System
+open System.Collections.Generic
+module E = Elaboration
+module L = Logging
+module M = Mappings
+module Mem = Memoization
 module S = Syntax
+module T = Tries
 
-type Resolution = option<D.DiscoveredType>
+type EntityKind =
+    | IsClass
+    | IsEnum
+    | IsInterface
+    | IsModule
+
+type Resolution =
+    {
+        CanonicalLocation : E.Location
+        EntityKind : EntityKind
+    }
 
 type INameResolver =
-    abstract ResolveName : C.Context * S.Name -> Resolution
-    abstract ResolveLocation : C.Location -> Resolution
+    abstract ResolveLocation : E.Location -> option<Resolution>
+    abstract ResolveName : E.Context * S.Name -> option<Resolution>
 
-[<Sealed>]
-type private NameResolver(resolveLocation: C.Location -> Resolution) =
-    let locationTable = M.Memoize (M.Options()) resolveLocation
-    interface INameResolver with
-        member this.ResolveLocation(loc) = locationTable.[loc]
-        member this.ResolveName(ctx: C.Context, name: S.Name) =
-            ctx.AncestorsAndSelf()
-            |> Seq.tryPick (fun ctx -> locationTable.[ctx.[name]])
+[<AutoOpen>]
+module private Implementation =
 
-[<Sealed>]
-type private RootNode(log: Logging.Log, pathTable: Mapping<string,Node>, entryTable: Mapping<S.Identifier,Entry>) =
+    let ParentContext (ctx: E.Context) : option<E.Context> =
+        match ctx with
+        | E.Global -> None
+        | E.At (E.Extern _) -> Some E.Global
+        | E.At (E.Local (scope, name)) ->
+            match name.Parent with
+            | None ->
+                match scope with
+                | E.ExternScope p -> Some (E.At (E.Extern p))
+                | E.GlobalScope -> Some E.Global
+            | Some p -> Some (E.At (E.Local (scope, p)))
 
-    /// Usese the path table to lookup a node.
-    let FindPath (path: string) : option<Node> =
-        pathTable.TryFind(path)
+    let rec ContextAncestors (ctx: E.Context) : list<E.Context> =
+        match ParentContext ctx with
+        | Some p -> ContextAncestorsAndSelf p
+        | None -> []
 
-    /// Usese the entry table to look up an entry.
-    let FindId (id: S.Identifier) : option<Entry> =
-        entryTable.TryFind(id)
+    and ContextAncestorsAndSelf (ctx: E.Context) : list<E.Context> =
+        ctx :: ContextAncestors ctx
 
-    /// Searching for X.Y.Z - recurse on the structure, trie-like.
-    let rec SearchAt(loc: C.Location) : option<Entry> =
+    type TKey =
+        | IdKey of S.Identifier
+        | PathKey of S.Path
+
+        override this.ToString() =
+            match this with
+            | IdKey s -> string s
+            | PathKey p -> string p
+
+    type TNode =
+        | TImportExternalNode of E.Location * S.Path
+        | TImportInternalNode of E.Location * E.Context * S.Name
+        | TSimpleNode of E.Location * EntityKind
+
+    type Trie = T.Trie<TKey,TNode>
+
+    let NodeLocation node =
+        match node with
+        | TImportExternalNode (loc, _)
+        | TImportInternalNode (loc, _, _)
+        | TSimpleNode (loc, _) -> loc
+
+    let LocationToKeyList (loc: E.Location) : list<TKey> =
         match loc with
-        | { Scope = C.Global; Name = Symbols.GlobalName id } ->
-            FindId(id)
-        | { Scope = s; Name = Symbols.LocalName (name, local) } ->
-            SearchAt { Scope = s; Name = name }
-            |> Option.bind (SearchFor(local))
-        | { Scope = C.External p; Name = Symbols.GlobalName id } ->
-            match FindPath(p) with
+        | E.Extern p -> [PathKey p]
+        | E.Local (scope, name) ->
+            let tail = List.map IdKey (name.List)
+            match scope with
+            | E.GlobalScope -> tail
+            | E.ExternScope p -> PathKey p :: tail
+
+    let RelativeLocation (ctx: E.Context) (name: S.Name) : E.Location =
+        match ctx with
+        | E.At (E.Extern p) -> E.Local (E.ExternScope p, name)
+        | E.At (E.Local (scope, p)) -> E.Local (scope, p.[name])
+        | E.Global -> E.Local (E.GlobalScope, name)
+
+    let NameVariants (ctx: E.Context) (name: S.Name) : list<E.Location> =
+        ContextAncestorsAndSelf ctx
+        |> List.map (fun ctx -> RelativeLocation ctx name)
+
+[<Sealed>]
+type private NameResolver(root: Tries.Trie<TKey,TNode>) =
+
+    /// Trie search procedure modified to account for import "symlinks."
+    let rec resolve (search: list<TKey>) (t: Trie) : option<Trie> =
+        match search with
+        | [] -> Some t
+        | x :: xs ->
+            match T.Lookup x t with
             | None -> None
-            | Some node -> node.FindId(id)
-//        | C.Extern path ->
-//            FindPath(path)
-//            |> Option.map NodeEntry
+            | Some tr ->
+                match T.Node tr with
+                | Some node ->
+                    match node with
+                    | TImportExternalNode (_, path) ->
+                        let m = resolve [PathKey path] root
+                        match m with
+                        | None -> None
+                        | Some m -> resolve xs m
+                    | TImportInternalNode (_, ctx, name) ->
+                        let m =
+                            NameVariants ctx name
+                            |> Seq.tryPick (fun loc ->
+                                resolve (LocationToKeyList loc) root)
+                        match m with
+                        | None -> None
+                        | Some m -> resolve xs m
+                    | TSimpleNode _ ->
+                        resolve xs tr
+                | None ->
+                    resolve xs tr
 
-    /// Searching for X in an entry - import/symlink resolution happens here.
-    and SearchFor (id: S.Identifier) (result: Entry) : option<Entry> =
-        match result with
-        | NodeEntry node ->
-            node.FindId(id)
-        | InternalImportEntry (ctx, name) ->
-            FindName(ctx)(name)
-            |> Option.bind (SearchFor(id))
-        | ExternalImportEntry path ->
-            FindPath(path)
-            |> Option.bind (NodeEntry >> SearchFor id)
+    let resolveLocation (loc: E.Location) : option<Resolution> =
+        match resolve (LocationToKeyList loc) root with
+        | None -> None
+        | Some tr ->
+            match T.Node tr with
+            | Some (TSimpleNode (loc, kind)) ->
+                Some {
+                    CanonicalLocation = loc
+                    EntityKind = kind
+                }
+            | _ -> None
 
-    /// Searching in X.Y.Z for A.B.C is equivalent to finding the first pick
-    /// of X.Y.Z.A.B.C, X.Y.A.B.C, X.A.B.C, A.B.C.
-    and FindName(ctx: C.Context)(name: S.Name) : option<Entry> =
-        ctx.AncestorsAndSelf()
-        |> Seq.tryPick (fun x -> SearchAt(x.[name]))
+    let resolveLocationTable =
+        Mem.Memoize (Mem.Options()) resolveLocation
 
-    member this.Resolve(loc) =
-        match SearchAt loc with
-        | Some (NodeEntry node) -> Some node.Type
-        | _ -> None
+    member this.ResolveLocation(loc: E.Location) : option<Resolution> =
+        resolveLocationTable.[loc]
 
-and [<Sealed>] private Node(table: Mapping<S.Identifier,Entry>, t: D.DiscoveredType) =
-    member this.FindId(id: S.Identifier) : option<Entry> = table.TryFind(id)
-    member this.Type = t
+    member this.ResolveName(ctx: E.Context, name: S.Name) : option<Resolution> =
+        NameVariants ctx name
+        |> Seq.tryPick this.ResolveLocation
 
-and private Entry =
-    | ExternalImportEntry of string
-    | InternalImportEntry of C.Context * S.Name
-    | NodeEntry of Node
+    interface INameResolver with
+        member this.ResolveLocation(loc) = this.ResolveLocation(loc)
+        member this.ResolveName(ctx, name) = this.ResolveName(ctx, name)
 
-let ConstructResolver (log: Logging.Log) (input: seq<D.DiscoveredEntity>) : INameResolver =
-    let (|Nested|_|) (c: C.Location) =
-        match c with
-        | { Scope = C.Global; Name = Symbols.GlobalName id } ->
-            Some (C.In C.Global, id)
-        | { Scope = C.Global; Name = Symbols.LocalName (name, local) } ->
-            Some (C.At { Scope = C.Global; Name = name }, local)
-        | _ ->
-            None
-    let byContext =
-        input
-        |> Seq.choose (fun ent ->
-            match ent.Key with
-            | D.TypeLike (Nested (ctx, id)) -> Some (ctx, (id, ent))
-            | _ -> None)
-        |> Seq.groupBy fst
-        |> Seq.map (fun (ctx, rest) ->
-            let entries =
-                rest
-                |> Seq.map snd
-                |> Mapping.New
-            (ctx, entries))
-        |> Mapping.New
-    let rec buildEntryTable (ctx: C.Context) =
-        match byContext.TryFind(ctx) with
-        | None -> Mapping()
-        | Some xs ->
-            xs
-            |> Mapping.Choose (fun (id: S.Identifier) entity ->
-                match entity with
-                | D.DiscoveredTypeEntity entity ->
-                    let nestedContext = C.At (ctx.[id])
-                    Node(buildEntryTable nestedContext, entity)
-                    |> NodeEntry
-                    |> Some
-                | D.DiscoveredImportExternal (loc, path) ->
-                    Some (ExternalImportEntry path)
-                | D.DiscoveredImportInternal (loc, ctx, name) ->
-                    Some (InternalImportEntry (ctx, name))
-                | D.DiscoveredGlobal _ ->
-                    None)
-
-    let entryTable = buildEntryTable (C.In C.Global)
-    let pathTable =
-        Seq.empty
-//        input
-//        |> Seq.choose (fun v ->
-//            match v.Key with
-//            | D.TypeLike { Scope = (C.External path as scope) } ->
-//                let ctx = C.In scope
-//                match v with
-//                | TypeDiscovery.DiscoveredTypeEntity x ->
-//                    let node = Node(buildEntryTable ctx, x)
-//                    Some (path, node)
-//                | _ -> None
-//            | _ -> None)
-        |> Mapping.New
-    let rootNode = RootNode(log, pathTable, entryTable)
-    NameResolver(rootNode.Resolve) :> INameResolver
+let ConstructResolver (trace: L.Log) (source: S.DeclarationSourceFile) : INameResolver =
+    let nodes =
+        let simple kind loc = TSimpleNode (loc, kind)
+        [|
+            for f in Elaboration.Elaborate trace source do
+                match f with
+                | E.ImportExternal (id, ctx, path) ->
+                    yield TImportExternalNode (ctx.[id], path)
+                | E.ImportInternal (id, ctx, name) ->
+                    yield TImportInternalNode (ctx.[id], ctx, name)
+                | E.IsClass loc ->
+                    yield simple IsClass loc
+                | E.IsEnum loc ->
+                    yield simple IsEnum loc
+                | E.IsInterface loc ->
+                    yield simple IsInterface loc
+                | E.IsModule loc ->
+                    yield simple IsModule loc
+                | E.PathIsDefined p ->
+                    yield simple IsModule (E.Extern p)
+                | _ -> ()
+        |]
+    let trieResult =
+        nodes
+        |> Seq.sortBy (function
+            /// Prioritize non-import nodes.
+            | TSimpleNode _ -> 0
+            | _ -> 1)
+        |> Seq.distinct
+        |> Seq.map (fun node ->
+            (LocationToKeyList (NodeLocation node), node))
+        |> T.Construct
+    for name in trieResult.Conflicts do
+        trace.Warning("Name conflict: {0}", String.concat "/" (Seq.map string name))
+    NameResolver(trieResult.Trie) :> INameResolver

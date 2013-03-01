@@ -11,6 +11,18 @@ open Microsoft.FSharp.Core.CompilerServices
 open Microsoft.FSharp.Data.TypeProviders
 open Microsoft.FSharp.Quotations
 
+module internal Assembly =
+
+    /// See http://stackoverflow.com/questions/10357273/type-provider-calling-another-dll-in-f
+    let InstallLoadHack () =
+        AppDomain.CurrentDomain.add_AssemblyResolve(fun _ args ->
+            let name = AssemblyName(args.Name)
+            let existingAssembly =
+                AppDomain.CurrentDomain.GetAssemblies()
+                |> Seq.tryFind(fun a ->
+                    AssemblyName.ReferenceMatchesDefinition(name, a.GetName()))
+            defaultArg existingAssembly null)
+
 [<Sealed>]
 [<TypeProvider>]
 type TypeProvider(config: TypeProviderConfig) =

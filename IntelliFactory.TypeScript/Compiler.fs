@@ -47,11 +47,9 @@ type Compiler() =
         let res = Parser.Parse log loc
         match res with
         | Parsed (syntax, pos, (), count) ->
-            let discovered = log.Time "TypeDiscovery" (fun () -> TypeDiscovery.Discover log syntax)
-            let resolver = log.Time "NameResolution" (fun () -> NameResolution.ConstructResolver log discovered)
             let entryPoint = ns.[tn]
-            let def = log.Time "Translation" (fun () -> Translation.Translate log resolver discovered entryPoint)
-            let res = log.Time "Assembling" (fun () -> A.Assemble log def)
+            let assembly = Adaptation.Adapt log entryPoint syntax
+            let res = A.Assemble log assembly
             Some {
                 new IGeneratedAssembly with
                     member this.Write(s) = res.Write(s)

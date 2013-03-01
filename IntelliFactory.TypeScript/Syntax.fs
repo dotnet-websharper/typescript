@@ -7,10 +7,9 @@ module internal IntelliFactory.TypeScript.Syntax
 open System
 open System.Collections.Generic
 open System.Threading
-module M = Memoization
 
-type Identifier = Symbols.Symbol<Symbols.SyntaxChecker>
-type Name = Symbols.Name<Symbols.SyntaxChecker>
+type Identifier = Symbols.Syntax.Identifier
+type Name = Symbols.Syntax.Name
 
 type Requirement =
     | Optional
@@ -53,7 +52,6 @@ and PropertySignature =
 (* See 3.5.3.5, 6.2 *)
 
 and FunctionSignature =
-    | FunctionCallSignature of Requirement * Parameters * Return
     | FunctionSignature of Identifier * Requirement * Parameters * Return
 
 and Parameter =
@@ -85,8 +83,10 @@ and InterfaceDeclaration =
 
 /// See 9.2.2
 and ImportDeclaration =
-    | ExternalImport of Identifier * string
+    | ExternalImport of Identifier * Path
     | InternalImport of Identifier * Name
+
+and Path = string
 
 (* See 10.1.3 *)
 
@@ -120,13 +120,14 @@ type InternalModule =
     }
 
 and ModuleElement =
-    | VariableElement of Parameter
-    | FunctionElement of FunctionSignature
+    | CallElement of CallSignature
     | ClassElement of AmbientClassDeclaration
+    | EnumElement of EnumDeclaration
+    | FunctionElement of FunctionSignature
+    | ImportElement of ImportDeclaration
     | InterfaceElement of InterfaceDeclaration
     | ModuleElement of InternalModule
-    | ImportElement of ImportDeclaration
-    | EnumElement of EnumDeclaration
+    | VariableElement of Parameter
 
 type ExternalModule =
     {

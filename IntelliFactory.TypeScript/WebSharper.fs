@@ -3,6 +3,7 @@ module IntelliFactory.TypeScript.WebSharper
 
 open System
 open IntelliFactory.WebSharper
+module Attr = Core.Attributes
 module A = IntelliFactory.WebSharper.Core.Attributes
 module J = IntelliFactory.JavaScript.Core
 module M = IntelliFactory.WebSharper.Core.Macros
@@ -11,8 +12,18 @@ module Q = IntelliFactory.WebSharper.Core.Quotations
 /// Represents TypeScript numbers.
 [<Sealed>]
 type Number =
-    class
-    end
+
+    [<Attr.Inline "$0">]
+    member this.Double = 0.
+
+    [<Attr.Inline "$0">]
+    member this.Int = 0
+
+    [<Attr.Inline "$0">]
+    static member Of(x: int) : Number = Unchecked.defaultof<Number>
+
+    [<Attr.Inline "$0">]
+    static member Of(x: double) : Number = Unchecked.defaultof<Number>
 
 /// Implements macros for compilation support.
 module Macros =
