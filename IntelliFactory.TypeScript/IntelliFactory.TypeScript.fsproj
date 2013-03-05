@@ -36,7 +36,10 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <OtherFlags>--staticlink:IntelliFactory.ParserCombinators</OtherFlags>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets"
+          Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')"/>
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets"
+          Condition="!Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')"/>
   <ItemGroup>
     <Compile Include="Memoization.fs" />
     <Compile Include="Mappings.fs" />
@@ -60,14 +63,21 @@
     <Compile Include="TypeProvider.fs" />
     <None Include="Test.fsx" />
     <None Include="Example.d.ts" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+      <HintPath>../packages/FSharp.Core.3.0.0.2/lib/net40/FSharp.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="FSharp.Data.TypeProviders, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+      <HintPath>../packages/FSharp.Data.TypeProviders.0.0.1/lib/net40/FSharp.Data.TypeProviders.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="FSharp.Data.TypeProviders, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="IntelliFactory.WebSharper.Core">
       <HintPath>../.build/lib/IntelliFactory.WebSharper.Core.dll</HintPath>
     </Reference>
@@ -78,4 +88,5 @@
       <HintPath>../.build/lib/IntelliFactory.ParserCombinators.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <Import Project="../.nuget/BuildMagic.targets" />
 </Project>
