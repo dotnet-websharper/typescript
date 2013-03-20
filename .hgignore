@@ -4,6 +4,6 @@
 Web/Scripts
 Web/bin
 ^\.build
-^\.nuget/bin
+^\.nuget
 ^packages
 user$

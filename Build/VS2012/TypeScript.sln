@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.Parsec", "..\..\IntelliFactory.Parsec\IntelliFactory.Parsec.fsproj", "{46BF2DE8-C657-4C86-97F3-89F677D8816E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{6DF6E294-0785-47E0-8AB9-3311307E1557}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Build.fsx = ..\..\Build.fsx
+		..\..\packages.config = ..\..\packages.config
+		..\..\README.md.txt = ..\..\README.md.txt
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug-v4.0|Any CPU = Debug-v4.0|Any CPU
+		Release-v4.0|Any CPU = Release-v4.0|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{46BF2DE8-C657-4C86-97F3-89F677D8816E}.Debug-v4.0|Any CPU.ActiveCfg = Debug-v4.0|Any CPU
+		{46BF2DE8-C657-4C86-97F3-89F677D8816E}.Debug-v4.0|Any CPU.Build.0 = Debug-v4.0|Any CPU
+		{46BF2DE8-C657-4C86-97F3-89F677D8816E}.Release-v4.0|Any CPU.ActiveCfg = Release-v4.0|Any CPU
+		{46BF2DE8-C657-4C86-97F3-89F677D8816E}.Release-v4.0|Any CPU.Build.0 = Release-v4.0|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

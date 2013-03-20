@@ -1,45 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{f5f2f4fa-524c-47f5-848a-86d8060b8d67}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <Name>IntelliFactory.TypeScript</Name>
-    <RootNamespace>$(Name)</RootNamespace>
-    <AssemblyName>$(Name)</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
     <KeyOriginatorFile>$(INTELLIFACTORY)/keys/IntelliFactory.snk</KeyOriginatorFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\$(Name).XML</DocumentationFile>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\$(Name).XML</DocumentationFile>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <OtherFlags>--staticlink:IntelliFactory.ParserCombinators</OtherFlags>
-  </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets"
-          Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')"/>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets"
-          Condition="!Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')"/>
   <ItemGroup>
     <Compile Include="Memoization.fs" />
     <Compile Include="Mappings.fs" />
@@ -65,28 +32,21 @@
     <None Include="Example.d.ts" />
     <None Include="packages.config" />
   </ItemGroup>
+  <Import Project="../.build/FSharp.targets" />
+  <PropertyGroup>
+    <WebSharperHome>../packages/WebSharper.2.5.4-alpha/tools/net40</WebSharperHome>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-      <HintPath>../packages/FSharp.Core.3.0.0.2/lib/net40/FSharp.Core.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.Data.TypeProviders, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
-      <HintPath>../packages/FSharp.Data.TypeProviders.0.0.1/lib/net40/FSharp.Data.TypeProviders.dll</HintPath>
+      <SpecificVersion>True</SpecificVersion>
     </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
     <Reference Include="IntelliFactory.WebSharper.Core">
-      <HintPath>../.build/lib/IntelliFactory.WebSharper.Core.dll</HintPath>
+      <HintPath>$(WebSharperHome)/IntelliFactory.WebSharper.Core.dll</HintPath>
     </Reference>
     <Reference Include="IntelliFactory.JavaScript">
-      <HintPath>../.build/lib/IntelliFactory.JavaScript.dll</HintPath>
+      <HintPath>$(WebSharperHome)/IntelliFactory.JavaScript.dll</HintPath>
     </Reference>
-    <Reference Include="IntelliFactory.ParserCombinators">
-      <HintPath>../.build/lib/IntelliFactory.ParserCombinators.dll</HintPath>
-    </Reference>
+    <Reference Include="IntelliFactory.Parsec" />
   </ItemGroup>
-  <Import Project="../.nuget/BuildMagic.targets" />
 </Project>
