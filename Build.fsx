@@ -20,8 +20,8 @@ module Config =
     let PackageId = "IntelliFactory.TypeScript"
     let Tags = ["WebSharper"; "TypeScript"; "F#"]
     let AssemblyVersion = Version "0.0.0.0"
-    let AssemblyFileVersion = Version "0.0.2.0"
-    let Version = "0.0.2-alpha"
+    let AssemblyFileVersion = Version "0.0.3.0"
+    let Version = "0.0.3-alpha"
     let Website = "http://bitbucket.org/IntelliFactory/typescript"
 
 let Metadata =
