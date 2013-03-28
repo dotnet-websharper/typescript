@@ -192,7 +192,7 @@ let lexRefPathComment : L<unit> =
     let ws = P.SkipMany (P.Satisfy Char.IsWhiteSpace)
     let w1 = P.SkipMany1 (P.Satisfy Char.IsWhiteSpace)
     let p =
-        (
+        P.Try (
             P.String "///"
             >*> ws
             >*> P.String "<reference"

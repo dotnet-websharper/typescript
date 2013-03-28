@@ -381,9 +381,6 @@ module private Compilation =
             let attrs = kind.MethodAttributes
             let ty = this.BuildType(ty)
             let par = Array.map this.BuildType (Seq.toArray par)
-
-            let smallName = id.Name
-
             let prop = tb.DefineProperty(id.Name, PropertyAttributes.None, ty, par)
             let gm = tb.DefineMethod("get_" + id.Name, attrs, ty, par)
             let sm = tb.DefineMethod("set_" + id.Name, attrs, typeof<Void>, Array.append par [| ty |])
