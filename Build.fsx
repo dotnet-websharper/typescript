@@ -1,107 +1,184 @@
-#r "packages/IntelliFactory.Build.0.0.6/lib/net40/IntelliFactory.Build.dll"
-#r "packages/FAKE.2.1.158-alpha/tools/FakeLib.dll"
+#if BOOT
+open System
+open System.Net
+open System.Security
+open Fake
+module FB = Fake.Boot
 
+let ReadPassword () =
+    let p = new SecureString()
+    Console.Write("Password: ")
+    let rec loop () =
+        let key = Console.ReadKey(true)
+        if key.Key = ConsoleKey.Enter then
+            Console.WriteLine()
+        else
+            p.AppendChar(key.KeyChar)
+            Console.Write("*")
+            loop ()
+    loop ()
+    p
+
+let ReadCredential () =
+    let user =
+        Console.Write("User: ")
+        Console.ReadLine()
+    let pw = ReadPassword ()
+    NetworkCredential(user, pw)
+
+let Credential =
+    lazy ReadCredential()
+
+let Credentials =
+    {
+        new ICredentials with
+            member this.GetCredential(uri: Uri, authType) =
+                Console.WriteLine("Authorizing to {0}: ", uri)
+                Credential.Value
+    }
+
+FB.Prepare {
+    FB.Config.Default __SOURCE_DIRECTORY__ with
+        NuGetSourceUrl = "https://www.myget.org/F/intellifactory/"
+        NuGetCredentials = Some Credentials
+        NuGetDependencies =
+            let ( ! ) x = FB.NuGetDependency.Create x
+            [
+                !"IntelliFactory.Build"
+                !"IntelliFactory.Parsec"
+                !"WebSharper"
+            ]
+}
+#else
+
+#load ".build/boot.fsx"
 open System
 open System.IO
 open Fake
-
 module B = IntelliFactory.Build.CommonBuildSetup
-module X = IntelliFactory.Build.XmlGenerator
+module F = IntelliFactory.Build.FileSystem
+module NG = IntelliFactory.Build.NuGetUtils
 
-let ( +/ ) a b = Path.Combine(a, b)
+let cfg = Fake.Boot.Config.Default "A"
+
 let RootDir = __SOURCE_DIRECTORY__
-let DotBuildDir = RootDir +/ ".build"
+let ( +/ ) a b = Path.Combine(a, b)
 let T x f = Target x f; x
 
 module Config =
     let Company = "IntelliFactory"
+    let PackageId = "IntelliFactory.TypeScript"
+    let VersionSuffix = "alpha"
+
     let Description = "WebSharper-compatible TypeScript analyzer and bindings compiler"
     let LicenseUrl = "http://websharper.com/licensing"
-    let PackageId = "IntelliFactory.TypeScript"
     let Tags = ["WebSharper"; "TypeScript"; "F#"]
+    let NuGetVersion = global.NuGet.SemanticVersion("0.0.4-alpha")
     let AssemblyVersion = Version "0.0.0.0"
-    let AssemblyFileVersion = Version "0.0.3.0"
-    let Version = "0.0.3-alpha"
     let Website = "http://bitbucket.org/IntelliFactory/typescript"
+
+    let FileVersion =
+        let v = NuGetVersion.Version
+        let bn = environVarOrNone "BUILD_NUMBER"
+        match bn with
+        | None -> v
+        | Some bn -> new Version(v.Major, v.Minor, v.Build, int bn)
 
 let Metadata =
     let m = B.Metadata.Create()
     m.Author <- Some Config.Company
     m.AssemblyVersion <- Some Config.AssemblyVersion
-    m.FileVersion <- Some Config.AssemblyFileVersion
+    m.FileVersion <- Some Config.FileVersion
     m.Description <- Some Config.Description
     m.Product <- Some Config.PackageId
     m.Website <- Some Config.Website
     m
 
-let Frameworks = [B.Net40]
+let Net40 : B.BuildConfiguration =
+    {
+        ConfigurationName = "Release"
+        Debug = false
+        FrameworkVersion = B.Net40
+        NuGetDependencies =
+            new global.NuGet.PackageDependencySet(B.Net40.ToFrameworkName(),
+                [new global.NuGet.PackageDependency("IntelliFactory.Parsec")])
+    }
+
+let Configs = [Net40]
+
+let DefProject name : B.Project =
+    {
+        BuildConfigurations = Configs
+        MSBuildProjectFilePath = Some (RootDir +/ name +/ (name + ".fsproj"))
+        Name = name
+    }
+
+let Projects =
+    [
+        DefProject "IntelliFactory.TypeScript"
+        DefProject "IntelliFactory.TypeScript.TypeProvider"
+    ]
 
 let Solution =
-    B.Solution.Standard __SOURCE_DIRECTORY__ Metadata [
-        B.Project.FSharp "IntelliFactory.TypeScript" Frameworks
-        B.Project.FSharp "IntelliFactory.TypeScript.TypeProvider" Frameworks
-    ]
+    B.Solution(RootDir, Metadata = Metadata, Projects = Projects)
 
-let BuildMain = T "BuildMain" Solution.Build
+let BuildMain = T "BuildMain" (fun () -> Solution.MSBuild() |> Async.RunSynchronously)
 let Build = T "Build" ignore
-let Clean = T "Clean" Solution.Clean
 
-let BuildNuSpecXml (name: string) (deps: seq<string * string>) =
-    let e n = X.Element.Create n
-    let ( -- ) (a: X.Element) (b: string) = X.Element.WithText b a
-    e "package" - [
-        e "metadata" - [
-            e "id" -- name
-            e "version" -- Config.Version
-            e "authors"-- Config.Company
-            e "owners"-- Config.Company
-            e "licenseUrl" -- Config.LicenseUrl
-            e "projectUrl"-- Config.Website
-            e "requireLicenseAcceptance" -- "false"
-            e "description" -- Config.Description
-            e "copyright" -- sprintf "Copyright (c) %O %s" DateTime.Now.Year Config.Company
-            e "tags" -- String.concat " " Config.Tags
-            e "dependencies" - [
-                e "group" - [
-                    for (k, v) in deps ->
-                        e "dependency" + ["id", k; "version", v]
-                ]
-            ]
-        ]
-        e "files" - [
-            for fw in Frameworks do
-                for ext in ["dll"; "xml"; "exe"] do
-                    let pat = sprintf @"..\%s\bin\Release-%s\%s.*%s" name (fw.GetMSBuildLiteral()) name ext
-                    let tgt = sprintf @"lib\%s" (fw.GetNuGetLiteral())
-                    yield e "file" + ["src", pat; "target", tgt]
-        ]
-    ]
+let Clean =
+    T "Clean" (fun () ->
+        Solution.MSBuild
+            {
+                Targets = ["Clean"]
+                BuildConfiguration = None
+                Properties = Map.empty
+            }
+        |> Async.RunSynchronously)
 
-let BuildNuGet =
-    T "BuildNuGet" <| fun () ->
-        ensureDirectory DotBuildDir
-        let nuSpec name = DotBuildDir +/ sprintf "%s.nuspec" name
-        let pkgs =
-            [
-                "IntelliFactory.TypeScript", []
-                "IntelliFactory.TypeScript.TypeProvider",
-                    [
-                        "IntelliFactory.TypeScript", Config.Version
-                    ]
-            ]
-        let nuGetExe = RootDir +/ ".nuget" +/ "NuGet.exe"
-        for (n, d) in pkgs do
-            let spec = nuSpec n
-            X.WriteFile (nuSpec n) (BuildNuSpecXml n d)
-            spec
-            |> NuGetPack (fun p ->
-                { p with
-                    OutputPath = DotBuildDir
-                    ToolPath = nuGetExe
-                    Version = Config.Version
-                    WorkingDir = DotBuildDir
-                })
+let ComputePublishedFiles (c: B.BuildConfiguration) =
+    let config = "Release-" + c.FrameworkVersion.GetMSBuildLiteral()
+    let prefix = RootDir +/ "*" +/ "bin" +/ config
+    (!+ (prefix +/ "*.dll")
+        ++ (prefix +/ "*.xml")
+        ++ (prefix +/ "*.exe")
+        ++ (prefix +/ "*.exe.config"))
+    |> Scan
+    |> Seq.distinctBy Path.GetFileName
+
+let NuGetPackageFile =
+    RootDir +/ ".build" +/ sprintf "%s.%O.nupkg" Config.PackageId Config.NuGetVersion
+
+let BuildNuGet = T "BuildNuGet" <| fun () ->
+    let content =
+        use out = new MemoryStream()
+        let builder = new NuGet.PackageBuilder()
+        builder.Id <- Config.PackageId
+        builder.Version <- Config.NuGetVersion
+        builder.Authors.Add(Config.Company) |> ignore
+        builder.Owners.Add(Config.Company) |> ignore
+        builder.LicenseUrl <- Uri(Config.LicenseUrl)
+        builder.ProjectUrl <- Uri(Config.Website)
+        builder.Copyright <- String.Format("Copyright (c) {0} {1}", DateTime.Now.Year, Config.Company)
+        builder.Description <- Config.Description
+        Config.Tags
+        |> Seq.iter (builder.Tags.Add >> ignore)
+        for c in Configs do
+            ComputePublishedFiles c
+            |> Seq.map (fun file ->
+                let ppf = global.NuGet.PhysicalPackageFile()
+                ppf.SourcePath <- file
+                ppf.TargetPath <- "tools" +/ c.FrameworkVersion.GetNuGetLiteral() +/ Path.GetFileName(file)
+                ppf)
+            |> Seq.distinctBy (fun file -> file.TargetPath)
+            |> Seq.iter builder.Files.Add
+        builder.Save(out)
+        F.Binary.FromBytes (out.ToArray())
+        |> F.BinaryContent
+    content.WriteFile(NuGetPackageFile)
+    tracefn "Written %s" NuGetPackageFile
 
 BuildMain ==> BuildNuGet ==> Build
 
 RunTargetOrDefault Build
+
+#endif

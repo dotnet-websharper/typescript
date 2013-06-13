@@ -17,7 +17,7 @@
     <ProjectReference Include="..\IntelliFactory.TypeScript\IntelliFactory.TypeScript.fsproj">
       <Name>IntelliFactory.TypeScript</Name>
       <Project>{f5f2f4fa-524c-47f5-848a-86d8060b8d67}</Project>
-      <Private>True</Private>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="../.build/FSharp.targets" />

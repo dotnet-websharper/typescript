@@ -30,19 +30,22 @@
     <Compile Include="Compiler.fs" />
     <None Include="Test.fsx" />
     <None Include="Example.d.ts" />
-    <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup>
-    <WebSharperHome>../packages/WebSharper.2.5.4-alpha/tools/net40</WebSharperHome>
+    <WebSharperHome>../packages/WebSharper.2.5.8-alpha/tools/net40</WebSharperHome>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
     <Reference Include="IntelliFactory.WebSharper.Core">
       <HintPath>$(WebSharperHome)/IntelliFactory.WebSharper.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="IntelliFactory.JavaScript">
       <HintPath>$(WebSharperHome)/IntelliFactory.JavaScript.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="IntelliFactory.Parsec" />
   </ItemGroup>
   <Import Project="../.build/FSharp.targets" />
 </Project>

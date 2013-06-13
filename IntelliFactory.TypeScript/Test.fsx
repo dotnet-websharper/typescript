@@ -1,4 +1,4 @@
-﻿#I "bin/Release"
+﻿#I "bin/Release-v4.0"
 #r "IntelliFactory.ParserCombinators"
 #r "IntelliFactory.TypeScript"
 
