@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Web
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{6DF6E294-0785-47E0-8AB9-3311307E1557}"
 	ProjectSection(SolutionItems) = preProject
+		.hgignore = .hgignore
 		Build.fsx = Build.fsx
 	EndProjectSection
 EndProject
