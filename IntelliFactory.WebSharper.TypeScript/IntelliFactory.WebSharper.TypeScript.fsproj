@@ -9,6 +9,7 @@
     <OutputPath>../build/net45</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CodeModel.fs" />
     <Compile Include="Algorithms.fsi" />
     <Compile Include="Algorithms.fs" />
     <Compile Include="Memoization.fsi" />
