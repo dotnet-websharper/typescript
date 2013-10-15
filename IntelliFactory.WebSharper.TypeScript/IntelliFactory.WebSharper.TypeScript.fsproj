@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <Name>IntelliFactory.WebSharper.TypeScript</Name>
+    <ProjectGuid>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+    <OutputPath>../build/net45</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Algorithms.fsi" />
+    <Compile Include="Algorithms.fs" />
+    <Compile Include="Memoization.fsi" />
+    <Compile Include="Memoization.fs" />
+    <Compile Include="Names.fsi" />
+    <Compile Include="Names.fs" />
+    <Compile Include="Lexer.fsi" />
+    <Compile Include="Lexer.fs" />
+    <Compile Include="Syntax.fsi" />
+    <Compile Include="Syntax.fs" />
+    <Compile Include="Parser.fsi" />
+    <Compile Include="Parser.fs" />
+    <Compile Include="FileSets.fsi" />
+    <Compile Include="FileSets.fs" />
+    <Compile Include="Resolution.fs" />
+    <None Include="LTest.fsx" />
+    <Content Include="Mappings.fs" />
+    <Content Include="Tries.fs" />
+    <Content Include="Symbols.fsi" />
+    <Content Include="Symbols.fs" />
+    <Content Include="SyntaxZ.fs" />
+    <Content Include="OldLexer.fsi" />
+    <Content Include="OldLexer.fs" />
+    <Content Include="Logging.fs" />
+    <Content Include="Resolver.fs" />
+    <Content Include="OldParser.fsi" />
+    <Content Include="OldParser.fs" />
+    <Content Include="Signatures.fs" />
+    <Content Include="Elaboration.fs" />
+    <Content Include="WebSharper.fs" />
+    <Content Include="Assembling.fs" />
+    <Content Include="NameResolution.fs" />
+    <Content Include="Adaptation.fs" />
+    <Content Include="Compiler.fs" />
+    <None Include="Test.fsx" />
+    <None Include="Example.d.ts" />
+  </ItemGroup>
+  <Import Project="../build/net45/$(Name).proj" />
+  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
+  <!--<Target Name="Build" />
+  <Target Name="Clean" />-->
+</Project>

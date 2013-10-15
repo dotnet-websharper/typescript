@@ -1,8 +1,6 @@
 ﻿/// Implements lexical analysis of TypeScript 0.8 declarations (.d.ts) files.
 module internal IntelliFactory.TypeScript.Lexer
 
-open IntelliFactory.Parsec
-module P = Parser
 module S = Syntax
 
 type Lexer<'T> = Parser<'T,string,char,list<string>,int>

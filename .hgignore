@@ -1,9 +1,11 @@
 (\.suo|\~)$
 (bin|obj)/(Debug|Release)
 /_
-Web/Scripts
-Web/bin
+^Web/Scripts/
+^Web/bin/
 ^\.build
 ^\.nuget
-^packages
+^packages/
+^tools/packages/
+^build/
 user$
