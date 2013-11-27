@@ -2,7 +2,7 @@
 
 open IntelliFactory.Build
 
-let bt = BuildTool().PackageId("IntelliFactory.TypeScript", "0.1")
+let bt = BuildTool().PackageId("WebSharper.TypeScript", "0.1")
 
 let lib1 =
     bt.FSharp.Library("IntelliFactory.TypeScript")
