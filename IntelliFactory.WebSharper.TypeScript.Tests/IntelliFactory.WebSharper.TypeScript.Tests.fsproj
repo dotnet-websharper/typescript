@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Name>IntelliFactory.WebSharper.TypeScript.Tests</Name>
+    <ProjectGuid>79dca5ee-e994-42ca-af93-1535f2063ad3</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <OutputPath>../build/net45</OutputPath>
+  </PropertyGroup>
+  <Import Project="../build/net45/$(Name).proj" />
+  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
+  <ItemGroup>
+    <Compile Include="TestUtility.fs" />
+    <Compile Include="UniplateTests.fs" />
+    <Compile Include="GraphColoringTests.fs" />
+    <Compile Include="DisambiguateTests.fs" />
+    <Compile Include="TestRunner.fs" />
+    <None Include="App.config" />
+  </ItemGroup>
+</Project>

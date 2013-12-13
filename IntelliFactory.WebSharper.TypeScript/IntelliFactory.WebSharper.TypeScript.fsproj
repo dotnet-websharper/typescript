@@ -8,47 +8,48 @@
     <TargetFrameworkProfile />
     <OutputPath>../build/net45</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="CodeModel.fs" />
-    <Compile Include="Algorithms.fsi" />
-    <Compile Include="Algorithms.fs" />
-    <Compile Include="Memoization.fsi" />
-    <Compile Include="Memoization.fs" />
-    <Compile Include="Names.fsi" />
-    <Compile Include="Names.fs" />
-    <Compile Include="Lexer.fsi" />
-    <Compile Include="Lexer.fs" />
-    <Compile Include="Syntax.fsi" />
-    <Compile Include="Syntax.fs" />
-    <Compile Include="Parser.fsi" />
-    <Compile Include="Parser.fs" />
-    <Compile Include="FileSets.fsi" />
-    <Compile Include="FileSets.fs" />
-    <Compile Include="Resolution.fs" />
-    <None Include="LTest.fsx" />
-    <Content Include="Mappings.fs" />
-    <Content Include="Tries.fs" />
-    <Content Include="Symbols.fsi" />
-    <Content Include="Symbols.fs" />
-    <Content Include="SyntaxZ.fs" />
-    <Content Include="OldLexer.fsi" />
-    <Content Include="OldLexer.fs" />
-    <Content Include="Logging.fs" />
-    <Content Include="Resolver.fs" />
-    <Content Include="OldParser.fsi" />
-    <Content Include="OldParser.fs" />
-    <Content Include="Signatures.fs" />
-    <Content Include="Elaboration.fs" />
-    <Content Include="WebSharper.fs" />
-    <Content Include="Assembling.fs" />
-    <Content Include="NameResolution.fs" />
-    <Content Include="Adaptation.fs" />
-    <Content Include="Compiler.fs" />
-    <None Include="Test.fsx" />
-    <None Include="Example.d.ts" />
-  </ItemGroup>
   <Import Project="../build/net45/$(Name).proj" />
   <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
-  <!--<Target Name="Build" />
-  <Target Name="Clean" />-->
+  <ItemGroup>
+    <Compile Include="Properties/AssemblyInfo.fs" />
+    <Compile Include="Utility/Abbreviations.fs" />
+    <Compile Include="Utility/GraphColoring.fsi" />
+    <Compile Include="Utility/GraphColoring.fs" />
+    <Compile Include="Utility/Disambiguate.fsi" />
+    <Compile Include="Utility/Disambiguate.fs" />
+    <Compile Include="Utility/Uniplate.fs" />
+    <Compile Include="Utility/Names.fsi" />
+    <Compile Include="Utility/Names.fs" />
+    <Compile Include="Utility/Memoization.fsi" />
+    <Compile Include="Utility/Memoization.fs" />
+    <Compile Include="Utility/TopSort.fsi" />
+    <Compile Include="Utility/TopSort.fs" />
+    <Compile Include="Parsing/ExternalModuleNames.fsi" />
+    <Compile Include="Parsing/ExternalModuleNames.fs" />
+    <Compile Include="Parsing/Lexer.fsi" />
+    <Compile Include="Parsing/Lexer.fs" />
+    <Compile Include="Parsing/Syntax.fsi" />
+    <Compile Include="Parsing/Syntax.fs" />
+    <Compile Include="Parsing/Parser.fsi" />
+    <Compile Include="Parsing/Parser.fs" />
+    <Compile Include="Analysis/SourceFileDependencies.fsi" />
+    <Compile Include="Analysis/SourceFileDependencies.fs" />
+    <Compile Include="Analysis/Contracts.fsi" />
+    <Compile Include="Analysis/Contracts.fs" />
+    <Compile Include="Analysis/Scopes.fsi" />
+    <Compile Include="Analysis/Scopes.fs" />
+    <Compile Include="Analysis/Analysis.fsi" />
+    <Compile Include="Analysis/Analysis.fs" />
+    <Compile Include="ReflectEmit.fsi" />
+    <Compile Include="ReflectEmit.fs" />
+    <None Include="TestREmit.fsx" />
+    <Compile Include="Mappings.fs" />
+    <Compile Include="Tries.fs" />
+    <Compile Include="Signatures.fs" />
+    <Compile Include="WebSharper.fs" />
+    <Compile Include="Assembling.fs" />
+    <Compile Include="NameResolution.fs" />
+    <Compile Include="Adaptation.fs" />
+    <Compile Include="Compiler.fs" />
+  </ItemGroup>
 </Project>
