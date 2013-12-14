@@ -78,6 +78,6 @@ module Names =
             | NP1 n
             | NP2 (_, n) -> n
 
-type internal Name = Names.Name
-type internal NamePath = Names.NamePath
-type internal NameTable<'T> = Dictionary<Name,'T>
+type Name = Names.Name
+type NamePath = Names.NamePath
+type NameTable<'T> = Dictionary<Name,'T>

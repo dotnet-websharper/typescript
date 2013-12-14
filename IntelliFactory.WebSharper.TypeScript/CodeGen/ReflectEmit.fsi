@@ -21,18 +21,12 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-open Fuchu
+open System
+open System.IO
+open System.Reflection
+open System.Reflection.Emit
 
-module internal TestRunner =
 
-    let AllTests =
-        testList "WebSharper.TypeScript" [
-            UniplateTests.AllTests
-            GraphColoringTests.AllTests
-            DisambiguateTests.AllTests
-        ]
-
-    [<EntryPoint>]
-    let Start args =
-        ReflectEmitTest.Run ()
-        0
+/// Implements assembly generation via System.Reflection.Emit.
+module internal ReflectEmit =
+    open System.Collections.Generic

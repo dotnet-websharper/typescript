@@ -14,6 +14,7 @@
     <Compile Include="UniplateTests.fs" />
     <Compile Include="GraphColoringTests.fs" />
     <Compile Include="DisambiguateTests.fs" />
+    <Compile Include="ReflectEmitTest.fs" />
     <Compile Include="TestRunner.fs" />
     <None Include="App.config" />
   </ItemGroup>

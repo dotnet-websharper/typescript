@@ -40,16 +40,11 @@
     <Compile Include="Analysis/Scopes.fs" />
     <Compile Include="Analysis/Analysis.fsi" />
     <Compile Include="Analysis/Analysis.fs" />
-    <Compile Include="ReflectEmit.fsi" />
-    <Compile Include="ReflectEmit.fs" />
+    <Compile Include="CodeGen/Naming.fsi" />
+    <Compile Include="CodeGen/Naming.fs" />
+    <Content Include="CodeGen/ReflectEmit.fsi" />
+    <Compile Include="CodeGen/ReflectEmit.fs" />
     <None Include="TestREmit.fsx" />
-    <Compile Include="Mappings.fs" />
-    <Compile Include="Tries.fs" />
-    <Compile Include="Signatures.fs" />
     <Compile Include="WebSharper.fs" />
-    <Compile Include="Assembling.fs" />
-    <Compile Include="NameResolution.fs" />
-    <Compile Include="Adaptation.fs" />
-    <Compile Include="Compiler.fs" />
   </ItemGroup>
 </Project>

@@ -86,3 +86,6 @@ module internal Contracts =
     type Parameter = Parameter<Type>
     type Property = Property<Type>
     type Signature = Signature<Type>
+
+    val (|MethodType|_|) : Type -> option<seq<Signature>>
+

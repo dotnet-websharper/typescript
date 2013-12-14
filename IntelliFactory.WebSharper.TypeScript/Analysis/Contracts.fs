@@ -172,7 +172,7 @@ module Contracts =
         | FunctionContract (dom, r) -> Some (dom, r)
         | _ -> None
 
-    let (|MethodType|) ty =
+    let (|MethodType|_|) ty =
         match ty with
         | TNamed (MethodContract res, []) -> Some res
         | _ -> None

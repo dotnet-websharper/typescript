@@ -21,18 +21,26 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-open Fuchu
+module A = Analysis
+module C = Contracts
 
-module internal TestRunner =
+/// Name disambiguation pass: given the output of Analysis phase,
+/// construct a trie that groups contracts and values into a module structure,
+/// and assigns CLR-sensible identifiers to all named entities.
+module internal Naming =
 
-    let AllTests =
-        testList "WebSharper.TypeScript" [
-            UniplateTests.AllTests
-            GraphColoringTests.AllTests
-            DisambiguateTests.AllTests
-        ]
+    [<Sealed>]
+    type Id =
+        member Text : string
 
-    [<EntryPoint>]
-    let Start args =
-        ReflectEmitTest.Run ()
-        0
+    [<Sealed>]
+    type Module<'T> =
+        member Id : 'T
+        member Modules : seq<Module<Id>>
+        member Contracts : seq<Id * C.Contract>
+        member Values : seq<Id * A.Value>
+
+    type NestedModule = Module<Id>
+    type TopModule = Module<unit>
+
+    val Do : A.Output -> TopModule

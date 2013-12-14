@@ -23,6 +23,7 @@ namespace IntelliFactory.WebSharper.TypeScript
 
 open System
 open System.Collections
+open System.Text
 
 [<AutoOpen>]
 module internal Abbreviations =
@@ -44,9 +45,11 @@ module internal Abbreviations =
     type IDictionary<'T1,'T2> = Generic.IDictionary<'T1,'T2>
     type IEqualityComparer<'T> = Generic.IEqualityComparer<'T>
     type IReadOnlyDictionary<'T1,'T2> = Generic.IReadOnlyDictionary<'T1,'T2>
+    type KeyValuePair<'T1,'T2> = Generic.KeyValuePair<'T1,'T2>
     type Object = System.Object
     type Path = IO.Path
     type PropertyInfo = Reflection.PropertyInfo
+    type Regex = RegularExpressions.Regex
     type SortedSet<'T> = Generic.SortedSet<'T>
     type StringWriter = IO.StringWriter
     type TextWriter = IO.TextWriter

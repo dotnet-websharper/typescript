@@ -22,7 +22,7 @@
 namespace IntelliFactory.WebSharper.TypeScript
 
 /// Implements memoization tables.
-module internal Memoization =
+module Memoization =
 
     type Options<'T1,'T2> =
         {
