@@ -30,9 +30,7 @@ module S = Shapes
 /// and assigns CLR-sensible identifiers to all named entities.
 module internal Naming =
 
-    [<Sealed>]
-    type Id =
-        member Text : string
+    type Id = Ident.Id
 
     type Parameter<'T> = S.Parameter<Id,'T>
     type Signature<'T> = S.Signature<Id,'T>

@@ -103,8 +103,10 @@ module internal ReflectEmit =
             let tB = parent.DefineNestedType(name.Text, Attr.Interface)
             st.ContractTable.Add(c, tB)
             st.CreatedTypes.Add(tB)
-            tB.DefineGenericParameters([| for n in c.Generics -> n.Text |])
-            |> ignore
+            let gs = [| for n in c.Generics -> n.Text |]
+            if gs.Length > 0 then
+                tB.DefineGenericParameters()
+                |> ignore
 
         member p.Module<'T>(tB, m: N.Module<'T>) =
             p.NoConstructor(tB)
@@ -314,23 +316,35 @@ module internal ReflectEmit =
                 let names =
                     List.toArray s.MethodGenerics
                     |> Array.map (fun n -> n.Text)
-                mB.DefineGenericParameters(names)
+                if names.Length > 0
+                    then mB.DefineGenericParameters(names)
+                    else Array.empty
             let ctx = { ctx with GenericsM = Array.map (fun x -> x :> Type) gs }
-            let paramTypes = ResizeArray()
-            s.Parameters
-            |> List.iteri (fun i p ->
-                match p with
-                | N.Parameter.Param (name, ty) ->
-                    mB.DefineParameter(i + 1, pA, name.Text) |> ignore
-                    paramTypes.Add(b.Type(ctx, ty))
-                | _ -> ())
+            let paramTypes =
+                [|
+                    for p in s.Parameters do
+                        match p with
+                        | N.Parameter.Param (_, ty) -> yield b.Type(ctx, ty)
+                        | _ -> ()
+                    match s.RestParameter with
+                    | Some (N.Parameter.Param (_, ty)) ->
+                        yield b.Type(ctx, ty)
+                    | _ -> ()
+                |]
+            mB.SetParameters(paramTypes)
+            do
+                let mutable i = 0
+                for p in s.Parameters do
+                    match p with
+                    | N.Parameter.Param (name, ty) ->
+                        i <- i + 1
+                        mB.DefineParameter(i, pA, name.Text) |> ignore
+                    | _ -> ()
             match s.RestParameter with
             | Some (N.Parameter.Param (name, ty)) ->
-                mB.DefineParameter(paramTypes.Count + 1, pA, name.Text)
+                mB.DefineParameter(paramTypes.Length + 1, pA, name.Text)
                 |> b.ParamArray
-                paramTypes.Add(b.Type(ctx, ty))
             | _ -> ()
-            mB.SetParameters(paramTypes.ToArray())
             match s.ReturnType with
             | None -> voidT
             | Some ty -> b.Type(ctx, ty)

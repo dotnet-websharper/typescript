@@ -41,12 +41,7 @@ module TypeScriptCompiler =
     let GetSourceFileSet cfg =
         {
             SFD.Configure(cfg.TypeScriptDeclarationFiles) with
-                Resolver =
-                    SFD.Resolver.Create
-                        (
-                            (fun _ -> failwith "Resolution not yet supported"), // TODO
-                            (fun _ -> failwith "Resolution not yet supported") // TODO)
-                        )
+                Resolver = SFD.Resolver.Failure // TODO
         }
         |> SFD.Resolve
 

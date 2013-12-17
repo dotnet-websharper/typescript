@@ -5,14 +5,15 @@
     <ProjectGuid>5f26e271-4dc6-4d7c-9e65-aba2d4a23dd5</ProjectGuid>
     <OutputType>Library</OutputType>
     <Name>IntelliFactory.WebSharper.TypeScript.TypeProvider</Name>
-    <KeyOriginatorFile>$(INTELLIFACTORY)/keys/IntelliFactory.snk</KeyOriginatorFile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <OutputPath>../build/net45</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="TypeProvider.fs" />
-  </ItemGroup>
   <Import Project="../build/net45/$(Name).proj" />
   <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
+  <ItemGroup>
+    <Compile Include="TypeProvider.fs" />
+    <None Include="TryTP.fsx" />
+    <None Include="Example1.fsx" />
+  </ItemGroup>
 </Project>

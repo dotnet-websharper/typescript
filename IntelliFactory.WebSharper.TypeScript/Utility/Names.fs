@@ -73,6 +73,15 @@ module Names =
         | NP1 of 'N
         | NP2 of NamePath<'N> * 'N
 
+        override np.ToString() =
+            use w = new StringWriter()
+            let rec loop n =
+                match n with
+                | NP1 x -> w.Write(string (box x))
+                | NP2 (x, y) -> loop x; w.Write('.'); w.Write(string (box y))
+            loop np
+            w.ToString()
+
         member np.Name =
             match np with
             | NP1 n
@@ -80,6 +89,11 @@ module Names =
 
     type NamePath =
         NamePath<Name>
+
+    let rec SubPath a b =
+        match b with
+        | NP1 b -> NP2 (a, b)
+        | NP2 (b1, b2) -> NP2 (SubPath a b1, b2)
 
 type Name = Names.Name
 type NamePath = Names.NamePath<Name>

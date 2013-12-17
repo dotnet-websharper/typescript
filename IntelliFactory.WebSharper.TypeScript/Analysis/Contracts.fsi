@@ -38,8 +38,14 @@ module internal Contracts =
 
     [<Sealed>]
     type Contract<'T> =
-        new : unit -> Contract<'T>
-
+        member AddByNumber : Name * 'T -> unit
+        member AddByString : Name * 'T -> unit
+        member AddCall : Signature<'T> -> unit
+        member AddNew : Signature<'T> -> unit
+        member AddOptProp : Name * 'T -> unit
+        member AddProp : Name * 'T -> unit
+        member Extend : 'T -> unit
+        member SetGenerics : list<Name> -> unit
         member ByString : option<Indexer<'T>>
         member ByNumber : option<Indexer<'T>>
         member Call : seq<Signature<'T>>
@@ -50,14 +56,10 @@ module internal Contracts =
         member New : seq<Signature<'T>>
         member Properties : IReadOnlyDictionary<Name,Property<'T>>
 
-        member AddByNumber : Name * 'T -> unit
-        member AddByString : Name * 'T -> unit
-        member AddCall : Signature<'T> -> unit
-        member AddNew : Signature<'T> -> unit
-        member AddOptProp : Name * 'T -> unit
-        member AddProp : Name * 'T -> unit
-        member Extend : 'T -> unit
-        member SetGenerics : list<Name> -> unit
+    and [<Sealed>] Contracts<'T> =
+        new : unit -> Contracts<'T>
+        member Contract : unit -> Contract<'T>
+        member All : seq<Contract<'T>>
 
     type Type =
         | TAny
@@ -71,6 +73,7 @@ module internal Contracts =
         | TString
 
     type Contract = Contract<Type>
+    type Contracts = Contracts<Type>
     type Indexer = Indexer<Type>
     type Parameter = Parameter<Type>
     type Property = Property<Type>

@@ -30,7 +30,7 @@ module internal Scopes =
 
     [<Sealed>]
     type Module =
-        new : unit -> Module
+        new : C.Contracts * option<NamePath> -> Module
         member InternalRoot : Root
         member ExportedContracts : NameTable<C.Contract>
         member ExportedModules : NameTable<Module>

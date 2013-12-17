@@ -28,106 +28,7 @@ module S = Shapes
 
 module Naming =
 
-    let ValidIdentifierRegex =
-        Regex(@"[_a-zA-Z][_a-zA-Z0-9]*")
-
-    let InvalidCharacterRegex =
-        Regex(@"[^_a-zA-Z0-9]")
-
-    let KeywordSet =
-        @"
-            Item New Call
-
-            abstract as base bool break byte case
-            catch char checked class const continue decimal
-            default delegate do double else enum event
-            explicit extern false finally fixed float for
-            foreach goto if implicit in int interface
-            internal is lock long namespace new null
-            object operator out override params private protected
-            public readonly ref return sbyte sealed short
-            sizeof stackalloc static string struct switch this
-            throw true try typeof uint ulong unchecked
-            unsafe ushort using virtual void volatile while
-
-            asr land lor lsl lsr lxor mod sig
-
-            abstract and as assert base begin class default delegate do
-            done downcast downto elif else end exception extern false
-            finally for fun function global if in inherit inline interface
-            internal lazy let let! match member module mutable namespace
-            new not null of open or override private public rec return return!
-            select static struct then to true try type upcast use use!
-            void when while with yield yield!
-
-            atomic break checked component const constraint constructor
-            continue eager event external fixed functor
-            include method mixin object parallel process protected pure
-            sealed tailcall trait virtual volatile
-        "
-        |> fun s ->
-            HashSet(Regex.Split(s, @"\s+"))
-
-    let IsKeyword k =
-        KeywordSet.Contains(k)
-        || k.StartsWith("get_")
-        || k.StartsWith("set_")
-
-    let TrailingNumbersRegex =
-        Regex("\d+$")
-
-    let Replace (p: Regex) (replace: string) (orig: string) =
-        p.Replace(orig, replace)
-
-    let MakeValidIdentifier name =
-        let r =
-            name
-            |> Replace InvalidCharacterRegex "_"
-            |> Replace TrailingNumbersRegex ""
-        if ValidIdentifierRegex.IsMatch(r) && not (IsKeyword name)
-            then name
-            else "_" + name
-
-    [<Sealed>]
-    type Id private (stem: string) =
-        let edges = HashSet<Id>()
-        let mutable color = 0
-
-        member n.Link(o: Id) =
-            if n.Stem = stem then
-                edges.Add(o) |> ignore
-                o.Link(n)
-
-        override n.ToString() =
-            match color with
-            | 0 -> stem
-            | k -> stem + string color
-
-        member val Color = 0 with get, set
-        member n.Edges = edges :> seq<_>
-        member n.Stem = stem
-        member n.Text = n.ToString()
-
-        static member Create(idSet: IdSet, name) =
-            let r = Id(MakeValidIdentifier name)
-            idSet.Ids.Add(r)
-            r
-
-        static member LinkAll(names: seq<Id>) =
-            let names = Seq.toArray names
-            for i in 0 .. names.Length - 1 do
-                for j in i + 1 .. names.Length - 1 do
-                    names.[i].Link(names.[j])
-    and IdSet =
-        {
-            Ids : ResizeArray<Id>
-        }
-
-        member x.Create(name) =
-            Id.Create(x, name)
-
-        static member Empty() =
-            { Ids = ResizeArray() }
+    type Id = Ident.Id
 
     let Memo f =
         M.Memoize M.Options.Default f
@@ -178,7 +79,7 @@ module Naming =
     type Signature = Signature<Type>
 
     [<Sealed>]
-    type ContractBuilder(idSet: IdSet) =
+    type ContractBuilder(idB: Ident.Builder) =
         let contractMap = Dictionary<C.Contract,Contract>()
 
         member p.Contract(c: C.Contract) : Contract =
@@ -192,14 +93,14 @@ module Naming =
                         ByString = Option.map p.Indexer c.ByString
                         Call = map p.Signature c.Call
                         Extends = map p.Type c.Extends
-                        Generics = [| for g in c.Generics -> idSet.Create(g.Text) |]
+                        Generics = [| for g in c.Generics -> idB.Id(g.Text) |]
                         Kind = p.Kind(c.Kind)
-                        Name = idSet.Create(c.HintPath.Name.Text)
+                        Name = idB.Id(c.HintPath.Name.Text)
                         New = map p.Signature c.New
                         Properties = map p.Property c.Properties
                     }
                 contractMap.Add(c, r)
-                Id.LinkAll <| seq {
+                idB.LinkAll <| seq {
                     yield r.Name
                     yield! r.Generics
                     for p in r.Properties do
@@ -209,7 +110,7 @@ module Naming =
 
         member p.Indexer(i: C.Indexer) : Indexer =
             {
-                IndexerName = idSet.Create(i.IndexerName.Text)
+                IndexerName = idB.Id(i.IndexerName.Text)
                 IndexerType = p.Type(i.IndexerType)
             }
 
@@ -223,15 +124,19 @@ module Naming =
 
         member p.Parameter(par: C.Parameter) : Parameter =
             match par with
-            | S.Param (name, t) -> Parameter.Param (idSet.Create(name.Text), p.Type(t))
-            | S.ParamConst (name, v) -> Parameter.ParamConst (idSet.Create(name.Text), v)
+            | S.Param (name, t) -> Parameter.Param (idB.Id(name.Text), p.Type(t))
+            | S.ParamConst (name, v) -> Parameter.ParamConst (idB.Id(name.Text), v)
 
-        member p.Property(kv: KeyValuePair<Name,C.Property>) : Property =
-            Unchecked.defaultof<_>
+        member p.Property(KeyValue (name, prop) : KeyValuePair<Name,C.Property>) : Property =
+            {
+                Id = idB.Id(name.Text)
+                Name = name
+                Type = p.Type(prop.Value)
+            }
 
         member p.Signature(s: C.Signature) : Signature =
             {
-                MethodGenerics = [for g in s.MethodGenerics -> idSet.Create(g.Text)]
+                MethodGenerics = [for g in s.MethodGenerics -> idB.Id(g.Text)]
                 Parameters = List.map p.Parameter s.Parameters
                 RestParameter = Option.map p.Parameter s.RestParameter
                 ReturnType = Option.map p.Type s.ReturnType
@@ -277,15 +182,15 @@ module Naming =
     type NestedModule = Module<Id>
     type TopModule = Module<unit>
 
-    let BuildModule (idSet: IdSet) (cB: ContractBuilder) (out: A.Output) =
+    let BuildModule (idB: Ident.Builder) (cB: ContractBuilder) (out: A.Output) =
         let topContainer = TopModule()
         let getContainer =
             MemoRec <| fun getContainer path ->
                 match path : Names.NamePath with
-                | Names.NP1 name -> Module(idSet.Create(name.Text))
+                | Names.NP1 name -> Module(idB.Id(name.Text))
                 | Names.NP2 (p, name) ->
                     let p = getContainer p
-                    let m = Module(idSet.Create(name.Text))
+                    let m = Module(idB.Id(name.Text))
                     p.ModuleList.Add(m)
                     m
         for c in out.Contracts do
@@ -300,14 +205,14 @@ module Naming =
                 | Names.NP1 name -> (topContainer.ValueList, name)
                 | Names.NP2 (path, name) -> (getContainer.[path].ValueList, name)
             values.Add {
-                Id = idSet.Create(name.Text)
+                Id = idB.Id(name.Text)
                 NamePath = v.NamePath
                 Type = cB.Type(v.Type)
             }
         topContainer
 
-    let rec LinkNames<'T> (path: list<Id>) (m: Module<'T>) : unit =
-        Id.LinkAll <| seq {
+    let rec LinkNames<'T> (idB: Ident.Builder) (path: list<Id>) (m: Module<'T>) : unit =
+        idB.LinkAll <| seq {
             yield! path
             for m in m.Modules do
                 yield m.Id
@@ -317,29 +222,15 @@ module Naming =
                 yield v.Id
         }
         for sM in m.Modules do
-            LinkNames (sM.Id :: path) sM
-
-    let GraphColoring (ids: IdSet) =
-        GraphColoring.ColorGraph {
-            new GraphColoring.IConfig<Id> with
-                member cfg.Edges(id) = id.Edges
-                member cfg.GetColor(id) = id.Color
-                member cfg.SetColor(id, c) = id.Color <- c
-                member cfg.Nodes = ids.Ids :> seq<_>
-        }
+            LinkNames idB (sM.Id :: path) sM
 
     let Do (out: A.Output) =
-        let idSet = IdSet.Empty()
-        let cB = ContractBuilder.Create(idSet, out.Contracts)
-        let m = BuildModule idSet cB out
-        LinkNames [] m
-        GraphColoring idSet
+        let idB = Ident.Builder.Create()
+        let cB = ContractBuilder.Create(idB, out.Contracts)
+        let m = BuildModule idB cB out
+        LinkNames idB [] m
+        idB.Disambiguate()
         m
-
-    let (|MethodContract|_|) (c: Contract) =
-        match c.Kind with
-        | S.MethodContract -> Some c.Call
-        | _ -> None
 
     let (|FunContract|_|) (c: Contract) =
         match c.Kind with
@@ -348,7 +239,11 @@ module Naming =
 
     let (|MethodType|_|) ty =
         match ty with
-        | TNamed (MethodContract res, []) -> Some res
+        | TNamed (con, []) ->
+            match con.Kind with
+            | S.FunctionContract _
+            | S.MethodContract -> Some con.Call
+            | _ -> None
         | _ -> None
 
     let (|FunType|_|) ty =

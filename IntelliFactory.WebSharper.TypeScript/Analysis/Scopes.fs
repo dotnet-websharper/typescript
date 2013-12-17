@@ -63,14 +63,16 @@ module Scopes =
             on init
 
     [<Sealed>]
-    type Module() =
-        member val InternalRoot = Root()
+    type Module(cs, hintPath) =
+        member val InternalRoot = Root(cs, hintPath)
         member val ExportedContracts = T<C.Contract>()
         member val ExportedModules = T<Module>()
         member val ExportedValues = T<C.Type>()
 
-    and [<Sealed>] Root() =
+    and [<Sealed>] Root(cs: C.Contracts, hintPath: option<NamePath>) =
         member val ContractRegistry = Dictionary<NamePath,C.Contract>()
+        member root.Contracts = cs
+        member root.HintPath = hintPath
         member val ModuleRegistry = Dictionary<NamePath,Module>()
         member val ScopeRegistry = Dictionary<NamePath,Scope>()
 
@@ -87,13 +89,22 @@ module Scopes =
             r
         | Some r -> r
 
+    let SubPath (root: Root) path =
+        match root.HintPath with
+        | None -> path
+        | Some bP -> Names.SubPath bP path
+
     type Root with
 
         member root.GetOrCreateContract(path) =
-            getOrCreate root.ContractRegistry path (fun () -> C.Contract())
+            getOrCreate root.ContractRegistry path (fun () ->
+                let c = root.Contracts.Contract()
+                c.HintPath <- SubPath root path
+                c)
 
         member root.GetOrCreateModule(path) =
-            getOrCreate root.ModuleRegistry path (fun () -> Module())
+            getOrCreate root.ModuleRegistry path (fun () ->
+                Module(root.Contracts, Some (SubPath root path)))
 
         member root.GetOrCreateScope(path) =
             getOrCreate root.ScopeRegistry path (fun () -> Scope())

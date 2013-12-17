@@ -202,7 +202,7 @@ module SourceFileDependencies =
             let info = FileInfo(path)
             if not info.Exists then
                 warn (Missing path) state
-            elif info.Extension <> ".d.ts" then
+            elif info.FullName.EndsWith(".d.ts") |> not then
                 warn (UnknownFileType path) state
             else
                 match P.ParseFile state.NameBuilder path with

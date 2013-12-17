@@ -13,6 +13,11 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.T
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.TypeProvider", "IntelliFactory.WebSharper.TypeScript.TypeProvider\IntelliFactory.WebSharper.TypeScript.TypeProvider.fsproj", "{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "typescript", "typescript", "{2956584D-C3CC-453E-93DC-E9448E72012E}"
+	ProjectSection(SolutionItems) = preProject
+		typescript\example1.d.ts = typescript\example1.d.ts
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

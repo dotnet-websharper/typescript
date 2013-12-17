@@ -108,6 +108,17 @@ module Contracts =
         member val HintPath = defaultHintPath with get, set
         member c.New = ctors :> seq<_>
 
+    and [<Sealed>] Contracts<'T>() =
+        let contracts = ResizeArray<Contract<'T>>()
+
+        member x.Contract() =
+            let c = Contract()
+            contracts.Add(c)
+            c
+
+        member x.All =
+            contracts :> seq<Contract<'T>>
+
     type Type =
         | TAny
         | TArray of Type
@@ -120,6 +131,7 @@ module Contracts =
         | TString
 
     type Contract = Contract<Type>
+    type Contracts = Contracts<Type>
     type Indexer = Indexer<Type>
     type Parameter = Parameter<Type>
     type Property = Property<Type>

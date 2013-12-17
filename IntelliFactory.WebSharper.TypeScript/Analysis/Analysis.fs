@@ -31,6 +31,26 @@ module E = ExternalModuleNames
 /// and construct scope structure for later name resolution.
 module internal Analysis =
 
+    [<Sealed>]
+    type Value(path: NamePath, ty: C.Type) =
+        member v.NamePath = path
+        member v.Type = ty
+
+    type State =
+        {
+            Contracts : C.Contracts
+            Values : ResizeArray<Value>
+        }
+
+        static member Create() =
+            {
+                Contracts = C.Contracts()
+                Values = ResizeArray()
+            }
+
+        member st.Contract() =
+            st.Contracts.Contract()
+
     type Context =
         {
             CurrentModule : Sc.Module
@@ -50,15 +70,15 @@ module internal Analysis =
             | Some p -> Names.NP2 (p, n)
 
     [<Sealed>]
-    type Visit(ctx: Context) as self =
+    type Visit(st: State, ctx: Context) as self =
 
         let ( ! ) t = self.Type(t)
 
         member this.Anonynmous() =
-            let c = C.Contract()
+            let c = st.Contract()
             match ctx.Path with
             | None -> ()
-            | Some p -> c.HintPath <- Names.NP2 (p, c.HintPath.Name)
+            | Some p -> c.HintPath <- Names.NP2 (p, c.HintPath.Name (* Anon *))
             c
 
         member this.BuildContract(c: C.Contract, ms: list<_>) =
@@ -81,7 +101,7 @@ module internal Analysis =
                 | [] -> this
                 | ps ->
                     let gs = List.map this.TypeParam tps
-                    Visit({ctx with GenericsM = Seq.toArray gs })
+                    Visit(st, {ctx with GenericsM = Seq.toArray gs })
             let retTy =
                 match ret with
                 | S.TVoid -> None
@@ -125,13 +145,14 @@ module internal Analysis =
                 | S.Export -> (ctx.ExportedRoot, ctx.SubPath i.InterfaceName)
                 | S.NoExport -> (ctx.LocalRoot, Names.NP1 i.InterfaceName)
             let c = root.GetOrCreateContract(path)
+
             let vis =
                 match i.InterfaceTypeParameters with
                 | [] -> this
                 | ps ->
                     let tps = List.map this.TypeParam ps
                     c.SetGenerics(tps)
-                    Visit({ ctx with Generics = Seq.toArray tps })
+                    Visit(st, { ctx with Generics = Seq.toArray tps })
             vis.BuildContract(c, i.InterfaceBody)
             for r in i.InterfaceExtends do
                 c.Extend(this.TypeRef(r))
@@ -166,7 +187,7 @@ module internal Analysis =
                     Path = Some path
                     ScopeChain = ctx.ScopeChain.Add(expScope).Add(locScope)
                 }
-            let v = Visit(subContext)
+            let v = Visit(st, subContext)
             for el in body.List do
                 v.ModuleElement(el)
             // TODO: instantiated modules bind a variable
@@ -184,7 +205,28 @@ module internal Analysis =
             | S.AME7 (em, imp) -> this.Import(em, imp)
 
         member this.SourceFile(sf: D.SourceFile) =
-            () // TODO
+            // TODO: recognize if this is an external module or a normal file?
+            // For now, only deal with normal files.
+            let decls =
+                match sf.Syntax with
+                | S.DSF decls -> decls
+            for decl in decls.List do
+                match decl with
+                | S.DE1 _ -> () // export assignments not possible in normal source files
+                | S.DE2 (_, i) -> // no export modifier in normal source files
+                    this.Interface(S.Export, i)
+                | S.DE3 (_, imp) -> // no export modifier in normal source files
+                    this.Import(S.Export, imp)
+                | S.DE4 _ -> () // TODO: external imports are not yet suported
+                | S.DE5 (_, decl) -> // no export modifier in normal source files
+                    let em = S.Export
+                    match decl with
+                    | S.AD1 (S.AVD (id, ty)) -> this.Var(em, id, ty)
+                    | S.AD2 (S.AFD (id, s)) -> this.Var(em, id, S.TObject [S.TM2 s])
+                    | S.AD3 c -> this.Class(c)
+                    | S.AD4 e -> this.Enum(e)
+                    | S.AD5 m -> this.Module(em, m)
+                    | S.AD6 _ -> () // TODO: ambient external modules
 
         member this.Type(t) =
             match t with
@@ -225,10 +267,11 @@ module internal Analysis =
             match exp with
             | S.Export -> ctx.CurrentModule.ExportedValues.Add(id, !ty)
             | _ -> ()
+            // TODO: create/record a Value
             // TODO: record more information so that type-queries may work.
 
-    let createGlobalContext () =
-        let globalModule = Sc.Module()
+    let createGlobalContext st =
+        let globalModule = Sc.Module(st.Contracts, None)
         let globalRoot = globalModule.InternalRoot
         let globalScope = Sc.Scope()
         {
@@ -243,11 +286,6 @@ module internal Analysis =
             ScopeChain = Sc.ScopeChain().Add(globalScope)
         }
 
-    [<Sealed>]
-    type Value(path: NamePath, ty: C.Type) =
-        member v.NamePath = path
-        member v.Type = ty
-
     type Input =
         {
             SourceFiles : seq<D.SourceFile>
@@ -260,13 +298,12 @@ module internal Analysis =
         }
 
     let Analyze input =
-        let ctx = createGlobalContext ()
-        let vis = Visit(ctx)
+        let st = State.Create()
+        let ctx = createGlobalContext st
+        let vis = Visit(st, ctx)
         for sF in input.SourceFiles do
             vis.SourceFile(sF)
-        // TODO: force all type resolution suspentions..
-        // TODO: actually collect values and contracts.
         {
-            Contracts = Seq.empty
-            Values = Seq.empty
+            Contracts = st.Contracts.All
+            Values = st.Values.ToArray() :> seq<_>
         }

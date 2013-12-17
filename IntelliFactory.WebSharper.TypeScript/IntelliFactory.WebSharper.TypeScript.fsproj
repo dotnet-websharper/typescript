@@ -39,6 +39,8 @@
     <Compile Include="Analysis/Scopes.fs" />
     <Compile Include="Analysis/Analysis.fsi" />
     <Compile Include="Analysis/Analysis.fs" />
+    <Compile Include="CodeGen/Ident.fsi" />
+    <Compile Include="CodeGen/Ident.fs" />
     <Compile Include="CodeGen/Naming.fsi" />
     <Compile Include="CodeGen/Naming.fs" />
     <Compile Include="CodeGen/ReflectEmit.fsi" />

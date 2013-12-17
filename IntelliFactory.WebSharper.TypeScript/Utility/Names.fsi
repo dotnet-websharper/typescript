@@ -40,6 +40,9 @@ module internal Names =
         /// The outermost name.
         member Name : 'N
 
+    /// Joins paths, for example combines A.B.C and D.E.F into A.B.C.D.E.F.
+    val SubPath : NamePath<'N> -> NamePath<'N> -> NamePath<'N>
+
     /// An abbreviation for the common case.
     type NamePath = NamePath<Name>
 
