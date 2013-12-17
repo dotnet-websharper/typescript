@@ -15,8 +15,6 @@
     <Compile Include="Utility/Abbreviations.fs" />
     <Compile Include="Utility/GraphColoring.fsi" />
     <Compile Include="Utility/GraphColoring.fs" />
-    <Compile Include="Utility/Disambiguate.fsi" />
-    <Compile Include="Utility/Disambiguate.fs" />
     <Compile Include="Utility/Uniplate.fs" />
     <Compile Include="Utility/Names.fsi" />
     <Compile Include="Utility/Names.fs" />

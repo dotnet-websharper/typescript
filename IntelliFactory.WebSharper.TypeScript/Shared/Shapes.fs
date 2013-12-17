@@ -41,3 +41,29 @@ module internal Shapes =
             IndexerName : 'N
             IndexerType : 'T
         }
+
+    type ContractKind<'T> =
+        | EmptyContract
+        | FunctionContract of list<'T> * option<'T>
+        | MethodContract
+        | ObjectContract
+
+    let IsSimpleParameter p =
+        match p with
+        | Param _ -> true
+        | _ -> false
+
+    let IsFunctionSignature (si: Signature<_,_>) =
+        si.RestParameter.IsNone
+        && si.MethodGenerics.IsEmpty
+        && List.forall IsSimpleParameter si.Parameters
+
+    let GetParameterType p =
+        match p with
+        | Param (_, t) -> Some t
+        | _ -> None
+
+    let (|FunctionSignature|_|) (si: Signature<_,_>) =
+        if IsFunctionSignature si then
+            Some (List.choose GetParameterType si.Parameters, si.ReturnType)
+        else None

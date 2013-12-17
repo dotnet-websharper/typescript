@@ -30,35 +30,35 @@ open IntelliFactory.WebSharper.TypeScript
 module C = Contracts
 module R = ReflectEmit
 
-module internal ReflectEmitTest =
-
-    let container xs : R.CodeContainer =
-        { Nodes = xs }
-
-    let nB = Names.NameBuilder.Create()
-
-    let example =
-        let c1 =
-            let c1 = C.Contract()
-            c1.AddProp(nB.CreateName("Name"), C.TString)
-            c1
-        container [
-            "NumberProp", R.ValueNode C.TNumber
-            "StingProp", R.ValueNode C.TString
-            "C1Prop", R.ValueNode (C.TNamed (c1, []))
-            "F", R.ContainerNode <| container [
-                    "NumArrayProp", R.ValueNode (C.TArray C.TNumber)
-                    "C1", R.ContractNode c1
-                 ]
-        ]
-
-    let Run () =
-        let p = "Test.dll"
-        let b =
-            R.Construct {
-                AssemblyName = "A"
-                CodeContainer = example
-                TopLevelClassName = "A.Main"
-            }
-        File.WriteAllBytes(p, b)
-        printfn "Wrote %s" (Path.GetFullPath p)
+//module internal ReflectEmitTest =
+//
+//    let container xs : R.CodeContainer =
+//        { Nodes = xs }
+//
+//    let nB = Names.NameBuilder.Create()
+//
+//    let example =
+//        let c1 =
+//            let c1 = C.Contract()
+//            c1.AddProp(nB.CreateName("Name"), C.TString)
+//            c1
+//        container [
+//            "NumberProp", R.ValueNode C.TNumber
+//            "StingProp", R.ValueNode C.TString
+//            "C1Prop", R.ValueNode (C.TNamed (c1, []))
+//            "F", R.ContainerNode <| container [
+//                    "NumArrayProp", R.ValueNode (C.TArray C.TNumber)
+//                    "C1", R.ContractNode c1
+//                 ]
+//        ]
+//
+//    let Run () =
+//        let p = "Test.dll"
+//        let b =
+//            R.Construct {
+//                AssemblyName = "A"
+//                CodeContainer = example
+//                TopLevelClassName = "A.Main"
+//            }
+//        File.WriteAllBytes(p, b)
+//        printfn "Wrote %s" (Path.GetFullPath p)

@@ -4,21 +4,15 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>5f26e271-4dc6-4d7c-9e65-aba2d4a23dd5</ProjectGuid>
     <OutputType>Library</OutputType>
-    <Name>IntelliFactory.TypeScript.TypeProvider</Name>
+    <Name>IntelliFactory.WebSharper.TypeScript.TypeProvider</Name>
     <KeyOriginatorFile>$(INTELLIFACTORY)/keys/IntelliFactory.snk</KeyOriginatorFile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+    <OutputPath>../build/net45</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="TypeProvider.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FSharp.Data.TypeProviders" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\IntelliFactory.TypeScript\IntelliFactory.TypeScript.fsproj">
-      <Name>IntelliFactory.TypeScript</Name>
-      <Project>{f5f2f4fa-524c-47f5-848a-86d8060b8d67}</Project>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="../.build/FSharp.targets" />
+  <Import Project="../build/net45/$(Name).proj" />
+  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
 </Project>

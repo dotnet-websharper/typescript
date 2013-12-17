@@ -95,8 +95,8 @@ module internal Analysis =
                 }
             let convP p =
                 match p with
-                | S.P1 (name, t) -> C.Param (name, !t)
-                | S.P2 (name, v) -> C.ParamConst (name, v)
+                | S.P1 (name, t) -> C.Parameter.Param (name, !t)
+                | S.P2 (name, v) -> C.Parameter.ParamConst (name, v)
             let makeSigs ps opts rest =
                 let req = List.map convP ps
                 let opt = List.map convP opts

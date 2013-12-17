@@ -11,6 +11,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.T
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.Tests", "IntelliFactory.WebSharper.TypeScript.Tests\IntelliFactory.WebSharper.TypeScript.Tests.fsproj", "{79DCA5EE-E994-42CA-AF93-1535F2063AD3}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.TypeProvider", "IntelliFactory.WebSharper.TypeScript.TypeProvider\IntelliFactory.WebSharper.TypeScript.TypeProvider.fsproj", "{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{79DCA5EE-E994-42CA-AF93-1535F2063AD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79DCA5EE-E994-42CA-AF93-1535F2063AD3}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{79DCA5EE-E994-42CA-AF93-1535F2063AD3}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

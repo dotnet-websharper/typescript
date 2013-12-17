@@ -23,66 +23,6 @@ namespace IntelliFactory.WebSharper.TypeScript
 
 module GraphColoring =
 
-    [<Sealed>]
-    type Node<'T>(v: 'T) =
-        member val Color = 0 with get, set
-        member val Edges = ResizeArray<Node<'T>>()
-        member n.Label =  v
-
-    [<Sealed>]
-    type Graph<'T>(nodes: seq<Node<'T>>, edges: seq<Node<'T> * Node<'T>>) =
-
-        // Cached edges with duplicates removed.
-        let edges = Seq.toArray (Seq.distinct edges)
-
-        // All nodes (from nodes and edges) with duplicates removed.
-        let nodes =
-            seq {
-                yield! nodes
-                for (a, b) in edges do
-                    yield a
-                    yield b
-            }
-            |> Seq.distinct
-            |> Seq.toArray
-
-        member g.Edges = edges
-        member g.Nodes = nodes
-
-    [<Sealed>]
-    type Coloring<'T>(map: Dictionary<Node<'T>, int>) =
-        member c.Item with get x = map.[x]
-
-    let Label (n: Node<'T>) =
-        n.Label
-
-    let Color (c: Coloring<'T>) node =
-        c.[node]
-
-    let CreateNode value =
-        Node(value)
-
-    let CreateGraph nodes edges =
-        Graph(nodes, edges)
-
-    /// Links one node to another.
-    let LinkTo (a: Node<'T>) (b: Node<'T>) =
-        if a.Edges.Contains(b) |> not then
-            a.Edges.Add(b)
-
-    /// Links two nodes in both directions.
-    let Link a b =
-        LinkTo a b
-        LinkTo b a
-
-    /// Clears all state in the graph, resets edges.
-    let Reset (graph: Graph<'T>) =
-        for node in graph.Nodes do
-            node.Color <- 0
-            node.Edges.Clear()
-        for (a, b) in graph.Edges do
-            Link a b
-
     /// Finds the smallest non-negative int
     /// that is not contained in the sorted input array.
     let PickSmallestUnique input =
@@ -103,23 +43,27 @@ module GraphColoring =
         set.CopyTo(r)
         r
 
+    type IConfig<'T> =
+        abstract Edges : 'T -> seq<'T>
+        abstract GetColor : 'T -> int
+        abstract SetColor : 'T * int -> unit
+        abstract Nodes : seq<'T>
+
     /// Picks the smallest possible color that is possible
     /// given current node edges.
-    let PickColor (node: Node<'T>) =
-        seq { for n in node.Edges -> n.Color }
+    let PickColor (config: IConfig<'T>) (node: 'T) =
+        config.Edges(node)
+        |> Seq.map config.GetColor
         |> DistinctSorted
         |> PickSmallestUnique
 
-    let ComputeColoring g =
-        let d = Dictionary()
-        // Clear the state from previous runs if any
-        Reset g
+    let ColorGraph (config: IConfig<'T>) =
         // Worst case: every node gets its index as color
-        g.Nodes |> Seq.iteri (fun i node -> node.Color <- i)
+        config.Nodes
+        |> Seq.iteri (fun i node ->
+            config.SetColor(node, i))
         // Improvement: for each node, pick smallest color
         // that is not one of the neighbor colors.
-        for node in g.Nodes do
-            let c = PickColor node
-            node.Color <- c
-            d.[node] <- c
-        Coloring(d)
+        for node in config.Nodes do
+            let c = PickColor config node
+            config.SetColor(node, c)

@@ -29,10 +29,10 @@ module internal TestRunner =
         testList "WebSharper.TypeScript" [
             UniplateTests.AllTests
             GraphColoringTests.AllTests
-            DisambiguateTests.AllTests
         ]
 
     [<EntryPoint>]
     let Start args =
-        ReflectEmitTest.Run ()
-        0
+        //ReflectEmitTest.Run ()
+        // 0
+        defaultMain AllTests args

@@ -24,6 +24,7 @@ namespace IntelliFactory.WebSharper.TypeScript
 module A = Analysis
 module C = Contracts
 module M = Memoization
+module S = Shapes
 
 module Naming =
 
@@ -87,13 +88,6 @@ module Naming =
             then name
             else "_" + name
 
-    type IGraphNode =
-        abstract Color : int with get, set
-        abstract Edges : seq<IGraphNode>
-
-    type IGraphColorer =
-        abstract Colorize : seq<IGraphNode> -> unit
-
     [<Sealed>]
     type Id private (stem: string) =
         let edges = HashSet<Id>()
@@ -110,21 +104,30 @@ module Naming =
             | k -> stem + string color
 
         member val Color = 0 with get, set
+        member n.Edges = edges :> seq<_>
         member n.Stem = stem
         member n.Text = n.ToString()
 
-        static member Create(name) =
-            Id(MakeValidIdentifier name)
+        static member Create(idSet: IdSet, name) =
+            let r = Id(MakeValidIdentifier name)
+            idSet.Ids.Add(r)
+            r
 
         static member LinkAll(names: seq<Id>) =
             let names = Seq.toArray names
             for i in 0 .. names.Length - 1 do
                 for j in i + 1 .. names.Length - 1 do
                     names.[i].Link(names.[j])
+    and IdSet =
+        {
+            Ids : ResizeArray<Id>
+        }
 
-        interface IGraphNode with
-            member n.Color with get () = color and set x = color <- x
-            member n.Edges = Seq.cast edges
+        member x.Create(name) =
+            Id.Create(x, name)
+
+        static member Empty() =
+            { Ids = ResizeArray() }
 
     let Memo f =
         M.Memoize M.Options.Default f
@@ -152,6 +155,7 @@ module Naming =
             Call : seq<Signature<'T>>
             Extends : seq<'T>
             Generics : seq<Id>
+            Kind : S.ContractKind<'T>
             Name : Id
             New : seq<Signature<'T>>
             Properties : seq<Property<'T>>
@@ -174,7 +178,7 @@ module Naming =
     type Signature = Signature<Type>
 
     [<Sealed>]
-    type ContractBuilder() =
+    type ContractBuilder(idSet: IdSet) =
         let contractMap = Dictionary<C.Contract,Contract>()
 
         member p.Contract(c: C.Contract) : Contract =
@@ -188,8 +192,9 @@ module Naming =
                         ByString = Option.map p.Indexer c.ByString
                         Call = map p.Signature c.Call
                         Extends = map p.Type c.Extends
-                        Generics = [| for g in c.Generics -> Id.Create(g.Text) |]
-                        Name = Id.Create(c.HintPath.Name.Text)
+                        Generics = [| for g in c.Generics -> idSet.Create(g.Text) |]
+                        Kind = p.Kind(c.Kind)
+                        Name = idSet.Create(c.HintPath.Name.Text)
                         New = map p.Signature c.New
                         Properties = map p.Property c.Properties
                     }
@@ -204,21 +209,29 @@ module Naming =
 
         member p.Indexer(i: C.Indexer) : Indexer =
             {
-                IndexerName = Id.Create(i.IndexerName.Text)
+                IndexerName = idSet.Create(i.IndexerName.Text)
                 IndexerType = p.Type(i.IndexerType)
             }
 
+        member p.Kind(k: S.ContractKind<C.Type>) : S.ContractKind<Type> =
+            match k with
+            | S.EmptyContract -> S.EmptyContract
+            | S.FunctionContract (xs, r) ->
+                S.FunctionContract (List.map p.Type xs, Option.map p.Type r)
+            | S.MethodContract -> S.MethodContract
+            | S.ObjectContract -> S.ObjectContract
+
         member p.Parameter(par: C.Parameter) : Parameter =
             match par with
-            | C.Param (name, t) -> Parameter.Param (Id.Create(name.Text), p.Type(t))
-            | C.ParamConst (name, v) -> Parameter.ParamConst (Id.Create(name.Text), v)
+            | S.Param (name, t) -> Parameter.Param (idSet.Create(name.Text), p.Type(t))
+            | S.ParamConst (name, v) -> Parameter.ParamConst (idSet.Create(name.Text), v)
 
         member p.Property(kv: KeyValuePair<Name,C.Property>) : Property =
             Unchecked.defaultof<_>
 
         member p.Signature(s: C.Signature) : Signature =
             {
-                MethodGenerics = [for g in s.MethodGenerics -> Id.Create(g.Text)]
+                MethodGenerics = [for g in s.MethodGenerics -> idSet.Create(g.Text)]
                 Parameters = List.map p.Parameter s.Parameters
                 RestParameter = Option.map p.Parameter s.RestParameter
                 ReturnType = Option.map p.Type s.ReturnType
@@ -236,8 +249,8 @@ module Naming =
             | C.TNumber -> TNumber
             | C.TString -> TString
 
-        static member Create(contracts) =
-            let cb = ContractBuilder()
+        static member Create(idSet, contracts) =
+            let cb = ContractBuilder(idSet)
             for c in contracts do
                 cb.Contract(c) |> ignore
             cb
@@ -264,16 +277,15 @@ module Naming =
     type NestedModule = Module<Id>
     type TopModule = Module<unit>
 
-    let BuildModule (out: A.Output) =
-        let cB = ContractBuilder.Create(out.Contracts)
+    let BuildModule (idSet: IdSet) (cB: ContractBuilder) (out: A.Output) =
         let topContainer = TopModule()
         let getContainer =
             MemoRec <| fun getContainer path ->
                 match path : Names.NamePath with
-                | Names.NP1 name -> Module(Id.Create(name.Text))
+                | Names.NP1 name -> Module(idSet.Create(name.Text))
                 | Names.NP2 (p, name) ->
                     let p = getContainer p
-                    let m = Module(Id.Create(name.Text))
+                    let m = Module(idSet.Create(name.Text))
                     p.ModuleList.Add(m)
                     m
         for c in out.Contracts do
@@ -288,7 +300,7 @@ module Naming =
                 | Names.NP1 name -> (topContainer.ValueList, name)
                 | Names.NP2 (path, name) -> (getContainer.[path].ValueList, name)
             values.Add {
-                Id = Id.Create(name.Text)
+                Id = idSet.Create(name.Text)
                 NamePath = v.NamePath
                 Type = cB.Type(v.Type)
             }
@@ -307,8 +319,40 @@ module Naming =
         for sM in m.Modules do
             LinkNames (sM.Id :: path) sM
 
-    let Do out =
-        let m = BuildModule out
+    let GraphColoring (ids: IdSet) =
+        GraphColoring.ColorGraph {
+            new GraphColoring.IConfig<Id> with
+                member cfg.Edges(id) = id.Edges
+                member cfg.GetColor(id) = id.Color
+                member cfg.SetColor(id, c) = id.Color <- c
+                member cfg.Nodes = ids.Ids :> seq<_>
+        }
+
+    let Do (out: A.Output) =
+        let idSet = IdSet.Empty()
+        let cB = ContractBuilder.Create(idSet, out.Contracts)
+        let m = BuildModule idSet cB out
         LinkNames [] m
-        /// TODO: colorize names
+        GraphColoring idSet
         m
+
+    let (|MethodContract|_|) (c: Contract) =
+        match c.Kind with
+        | S.MethodContract -> Some c.Call
+        | _ -> None
+
+    let (|FunContract|_|) (c: Contract) =
+        match c.Kind with
+        | S.FunctionContract (dom, r) -> Some (dom, r)
+        | _ -> None
+
+    let (|MethodType|_|) ty =
+        match ty with
+        | TNamed (MethodContract res, []) -> Some res
+        | _ -> None
+
+    let (|FunType|_|) ty =
+        match ty with
+        | TNamed (FunContract (dom, r), []) -> Some (dom, r)
+        | _ -> None
+

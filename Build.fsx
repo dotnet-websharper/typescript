@@ -12,6 +12,15 @@ let main =
                 r.NuGet("FParsec").Reference()
             ])
 
+let typeProvider =
+    bt.FSharp.ConsoleExecutable("IntelliFactory.WebSharper.TypeScript.TypeProvider")
+        .SourcesFromProject()
+        .References(fun r ->
+            [
+                r.Project(main)
+                r.Assembly("FSharp.Data.TypeProviders")
+            ])
+
 let tests =
     bt.FSharp.ConsoleExecutable("IntelliFactory.WebSharper.TypeScript.Tests")
         .SourcesFromProject()
@@ -23,6 +32,7 @@ let tests =
 
 bt.Solution [
     main
+    typeProvider
     tests
 ]
 |> bt.Dispatch

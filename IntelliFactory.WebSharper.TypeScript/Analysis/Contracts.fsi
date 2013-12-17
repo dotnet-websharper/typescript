@@ -21,32 +21,20 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
+module S = Shapes
+
 /// Representation of contracts after analysis has completed.
 module internal Contracts =
 
-    type Parameter<'T> =
-        | Param of Name * 'T
-        | ParamConst of Name * string
-
-    type Signature<'T> =
-        {
-            MethodGenerics : list<Name>
-            Parameters : list<Parameter<'T>>
-            RestParameter : option<Parameter<'T>>
-            ReturnType : option<'T>
-        }
+    type Indexer<'T> = S.Indexer<Name,'T>
+    type Parameter<'T> = S.Parameter<Name,'T>
+    type Signature<'T> = S.Signature<Name,'T>
 
     type Property<'T> =
         | OptProp of 'T
         | Prop of 'T
 
         member Value : 'T
-
-    type Indexer<'T> =
-        {
-            IndexerName : Name
-            IndexerType : 'T
-        }
 
     [<Sealed>]
     type Contract<'T> =
@@ -58,6 +46,7 @@ module internal Contracts =
         member Extends : seq<'T>
         member Generics : list<Name>
         member HintPath : NamePath with get, set
+        member Kind : S.ContractKind<'T>
         member New : seq<Signature<'T>>
         member Properties : IReadOnlyDictionary<Name,Property<'T>>
 
@@ -86,6 +75,4 @@ module internal Contracts =
     type Parameter = Parameter<Type>
     type Property = Property<Type>
     type Signature = Signature<Type>
-
-    val (|MethodType|_|) : Type -> option<seq<Signature>>
 

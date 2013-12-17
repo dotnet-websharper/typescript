@@ -23,6 +23,7 @@ namespace IntelliFactory.WebSharper.TypeScript
 
 module A = Analysis
 module C = Contracts
+module S = Shapes
 
 /// Name disambiguation pass: given the output of Analysis phase,
 /// construct a trie that groups contracts and values into a module structure,
@@ -33,14 +34,16 @@ module internal Naming =
     type Id =
         member Text : string
 
-    type Parameter<'T> = Shapes.Parameter<Id,'T>
-    type Signature<'T> = Shapes.Signature<Id,'T>
-    type Indexer<'T> = Shapes.Indexer<Id,'T>
+    type Parameter<'T> = S.Parameter<Id,'T>
+    type Signature<'T> = S.Signature<Id,'T>
+    type Indexer<'T> = S.Indexer<Id,'T>
 
-    [<Sealed>]
     type Property<'T> =
-        member Id : Id
-        member Type : 'T
+        {
+            Id : Id
+            Name : Name
+            Type : 'T
+        }
 
     [<ReferenceEquality>]
     [<NoComparison>]
@@ -51,6 +54,7 @@ module internal Naming =
             Call : seq<Signature<'T>>
             Extends : seq<'T>
             Generics : seq<Id>
+            Kind : S.ContractKind<'T>
             Name : Id
             New : seq<Signature<'T>>
             Properties : seq<Property<'T>>
@@ -66,10 +70,12 @@ module internal Naming =
         | TNumber
         | TString
 
-    [<Sealed>]
     type Value =
-        member Id : Id
-        member Type : Type
+        {
+            Id : Id
+            NamePath : NamePath
+            Type : Type
+        }
 
     type Contract = Contract<Type>
     type Property = Property<Type>
