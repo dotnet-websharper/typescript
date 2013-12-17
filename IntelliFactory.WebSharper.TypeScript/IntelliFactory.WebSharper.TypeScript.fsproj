@@ -44,6 +44,8 @@
     <Content Include="CodeGen/ReflectEmit.fsi" />
     <Compile Include="CodeGen/ReflectEmit.fs" />
     <None Include="TestREmit.fsx" />
+    <Compile Include="TypeScriptCompiler.fsi" />
+    <Compile Include="TypeScriptCompiler.fs" />
     <Compile Include="WebSharper.fs" />
   </ItemGroup>
 </Project>
