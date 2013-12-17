@@ -27,8 +27,9 @@ module TypeScriptCompiler =
 
     type Config =
         {
+            AssemblyName : string
             TopLevelClassName : string
-            TypeScriptDeclarationFiles : seq<string>
+            TypeScriptDeclarationFiles : seq<FilePath>
         }
 
     [<Sealed>]
@@ -37,4 +38,5 @@ module TypeScriptCompiler =
         member TopLevelClassName : string
 
     val Compile : Config -> CompiledAssembly
+    val Configure : topLevelClassName : string -> paths: seq<FilePath> -> Config
 

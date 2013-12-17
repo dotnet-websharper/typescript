@@ -380,7 +380,7 @@ module internal ReflectEmit =
                 ty.CreateType() |> ignore
 
     // TODO: does DefineDynamicAssembly leak any resources similar to Assembly.Load?
-    let Construct cfg =
+    let ConstructAssembly cfg =
         let name = AssemblyName(cfg.AssemblyName)
         let n = name.Name
         let fN = n + ".dll"

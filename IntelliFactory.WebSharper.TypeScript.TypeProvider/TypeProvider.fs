@@ -56,10 +56,8 @@ type TypeProvider(config: TypeProviderConfig) =
     let doMakeType (className: string []) (typeScriptFile: string) : Type =
         // log.Information("TP.doMakeType({0}, {1})", String.concat "." className, typeScriptFile)
         let assembly =
-            C.Compile {
-                TopLevelClassName = String.concat "." className
-                TypeScriptDeclarationFiles = [typeScriptFile]
-            }
+            C.Configure (String.concat "." className) [typeScriptFile]
+            |> C.Compile
         let bytes = assembly.GetBytes()
         let result =
             //log.Time "Assembly.Load()" <| fun () ->

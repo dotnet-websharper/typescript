@@ -41,7 +41,7 @@
     <Compile Include="Analysis/Analysis.fs" />
     <Compile Include="CodeGen/Naming.fsi" />
     <Compile Include="CodeGen/Naming.fs" />
-    <Content Include="CodeGen/ReflectEmit.fsi" />
+    <Compile Include="CodeGen/ReflectEmit.fsi" />
     <Compile Include="CodeGen/ReflectEmit.fs" />
     <None Include="TestREmit.fsx" />
     <Compile Include="TypeScriptCompiler.fsi" />
