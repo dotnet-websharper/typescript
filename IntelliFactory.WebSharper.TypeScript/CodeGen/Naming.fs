@@ -126,50 +126,172 @@ module Naming =
             member n.Color with get () = color and set x = color <- x
             member n.Edges = Seq.cast edges
 
-    [<Sealed>]
-    type Module<'T>(id: 'T) =
-
-        member val SubContracts = ResizeArray<KeyValuePair<Id,C.Contract>>()
-        member val SubModules = ResizeArray<Module<Id>>()
-        member val SubValues = ResizeArray<KeyValuePair<Id,A.Value>>()
-
-        member m.Contracts : seq<Id * C.Contract> = Seq.empty
-        member m.Modules : seq<Module<Id>> = Seq.empty
-        member m.Id = id
-        member m.Values : seq<Id * A.Value> = Seq.empty
-
-    type NestedModule = Module<Id>
-    type TopModule = Module<unit>
-
     let Memo f =
         M.Memoize M.Options.Default f
 
     let MemoRec f =
         M.MemoizeRecursive M.Options.Default f
 
+    type Indexer<'T> = Shapes.Indexer<Id,'T>
+    type Parameter<'T> = Shapes.Parameter<Id,'T>
+    type Signature<'T> = Shapes.Signature<Id,'T>
+
+    type Property<'T> =
+        {
+            Id : Id
+            Name : Name
+            Type : 'T
+        }
+
+    [<ReferenceEquality>]
+    [<NoComparison>]
+    type Contract<'T> =
+        {
+            ByNumber : option<Indexer<'T>>
+            ByString : option<Indexer<'T>>
+            Call : seq<Signature<'T>>
+            Extends : seq<'T>
+            Generics : seq<Id>
+            Name : Id
+            New : seq<Signature<'T>>
+            Properties : seq<Property<'T>>
+        }
+
+    type Type =
+        | TAny
+        | TArray of Type
+        | TBoolean
+        | TGeneric of int
+        | TGenericM of int
+        | TNamed of Contract<Type> * list<Type>
+        | TNumber
+        | TString
+
+    type Contract = Contract<Type>
+    type Indexer = Indexer<Type>
+    type Parameter = Parameter<Type>
+    type Property = Property<Type>
+    type Signature = Signature<Type>
+
+    [<Sealed>]
+    type ContractBuilder() =
+        let contractMap = Dictionary<C.Contract,Contract>()
+
+        member p.Contract(c: C.Contract) : Contract =
+            match contractMap.TryGetValue(c) with
+            | true, r -> r
+            | _ ->
+                let map f xs = Seq.ofArray [| for x in xs -> f x |]
+                let r : Contract =
+                    {
+                        ByNumber = Option.map p.Indexer c.ByNumber
+                        ByString = Option.map p.Indexer c.ByString
+                        Call = map p.Signature c.Call
+                        Extends = map p.Type c.Extends
+                        Generics = [| for g in c.Generics -> Id.Create(g.Text) |]
+                        Name = Id.Create(c.HintPath.Name.Text)
+                        New = map p.Signature c.New
+                        Properties = map p.Property c.Properties
+                    }
+                contractMap.Add(c, r)
+                Id.LinkAll <| seq {
+                    yield r.Name
+                    yield! r.Generics
+                    for p in r.Properties do
+                        yield p.Id
+                }
+                r
+
+        member p.Indexer(i: C.Indexer) : Indexer =
+            {
+                IndexerName = Id.Create(i.IndexerName.Text)
+                IndexerType = p.Type(i.IndexerType)
+            }
+
+        member p.Parameter(par: C.Parameter) : Parameter =
+            match par with
+            | C.Param (name, t) -> Parameter.Param (Id.Create(name.Text), p.Type(t))
+            | C.ParamConst (name, v) -> Parameter.ParamConst (Id.Create(name.Text), v)
+
+        member p.Property(kv: KeyValuePair<Name,C.Property>) : Property =
+            Unchecked.defaultof<_>
+
+        member p.Signature(s: C.Signature) : Signature =
+            {
+                MethodGenerics = [for g in s.MethodGenerics -> Id.Create(g.Text)]
+                Parameters = List.map p.Parameter s.Parameters
+                RestParameter = Option.map p.Parameter s.RestParameter
+                ReturnType = Option.map p.Type s.ReturnType
+            }
+
+        member p.Type(t: C.Type) =
+            match t with
+            | C.TAny -> TAny
+            | C.TArray t -> TArray (p.Type(t))
+            | C.TBoolean -> TBoolean
+            | C.TGeneric k -> TGeneric k
+            | C.TGenericM k -> TGenericM k
+            | C.TLazy ty -> p.Type(ty.Value)
+            | C.TNamed (con, ts) -> TNamed(p.Contract(con), List.map p.Type ts)
+            | C.TNumber -> TNumber
+            | C.TString -> TString
+
+        static member Create(contracts) =
+            let cb = ContractBuilder()
+            for c in contracts do
+                cb.Contract(c) |> ignore
+            cb
+
+    type Value =
+        {
+            Id : Id
+            NamePath : NamePath
+            Type : Type
+        }
+
+    [<Sealed>]
+    type Module<'T>(id: 'T) =
+
+        member val ContractList = ResizeArray<Contract>()
+        member val ModuleList = ResizeArray<Module<Id>>()
+        member val ValueList = ResizeArray<Value>()
+
+        member m.Contracts = m.ContractList :> seq<_>
+        member m.Id = id
+        member m.Modules = m.ModuleList :> seq<_>
+        member m.Values = m.ValueList :> seq<_>
+
+    type NestedModule = Module<Id>
+    type TopModule = Module<unit>
+
     let BuildModule (out: A.Output) =
+        let cB = ContractBuilder.Create(out.Contracts)
         let topContainer = TopModule()
         let getContainer =
             MemoRec <| fun getContainer path ->
-                match path with
+                match path : Names.NamePath with
                 | Names.NP1 name -> Module(Id.Create(name.Text))
                 | Names.NP2 (p, name) ->
                     let p = getContainer p
                     let m = Module(Id.Create(name.Text))
-                    p.SubModules.Add(m)
+                    p.ModuleList.Add(m)
                     m
         for c in out.Contracts do
-            let (contracts, name) =
+            let contracts =
                 match c.HintPath with
-                | Names.NP1 name -> (topContainer.SubContracts, name)
-                | Names.NP2 (path, name) -> (getContainer.[path].SubContracts, name)
-            contracts.Add(KeyValuePair(Id.Create(name.Text), c))
+                | Names.NP1 _ -> topContainer.ContractList
+                | Names.NP2 (path, _) -> getContainer.[path].ContractList
+            contracts.Add(cB.Contract(c))
         for v in out.Values do
             let (values, name) =
                 match v.NamePath with
-                | Names.NP1 name -> (topContainer.SubValues, name)
-                | Names.NP2 (path, name) -> (getContainer.[path].SubValues, name)
-            values.Add(KeyValuePair(Id.Create(name.Text), v))
+                | Names.NP1 name -> (topContainer.ValueList, name)
+                | Names.NP2 (path, name) -> (getContainer.[path].ValueList, name)
+            values.Add {
+                Id = Id.Create(name.Text)
+                NamePath = v.NamePath
+                Type = cB.Type(v.Type)
+            }
         topContainer
 
     let rec LinkNames<'T> (path: list<Id>) (m: Module<'T>) : unit =
@@ -177,11 +299,10 @@ module Naming =
             yield! path
             for m in m.Modules do
                 yield m.Id
-            for (c, _) in m.Contracts do
-                /// TODO: contracts - link member names.
-                yield c
-            for (v, _) in m.Values do
-                yield v
+            for c in m.Contracts do
+                yield c.Name
+            for v in m.Values do
+                yield v.Id
         }
         for sM in m.Modules do
             LinkNames (sM.Id :: path) sM

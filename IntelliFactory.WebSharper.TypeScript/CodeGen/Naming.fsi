@@ -33,14 +33,58 @@ module internal Naming =
     type Id =
         member Text : string
 
+    type Parameter<'T> = Shapes.Parameter<Id,'T>
+    type Signature<'T> = Shapes.Signature<Id,'T>
+    type Indexer<'T> = Shapes.Indexer<Id,'T>
+
+    [<Sealed>]
+    type Property<'T> =
+        member Id : Id
+        member Type : 'T
+
+    [<ReferenceEquality>]
+    [<NoComparison>]
+    type Contract<'T> =
+        {
+            ByNumber : option<Indexer<'T>>
+            ByString : option<Indexer<'T>>
+            Call : seq<Signature<'T>>
+            Extends : seq<'T>
+            Generics : seq<Id>
+            Name : Id
+            New : seq<Signature<'T>>
+            Properties : seq<Property<'T>>
+        }
+
+    type Type =
+        | TAny
+        | TArray of Type
+        | TBoolean
+        | TGeneric of int
+        | TGenericM of int
+        | TNamed of Contract<Type> * list<Type>
+        | TNumber
+        | TString
+
+    [<Sealed>]
+    type Value =
+        member Id : Id
+        member Type : Type
+
+    type Contract = Contract<Type>
+    type Property = Property<Type>
+    type Signature = Signature<Type>
+
     [<Sealed>]
     type Module<'T> =
         member Id : 'T
         member Modules : seq<Module<Id>>
-        member Contracts : seq<Id * C.Contract>
-        member Values : seq<Id * A.Value>
+        member Contracts : seq<Contract>
+        member Values : seq<Value>
 
     type NestedModule = Module<Id>
     type TopModule = Module<unit>
+
+    val (|MethodType|_|) : Type -> option<seq<Signature>>
 
     val Do : A.Output -> TopModule

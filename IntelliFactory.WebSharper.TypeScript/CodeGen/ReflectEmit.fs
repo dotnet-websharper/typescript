@@ -25,7 +25,6 @@ open System
 open System.IO
 open System.Reflection
 open System.Reflection.Emit
-module C = Contracts
 module N = Naming
 
 /// Implements assembly generation via System.Reflection.Emit.
@@ -49,7 +48,7 @@ module internal ReflectEmit =
         {
             Config : Config
             ContainerTable : ModuleTable<TypeBuilder>
-            ContractTable : Dictionary<C.Contract,TypeBuilder>
+            ContractTable : Dictionary<N.Contract,TypeBuilder>
             CreatedTypes : ResizeArray<TypeBuilder>
             ModuleBuilder : ModuleBuilder
         }
@@ -99,7 +98,8 @@ module internal ReflectEmit =
     [<Sealed>]
     type Pass1(st) =
 
-        member p.Contract(parent: TypeBuilder, name: N.Id, c: C.Contract) =
+        member p.Contract(parent: TypeBuilder, c: N.Contract) =
+            let name = c.Name
             let tB = parent.DefineNestedType(name.Text, Attr.Interface)
             st.ContractTable.Add(c, tB)
             st.CreatedTypes.Add(tB)
@@ -112,8 +112,8 @@ module internal ReflectEmit =
             st.CreatedTypes.Add(tB)
             for m in m.Modules do
                 p.NestedModule(tB, m)
-            for (name, c) in m.Contracts do
-                p.Contract(tB, name, c)
+            for c in m.Contracts do
+                p.Contract(tB, c)
 
         member p.NestedModule(parent: TypeBuilder, m: N.NestedModule) =
             let tB = parent.DefineNestedType(m.Id.Text, Attr.Module)
@@ -224,12 +224,12 @@ module internal ReflectEmit =
             let tB = st.ContainerTable.Get(m)
             for mo in m.Modules do
                 b.Container<N.Id>(mo)
-            for (name, c) in m.Contracts do
-                b.Contract(name, c)
-            for (name, v) in m.Values do
-                b.Value(tB, name, v)
+            for c in m.Contracts do
+                b.Contract(c)
+            for v in m.Values do
+                b.Value(tB, v)
 
-        member b.Contract(name: N.Id, c: C.Contract) =
+        member b.Contract(c: N.Contract) =
             let tB = st.ContractTable.[c]
             let ctx = { DefaultContext with Generics = tB.GenericTypeParameters }
             for ty in c.Extends do
@@ -244,12 +244,12 @@ module internal ReflectEmit =
                 b.Signatures(CallMethod, ctx, tB, "Call", c.Call)
             if Seq.isEmpty c.New |> not then
                 b.Signatures(NewMethod, ctx, tB, "New", c.New)
-            for KeyValue (name, prop) in c.Properties do
-                match prop.Value with
-                | C.MethodType ss -> b.Signatures(InterfaceMethod, ctx, tB, name.Text, ss)
-                | ty -> b.Property(InterfaceProperty, ctx, tB, name.Text, ty)
+            for prop in c.Properties do
+                match prop.Type with
+                | N.MethodType ss -> b.Signatures(InterfaceMethod, ctx, tB, prop.Id.Text, ss)
+                | ty -> b.Property(InterfaceProperty, ctx, tB, prop.Id.Text, prop.Type)
 
-        member b.Indexer(ctx, tB: TypeBuilder, paramName: Name, paramType, retType) =
+        member b.Indexer(ctx, tB: TypeBuilder, paramName: N.Id, paramType, retType) =
             let pA = PropertyAttributes.None
             let mA =
                 MethodAttributes.Abstract
@@ -273,7 +273,7 @@ module internal ReflectEmit =
         member b.ParamArray(p: ParameterBuilder) =
             () // TODO
 
-        member b.Property(pK, ctx, tB: TypeBuilder, name: string, ty) =
+        member b.Property(pK, ctx, tB: TypeBuilder, name: string, ty: N.Type) =
             let pA = PropertyAttributes.None
             let pT = b.Type(ctx, ty)
             let pB = tB.DefineProperty(name, pA, pT, Array.empty)
@@ -295,7 +295,7 @@ module internal ReflectEmit =
 
         /// An arbitrary object computed for comparing signatures for
         /// identity in compiled code, to signatures CLR sees as duplicate.
-        member b.SignatureIdentity(ctx, s: C.Signature) =
+        member b.SignatureIdentity(ctx, s: N.Signature) =
             let context =
                 let gs =
                     List.toArray s.MethodGenerics
@@ -303,10 +303,10 @@ module internal ReflectEmit =
                 { ctx with GenericsM = gs }
             s.Parameters
             |> List.choose (function
-                | C.Param (_, ty) -> b.Type(context, ty) |> Some
+                | N.Parameter.Param (_, ty) -> b.Type(context, ty) |> Some
                 | _ -> None)
 
-        member b.Signature(mK, ctx, tB: TypeBuilder, methodName, s: C.Signature) =
+        member b.Signature(mK, ctx, tB: TypeBuilder, methodName: string, s: N.Signature) =
             let mA = methodAttributes mK
             let pA = ParameterAttributes.None
             let mB = tB.DefineMethod(methodName, mA)
@@ -320,12 +320,12 @@ module internal ReflectEmit =
             s.Parameters
             |> List.iteri (fun i p ->
                 match p with
-                | C.Param (name, ty) ->
+                | N.Parameter.Param (name, ty) ->
                     mB.DefineParameter(i + 1, pA, name.Text) |> ignore
                     paramTypes.Add(b.Type(ctx, ty))
                 | _ -> ())
             match s.RestParameter with
-            | Some (C.Param (name, ty)) ->
+            | Some (N.Parameter.Param (name, ty)) ->
                 mB.DefineParameter(paramTypes.Count + 1, pA, name.Text)
                 |> b.ParamArray
                 paramTypes.Add(b.Type(ctx, ty))
@@ -340,7 +340,7 @@ module internal ReflectEmit =
             | StaticMethod -> mB.NotImplemented()
             /// TODO: this needs attribute annotations.
 
-        member b.Signatures(mK, ctx, tB, methodName, ss) =
+        member b.Signatures(mK, ctx, tB, methodName: string, ss) =
             let ss =
                 ss
                 |> Seq.distinctBy (fun s -> b.SignatureIdentity(ctx, s))
@@ -351,24 +351,24 @@ module internal ReflectEmit =
         member b.Type(ctx, ty) : Type =
             let inline ( ! ) t = b.Type(ctx, t)
             match ty with
-            | C.TAny -> objT
-            | C.TArray x -> arrayType.[!x]
-            | C.TBoolean -> boolT
-            | C.TGeneric k -> ctx.Generics.[k]
-            | C.TGenericM k -> ctx.GenericsM.[k]
-            | C.TLazy v -> !v.Value
-            | C.TNamed (c, []) ->
+            | N.TAny -> objT
+            | N.TArray x -> arrayType.[!x]
+            | N.TBoolean -> boolT
+            | N.TGeneric k -> ctx.Generics.[k]
+            | N.TGenericM k -> ctx.GenericsM.[k]
+            | N.TNamed (c, []) ->
                 st.ContractTable.[c] :> Type
-            | C.TNamed (c, xs) ->
+            | N.TNamed (c, xs) ->
                 let xs = Array.map (!) (Array.ofList xs)
                 genInst.[(st.ContractTable.[c] :> Type, xs)]
-            | C.TNumber -> numberT
-            | C.TString -> stringT
+            | N.TNumber -> numberT
+            | N.TString -> stringT
 
-        member b.Value(tB, n: N.Id, v: Analysis.Value) =
+        member b.Value(tB, v: N.Value) =
+            let n = v.Id
             match v.Type with
-            | C.MethodType ss -> b.Signatures(StaticMethod, DefaultContext, tB, n.Text, ss)
-            | ty -> b.Property(StaticProperty, DefaultContext, tB, n.Text, ty)
+            | N.MethodType ss -> b.Signatures(StaticMethod, DefaultContext, tB, v.Id.Text, ss)
+            | ty -> b.Property(StaticProperty, DefaultContext, tB, v.Id.Text, ty)
 
         static member Do(st: State) =
             Pass2(st).Container(st.Config.TopModule)

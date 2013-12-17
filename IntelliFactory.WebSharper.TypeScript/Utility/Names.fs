@@ -69,15 +69,19 @@ module Names =
         static member Create() =
             NameBuilder()
 
-    type NamePath =
-        | NP1 of Name
-        | NP2 of NamePath * Name
+    type NamePath<'N> =
+        | NP1 of 'N
+        | NP2 of NamePath<'N> * 'N
 
         member np.Name =
             match np with
             | NP1 n
             | NP2 (_, n) -> n
 
+    type NamePath =
+        NamePath<Name>
+
 type Name = Names.Name
-type NamePath = Names.NamePath
+type NamePath = Names.NamePath<Name>
+type NamePath<'T> = Names.NamePath<'T>
 type NameTable<'T> = Dictionary<Name,'T>

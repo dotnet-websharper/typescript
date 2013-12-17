@@ -1,4 +1,4 @@
-﻿// $begin{copyright}
+// $begin{copyright}
 //
 // This file is part of WebSharper
 //
@@ -21,11 +21,23 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-open System
-open System.IO
-open System.Reflection
-open System.Reflection.Emit
+/// Type shapes shared across mutliple passes.
+module internal Shapes =
 
-/// Implements assembly generation via System.Reflection.Emit.
-module internal ReflectEmit =
-    open System.Collections.Generic
+    type Parameter<'N,'T> =
+        | Param of 'N * 'T
+        | ParamConst of 'N * string
+
+    type Signature<'N,'T> =
+        {
+            MethodGenerics : list<'N>
+            Parameters : list<Parameter<'N,'T>>
+            RestParameter : option<Parameter<'N,'T>>
+            ReturnType : option<'T>
+        }
+
+    type Indexer<'N,'T> =
+        {
+            IndexerName : 'N
+            IndexerType : 'T
+        }

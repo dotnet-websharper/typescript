@@ -33,12 +33,15 @@ module internal Names =
         member Text : string
 
     /// Represents a hierarhical name.
-    type NamePath =
-        | NP1 of Name
-        | NP2 of NamePath * Name
+    type NamePath<'N> =
+        | NP1 of 'N
+        | NP2 of NamePath<'N> * 'N
 
         /// The outermost name.
-        member Name : Name
+        member Name : 'N
+
+    /// An abbreviation for the common case.
+    type NamePath = NamePath<Name>
 
     /// Builds names with hash-consing.
     [<Sealed>]
@@ -54,5 +57,6 @@ module internal Names =
         static member Create : unit -> NameBuilder
 
 type internal Name = Names.Name
-type internal NamePath = Names.NamePath
+type internal NamePath = Names.NamePath<Name>
+type internal NamePath<'T> = Names.NamePath<'T>
 type internal NameTable<'T> = Dictionary<Name,'T>
