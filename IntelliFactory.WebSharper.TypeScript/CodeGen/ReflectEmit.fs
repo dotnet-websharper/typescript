@@ -315,15 +315,10 @@ module internal ReflectEmit =
         member b.Signature(mK, ctx, tB: TypeBuilder, methodName: string, s: N.Signature) =
             let mA = methodAttributes mK
             let pA = ParameterAttributes.None
-            let mB = tB.DefineMethod(methodName, mA)
-            let gs =
-                let names =
-                    List.toArray s.MethodGenerics
-                    |> Array.map (fun n -> n.Text)
-                if names.Length > 0
-                    then mB.DefineGenericParameters(names)
-                    else Array.empty
-            let ctx = { ctx with GenericsM = Array.map (fun x -> x :> Type) gs }
+            let returnType =
+                match s.ReturnType with
+                | None -> voidT
+                | Some ty -> b.Type(ctx, ty)
             let paramTypes =
                 [|
                     for p in s.Parameters do
@@ -335,7 +330,15 @@ module internal ReflectEmit =
                         yield b.Type(ctx, ty)
                     | _ -> ()
                 |]
-            mB.SetParameters(paramTypes)
+            let mB = tB.DefineMethod(methodName, mA, returnType, paramTypes)
+            let gs =
+                let names =
+                    List.toArray s.MethodGenerics
+                    |> Array.map (fun n -> n.Text)
+                if names.Length > 0
+                    then mB.DefineGenericParameters(names)
+                    else Array.empty
+            let ctx = { ctx with GenericsM = Array.map (fun x -> x :> Type) gs }
             do
                 let mutable i = 0
                 for p in s.Parameters do
@@ -349,10 +352,6 @@ module internal ReflectEmit =
                 mB.DefineParameter(paramTypes.Length, pA, name.Text)
                 |> b.ParamArray
             | _ -> ()
-            match s.ReturnType with
-            | None -> voidT
-            | Some ty -> b.Type(ctx, ty)
-            |> mB.SetReturnType
             match mK with
             | InterfaceMethod | CallMethod | NewMethod -> ()
             | StaticMethod -> mB.NotImplemented()
