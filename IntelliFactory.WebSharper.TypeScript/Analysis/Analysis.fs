@@ -31,21 +31,45 @@ module E = ExternalModuleNames
 /// and construct scope structure for later name resolution.
 module internal Analysis =
 
-    [<Sealed>]
-    type Value(path: NamePath, ty: C.Type) =
-        member v.NamePath = path
-        member v.Type = ty
+    [<NoComparison>]
+    [<ReferenceEquality>]
+    type Value =
+        {
+            ValuePath : NamePath
+            ValueType : C.Type
+        }
+
+        member v.NamePath = v.ValuePath
+        member v.Type = v.ValueType
+
+    type ValueBuilder =
+        {
+            AllValues : ResizeArray<Value>
+        }
+
+        member vb.Value(path, ty) =
+            let v = { ValuePath = path; ValueType = ty }
+            vb.AllValues.Add(v)
+            v
+
+        member vb.All =
+            vb.AllValues :> seq<_>
+
+        static member Create() =
+            {
+                AllValues = ResizeArray()
+            }
 
     type State =
         {
             Contracts : C.Contracts
-            Values : ResizeArray<Value>
+            ValueBuilder : ValueBuilder
         }
 
         static member Create() =
             {
                 Contracts = C.Contracts()
-                Values = ResizeArray()
+                ValueBuilder = ValueBuilder.Create()
             }
 
         member st.Contract() =
@@ -145,7 +169,6 @@ module internal Analysis =
                 | S.Export -> (ctx.ExportedRoot, ctx.SubPath i.InterfaceName)
                 | S.NoExport -> (ctx.LocalRoot, Names.NP1 i.InterfaceName)
             let c = root.GetOrCreateContract(path)
-
             let vis =
                 match i.InterfaceTypeParameters with
                 | [] -> this
@@ -264,10 +287,13 @@ module internal Analysis =
             ctx.ScopeChain.ResolveType(tN, List.map (!) args)
 
         member this.Var(exp, id, ty) =
+            let ty = !ty
             match exp with
-            | S.Export -> ctx.CurrentModule.ExportedValues.Add(id, !ty)
+            | S.Export ->
+                ctx.CurrentModule.ExportedValues.Add(id, ty)
+                if ctx.ExportedRoot.IsGlobal then // TODO: account for external modules
+                    st.ValueBuilder.Value(ctx.SubPath(id), ty) |> ignore
             | _ -> ()
-            // TODO: create/record a Value
             // TODO: record more information so that type-queries may work.
 
     let createGlobalContext st =
@@ -305,5 +331,5 @@ module internal Analysis =
             vis.SourceFile(sF)
         {
             Contracts = st.Contracts.All
-            Values = st.Values.ToArray() :> seq<_>
+            Values = st.ValueBuilder.All
         }

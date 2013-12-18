@@ -187,7 +187,10 @@ module Naming =
         let getContainer =
             MemoRec <| fun getContainer path ->
                 match path : Names.NamePath with
-                | Names.NP1 name -> Module(idB.Id(name.Text))
+                | Names.NP1 name ->
+                    let m = Module(idB.Id(name.Text))
+                    topContainer.ModuleList.Add(m)
+                    m
                 | Names.NP2 (p, name) ->
                     let p = getContainer p
                     let m = Module(idB.Id(name.Text))

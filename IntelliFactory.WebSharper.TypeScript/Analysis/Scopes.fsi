@@ -40,6 +40,7 @@ module internal Scopes =
         member GetOrCreateContract : NamePath -> C.Contract
         member GetOrCreateModule : NamePath -> Module
         member GetOrCreateScope : NamePath -> Scope
+        member IsGlobal : bool
 
     and [<Sealed>] Scope =
         new : unit -> Scope
