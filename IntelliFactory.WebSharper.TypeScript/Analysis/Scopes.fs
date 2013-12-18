@@ -48,18 +48,21 @@ module Scopes =
             | Next of 'S
             | NextThen of 'S * ('T -> 'S)
 
-        let inline withLoopDetection next init =
+        let withLoopDetection next init =
             let visited = HashSet<'S>()
             let rec on state =
-                if visited.Add(state) then None else
-                    match next state with
-                    | Fail -> None
-                    | Found r -> Some r
-                    | Next st -> on st
-                    | NextThen (st, k) ->
-                        match on st with
-                        | None -> None
-                        | Some r -> on (k r)
+                let res =
+                    if visited.Add(state) then
+                        match next state with
+                        | Fail -> None
+                        | Found r -> Some r
+                        | Next st -> on st
+                        | NextThen (st, k) ->
+                            match on st with
+                            | None -> None
+                            | Some r -> on (k r)
+                    else None
+                res
             on init
 
     [<Sealed>]
@@ -113,7 +116,7 @@ module Scopes =
             root.HintPath.IsNone // TODO: account for external modules
 
     type Scope with
-        member x.BindContract(id, c) = x.Contracts.[id] <- c
+        member x.BindContract(id: Name, c) = x.Contracts.[id] <- c
         member x.BindModule(id, m) = x.Modules.[id] <- m
         member x.Link(id, name) = x.Links.[id] <- name
 
@@ -132,7 +135,7 @@ module Scopes =
             | C1 of Scope * S.Identifier
             | C2 of Module * S.Identifier
 
-        let inline step t =
+        let step t =
             match t with
             | Fail -> Q.Fail
             | M1 (scope, id) ->

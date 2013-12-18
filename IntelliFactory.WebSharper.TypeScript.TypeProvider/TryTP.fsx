@@ -11,7 +11,7 @@ open IntelliFactory.WebSharper.TypeScript
 module C = TypeScriptCompiler
 
 let asm =
-    C.Configure "A.B.C" [Path.Combine(__SOURCE_DIRECTORY__, "..", "typescript", "example1.d.ts")]
+    C.Configure "WebSharper.JQuery" [Path.Combine(__SOURCE_DIRECTORY__, "..", "typescript", "my.jquery.d.ts")]
     |> C.Compile
 
 File.WriteAllBytes(Path.Combine(__SOURCE_DIRECTORY__, "Example1.dll"), asm.GetBytes())
