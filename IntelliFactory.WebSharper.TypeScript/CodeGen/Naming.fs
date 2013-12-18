@@ -51,16 +51,30 @@ module Naming =
     [<NoComparison>]
     type Contract<'T> =
         {
-            ByNumber : option<Indexer<'T>>
-            ByString : option<Indexer<'T>>
-            Call : seq<Signature<'T>>
-            Extends : seq<'T>
-            Generics : seq<Id>
-            IsReified : bool
-            Kind : S.ContractKind<'T>
-            Name : Id
-            New : seq<Signature<'T>>
-            Properties : seq<Property<'T>>
+            mutable ByNumber : option<Indexer<'T>>
+            mutable ByString : option<Indexer<'T>>
+            mutable Call : seq<Signature<'T>>
+            mutable Extends : seq<'T>
+            mutable Generics : seq<Id>
+            mutable IsReified : bool
+            mutable Kind : S.ContractKind<'T>
+            mutable Name : Id
+            mutable New : seq<Signature<'T>>
+            mutable Properties : seq<Property<'T>>
+        }
+
+    let CreateContract name =
+        {
+            ByNumber = None
+            ByString = None
+            Call = Seq.empty
+            Extends = Seq.empty
+            Generics = Seq.empty
+            IsReified = false
+            Kind = S.EmptyContract
+            Name = name
+            New = Seq.empty
+            Properties = Seq.empty
         }
 
     type Type =
@@ -92,20 +106,17 @@ module Naming =
                     match c.Kind with
                     | S.MethodContract | S.FunctionContract _ -> c.IsUsedAsNamed
                     | _ -> true
-                let r : Contract =
-                    {
-                        ByNumber = Option.map p.Indexer c.ByNumber
-                        ByString = Option.map p.Indexer c.ByString
-                        Call = map p.Signature c.Call
-                        Extends = map p.Type c.Extends
-                        Generics = [| for g in c.Generics -> idB.Id(g.Text) |]
-                        IsReified = isReified
-                        Kind = p.Kind(c.Kind)
-                        Name = idB.Id(c.HintPath.Name.Text)
-                        New = map p.Signature c.New
-                        Properties = map p.Property c.Properties
-                    }
+                let r : Contract = CreateContract (idB.Id c.HintPath.Name.Text)
                 contractMap.Add(c, r)
+                r.ByNumber <- Option.map p.Indexer c.ByNumber
+                r.ByString <- Option.map p.Indexer c.ByString
+                r.Call <- map p.Signature c.Call
+                r.Extends <- map p.Type c.Extends
+                r.Generics <- [| for g in c.Generics -> idB.Id(g.Text) |]
+                r.IsReified <- isReified
+                r.Kind <- p.Kind(c.Kind)
+                r.New <- map p.Signature c.New
+                r.Properties <- map p.Property c.Properties
                 idB.LinkAll <| seq {
                     yield r.Name
                     yield! r.Generics

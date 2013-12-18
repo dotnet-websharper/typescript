@@ -47,19 +47,19 @@ module internal Naming =
     [<NoComparison>]
     type Contract<'T> =
         {
-            ByNumber : option<Indexer<'T>>
-            ByString : option<Indexer<'T>>
-            Call : seq<Signature<'T>>
-            Extends : seq<'T>
-            Generics : seq<Id>
+            mutable ByNumber : option<Indexer<'T>>
+            mutable ByString : option<Indexer<'T>>
+            mutable Call : seq<Signature<'T>>
+            mutable Extends : seq<'T>
+            mutable Generics : seq<Id>
 
             /// True if needs an explicit CLR representation.
-            IsReified : bool
+            mutable IsReified : bool
 
-            Kind : S.ContractKind<'T>
-            Name : Id
-            New : seq<Signature<'T>>
-            Properties : seq<Property<'T>>
+            mutable Kind : S.ContractKind<'T>
+            mutable Name : Id
+            mutable New : seq<Signature<'T>>
+            mutable Properties : seq<Property<'T>>
         }
 
     type Type =

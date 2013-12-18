@@ -274,7 +274,9 @@ module internal ReflectEmit =
                 let tB = st.ContractTable.[c]
                 let ctx = { DefaultContext with Generics = tB.GenericTypeParameters }
                 for ty in c.Extends do
-                    tB.AddInterfaceImplementation(b.Type(ctx, ty))
+                    let t = b.Type(ctx, ty)
+                    if t.IsInterface then // can be `obj` concealing a failure
+                        tB.AddInterfaceImplementation(t)
                 match c.ByNumber with
                 | None -> ()
                 | Some i -> b.Indexer(ctx, tB, i.IndexerName, numberT, i.IndexerType)
@@ -450,7 +452,15 @@ module internal ReflectEmit =
     module Pass3 =
 
         let Do st =
-            for ty in st.CreatedTypes do
+            // NOTE: need to consider base types first, otherwise an exception happens.
+            let typeSet = HashSet<Type>(Seq.cast st.CreatedTypes)
+            let baseTypes (ty: TypeBuilder) : seq<TypeBuilder> =
+                if ty.IsInterface then
+                    ty.ImplementedInterfaces
+                    |> Seq.filter typeSet.Contains
+                    |> Seq.cast
+                else Seq.empty
+            for ty in TopSort.Intrinsic st.CreatedTypes baseTypes do
                 ty.CreateType() |> ignore
 
     // TODO: does DefineDynamicAssembly leak any resources similar to Assembly.Load?
