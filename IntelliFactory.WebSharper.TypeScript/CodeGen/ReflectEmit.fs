@@ -197,7 +197,7 @@ module internal ReflectEmit =
             CustomAttributeBuilder(inlineCtor, [| "$0." + name |])
 
         let PropertySet (name: string) =
-            CustomAttributeBuilder(inlineCtor, [| "void($0." + name + "=$1" |])
+            CustomAttributeBuilder(inlineCtor, [| "void($0." + name + "=$1)" |])
 
     type Context =
         {
