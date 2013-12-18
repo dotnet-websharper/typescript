@@ -4,12 +4,13 @@ declare module A {
 
 interface I1 {
     incr(x: number, y: string): number;
-    withRest(x: number, ...rest: string[]): string;
+    withRest(x: number, y: boolean, ...rest: string[]): string;
     a: number;
     b: string;
     c: any;
     d: number[];
     e: boolean;
+    [x: number]: string;
     //type Type =
     //    | TAny
     //    | TNumber

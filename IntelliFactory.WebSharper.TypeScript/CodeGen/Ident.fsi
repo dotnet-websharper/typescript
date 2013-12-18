@@ -35,6 +35,12 @@ module internal Ident =
         /// The string form of the identifier.
         member Text : string
 
+        /// The name of the Call method.
+        static member Call : Id
+
+        /// The name of the New method.
+        static member New : Id
+
     /// Constructs identifiers.
     [<Sealed>]
     type Builder =

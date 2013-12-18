@@ -5,7 +5,7 @@ open IntelliFactory.Build
 let bt = BuildTool().PackageId("WebSharper.TypeScript", "2.5")
 
 let main =
-    bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript")
+    bt.WebSharper.Library("IntelliFactory.WebSharper.TypeScript")
         .SourcesFromProject()
         .References(fun r ->
             [
