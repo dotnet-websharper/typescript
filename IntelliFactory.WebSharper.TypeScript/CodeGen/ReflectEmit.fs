@@ -160,6 +160,10 @@ module internal ReflectEmit =
     let funTD = typedefof<_->_>
     let unitT = typeof<unit>
     let voidT = typeof<Void>
+    let paramArray() =
+        CustomAttributeBuilder(
+            typeof<ParamArrayAttribute>.GetConstructor([||]),
+            [||])
 
     type Context =
         {
@@ -273,7 +277,7 @@ module internal ReflectEmit =
             /// TODO: custom attributes here.
 
         member b.ParamArray(p: ParameterBuilder) =
-            () // TODO
+            p.SetCustomAttribute(paramArray())
 
         member b.Property(pK, ctx, tB: TypeBuilder, name: string, ty: N.Type) =
             let pA = PropertyAttributes.None
@@ -342,7 +346,7 @@ module internal ReflectEmit =
                     | _ -> ()
             match s.RestParameter with
             | Some (N.Parameter.Param (name, ty)) ->
-                mB.DefineParameter(paramTypes.Length + 1, pA, name.Text)
+                mB.DefineParameter(paramTypes.Length, pA, name.Text)
                 |> b.ParamArray
             | _ -> ()
             match s.ReturnType with

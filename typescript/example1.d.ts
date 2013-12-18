@@ -4,6 +4,7 @@ declare module A {
 
 interface I1 {
     incr(x: number, y: string): number;
+    withRest(x: number, ...rest: string[]): string;
     a: number;
     b: string;
     c: any;
