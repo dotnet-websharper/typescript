@@ -21,11 +21,11 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-open System
-open System.IO
 open System.Reflection
 open System.Reflection.Emit
+
 module N = Naming
+module S = Shapes
 
 /// Implements assembly generation via System.Reflection.Emit.
 module internal ReflectEmit =
@@ -99,14 +99,15 @@ module internal ReflectEmit =
     type Pass1(st) =
 
         member p.Contract(parent: TypeBuilder, c: N.Contract) =
-            let name = c.Name
-            let tB = parent.DefineNestedType(name.Text, Attr.Interface)
-            st.ContractTable.Add(c, tB)
-            st.CreatedTypes.Add(tB)
-            let gs = [| for n in c.Generics -> n.Text |]
-            if gs.Length > 0 then
-                tB.DefineGenericParameters()
-                |> ignore
+            if c.IsReified then
+                let name = c.Name
+                let tB = parent.DefineNestedType(name.Text, Attr.Interface)
+                st.ContractTable.Add(c, tB)
+                st.CreatedTypes.Add(tB)
+                let gs = [| for n in c.Generics -> n.Text |]
+                if gs.Length > 0 then
+                    tB.DefineGenericParameters()
+                    |> ignore
 
         member p.Module<'T>(tB, m: N.Module<'T>) =
             p.NoConstructor(tB)
@@ -160,10 +161,12 @@ module internal ReflectEmit =
     let funTD = typedefof<_->_>
     let unitT = typeof<unit>
     let voidT = typeof<Void>
-    let paramArray() =
-        CustomAttributeBuilder(
-            typeof<ParamArrayAttribute>.GetConstructor([||]),
-            [||])
+
+    let ParamArrayAttributeConstructor =
+        typeof<ParamArrayAttribute>.GetConstructor([||])
+
+    let paramArray () =
+        CustomAttributeBuilder(ParamArrayAttributeConstructor, [||])
 
     type Context =
         {
@@ -236,24 +239,25 @@ module internal ReflectEmit =
                 b.Value(tB, v)
 
         member b.Contract(c: N.Contract) =
-            let tB = st.ContractTable.[c]
-            let ctx = { DefaultContext with Generics = tB.GenericTypeParameters }
-            for ty in c.Extends do
-                tB.AddInterfaceImplementation(b.Type(ctx, ty))
-            match c.ByNumber with
-            | None -> ()
-            | Some i -> b.Indexer(ctx, tB, i.IndexerName, numberT, i.IndexerType)
-            match c.ByString with
-            | None -> ()
-            | Some i -> b.Indexer(ctx, tB, i.IndexerName, stringT, i.IndexerType)
-            if Seq.isEmpty c.Call |> not then
-                b.Signatures(CallMethod, ctx, tB, "Call", c.Call)
-            if Seq.isEmpty c.New |> not then
-                b.Signatures(NewMethod, ctx, tB, "New", c.New)
-            for prop in c.Properties do
-                match prop.Type with
-                | N.MethodType ss -> b.Signatures(InterfaceMethod, ctx, tB, prop.Id.Text, ss)
-                | ty -> b.Property(InterfaceProperty, ctx, tB, prop.Id.Text, prop.Type)
+            if c.IsReified then
+                let tB = st.ContractTable.[c]
+                let ctx = { DefaultContext with Generics = tB.GenericTypeParameters }
+                for ty in c.Extends do
+                    tB.AddInterfaceImplementation(b.Type(ctx, ty))
+                match c.ByNumber with
+                | None -> ()
+                | Some i -> b.Indexer(ctx, tB, i.IndexerName, numberT, i.IndexerType)
+                match c.ByString with
+                | None -> ()
+                | Some i -> b.Indexer(ctx, tB, i.IndexerName, stringT, i.IndexerType)
+                if Seq.isEmpty c.Call |> not then
+                    b.Signatures(CallMethod, ctx, tB, "Call", c.Call)
+                if Seq.isEmpty c.New |> not then
+                    b.Signatures(NewMethod, ctx, tB, "New", c.New)
+                for prop in c.Properties do
+                    match prop.Type with
+                    | N.MethodType ss -> b.Signatures(InterfaceMethod, ctx, tB, prop.Id.Text, ss)
+                    | ty -> b.Property(InterfaceProperty, ctx, tB, prop.Id.Text, prop.Type)
 
         member b.Indexer(ctx, tB: TypeBuilder, paramName: N.Id, paramType, retType) =
             let pA = PropertyAttributes.None
@@ -312,8 +316,17 @@ module internal ReflectEmit =
                 | N.Parameter.Param (_, ty) -> b.Type(context, ty) |> Some
                 | _ -> None)
 
-        member b.Signature(mK, ctx, tB: TypeBuilder, methodName: string, s: N.Signature) =
+        member b.Signature(mK, ctx0, tB: TypeBuilder, methodName: string, s: N.Signature) =
             let mA = methodAttributes mK
+            let mB = tB.DefineMethod(methodName, mA)
+            let gs =
+                let names =
+                    List.toArray s.MethodGenerics
+                    |> Array.map (fun n -> n.Text)
+                if names.Length > 0
+                    then mB.DefineGenericParameters(names)
+                    else Array.empty
+            let ctx = { ctx0 with GenericsM = Array.map (fun x -> x :> Type) gs }
             let pA = ParameterAttributes.None
             let returnType =
                 match s.ReturnType with
@@ -330,15 +343,8 @@ module internal ReflectEmit =
                         yield b.Type(ctx, ty)
                     | _ -> ()
                 |]
-            let mB = tB.DefineMethod(methodName, mA, returnType, paramTypes)
-            let gs =
-                let names =
-                    List.toArray s.MethodGenerics
-                    |> Array.map (fun n -> n.Text)
-                if names.Length > 0
-                    then mB.DefineGenericParameters(names)
-                    else Array.empty
-            let ctx = { ctx with GenericsM = Array.map (fun x -> x :> Type) gs }
+            mB.SetParameters(paramTypes)
+            mB.SetReturnType(returnType)
             do
                 let mutable i = 0
                 for p in s.Parameters do
@@ -372,12 +378,22 @@ module internal ReflectEmit =
             | N.TArray x -> arrayType.[!x]
             | N.TBoolean -> boolT
             | N.TGeneric k -> ctx.Generics.[k]
-            | N.TGenericM k -> ctx.GenericsM.[k]
-            | N.TNamed (c, []) ->
-                st.ContractTable.[c] :> Type
+            | N.TGenericM k -> try ctx.GenericsM.[k] with e -> failwithf "GenericsM? %i when avail %i" k ctx.GenericsM.Length
             | N.TNamed (c, xs) ->
-                let xs = Array.map (!) (Array.ofList xs)
-                genInst.[(st.ContractTable.[c] :> Type, xs)]
+                match c.Kind with
+                | S.FunctionContract (dom, range) ->
+                    let dom = Array.map (!) (Array.ofList dom)
+                    let range =
+                        match range with
+                        | None -> unitT
+                        | Some t -> !t
+                    funType.[(dom, range)]
+                | _ ->
+                    match xs with
+                    | [] -> st.ContractTable.[c] :> Type
+                    | _ ->
+                        let xs = Array.map (!) (Array.ofList xs)
+                        genInst.[(st.ContractTable.[c] :> Type, xs)]
             | N.TNumber -> numberT
             | N.TString -> stringT
 

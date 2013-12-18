@@ -56,6 +56,7 @@ module Naming =
             Call : seq<Signature<'T>>
             Extends : seq<'T>
             Generics : seq<Id>
+            IsReified : bool
             Kind : S.ContractKind<'T>
             Name : Id
             New : seq<Signature<'T>>
@@ -87,6 +88,10 @@ module Naming =
             | true, r -> r
             | _ ->
                 let map f xs = Seq.ofArray [| for x in xs -> f x |]
+                let isReified =
+                    match c.Kind with
+                    | S.MethodContract | S.FunctionContract _ -> c.IsUsedAsNamed
+                    | _ -> true
                 let r : Contract =
                     {
                         ByNumber = Option.map p.Indexer c.ByNumber
@@ -94,6 +99,7 @@ module Naming =
                         Call = map p.Signature c.Call
                         Extends = map p.Type c.Extends
                         Generics = [| for g in c.Generics -> idB.Id(g.Text) |]
+                        IsReified = isReified
                         Kind = p.Kind(c.Kind)
                         Name = idB.Id(c.HintPath.Name.Text)
                         New = map p.Signature c.New

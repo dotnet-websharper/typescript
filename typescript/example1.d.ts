@@ -1,3 +1,6 @@
+
+declare function mapArray<T1,T2>(f: (x: T1) => T2, values: T1[]): T2[];
+
 declare module A {
     var nestedNumber: number;
 }

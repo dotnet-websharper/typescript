@@ -52,6 +52,10 @@ module internal Naming =
             Call : seq<Signature<'T>>
             Extends : seq<'T>
             Generics : seq<Id>
+
+            /// True if needs an explicit CLR representation.
+            IsReified : bool
+
             Kind : S.ContractKind<'T>
             Name : Id
             New : seq<Signature<'T>>

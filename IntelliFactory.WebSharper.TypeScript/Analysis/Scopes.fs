@@ -214,6 +214,7 @@ module Scopes =
                 | Some m -> EntitySearch.findContractInModule name m
 
         member c.ResolveType(t, ts) =
-            C.TLazy <| lazy match c.ResolveContract(t) with
-                            | None -> C.TAny
-                            | Some tN -> C.TNamed (tN, ts)
+            C.TLazy <| lazy
+                match c.ResolveContract(t) with
+                | None -> C.TAny
+                | Some tN -> C.TNamed (tN, ts)

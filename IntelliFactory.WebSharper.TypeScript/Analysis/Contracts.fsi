@@ -45,13 +45,27 @@ module internal Contracts =
         member AddOptProp : Name * 'T -> unit
         member AddProp : Name * 'T -> unit
         member Extend : 'T -> unit
+
+        /// Sets IsUsedAsNamed to `true`.
+        member MarkNamedUse : unit -> unit
+
         member SetGenerics : list<Name> -> unit
+
         member ByString : option<Indexer<'T>>
         member ByNumber : option<Indexer<'T>>
         member Call : seq<Signature<'T>>
         member Extends : seq<'T>
         member Generics : list<Name>
         member HintPath : NamePath with get, set
+
+        /// Tracks if the contract has been used in a named position,
+        /// such as a body of a named interface (class, etc), as a base type
+        /// in extends clause, a method type inside an anonymous object type,
+        /// or as a result of type query. Knowing this is necessary to decide
+        /// which contracts with Kind = MethodContract or FunctionContract
+        /// do not need to be represented as a reified CLR class.
+        member IsUsedAsNamed : bool
+
         member Kind : S.ContractKind<'T>
         member New : seq<Signature<'T>>
         member Properties : IReadOnlyDictionary<Name,Property<'T>>

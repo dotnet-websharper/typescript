@@ -58,6 +58,7 @@ module Contracts =
         let ctors = ResizeArray<Signature<'T>>()
         let extends = ResizeArray<'T>()
         let mutable generics : list<Name> = []
+        let mutable isUsedAsNamed = false
 
         member c.AddByNumber(n, t) =
             kind <- S.ObjectContract
@@ -92,6 +93,9 @@ module Contracts =
         member c.Extend(i) =
             extends.Add(i)
 
+        member c.MarkNamedUse() =
+            isUsedAsNamed <- true
+
         member c.SetGenerics(ns) =
             match ns with
             | [] -> ()
@@ -103,6 +107,7 @@ module Contracts =
         member c.Properties = props :> IReadOnlyDictionary<_,_>
         member c.Call = call :> seq<_>
         member c.Extends = extends :> seq<_>
+        member c.IsUsedAsNamed = isUsedAsNamed
         member c.Kind = kind
         member c.Generics = generics
         member val HintPath = defaultHintPath with get, set

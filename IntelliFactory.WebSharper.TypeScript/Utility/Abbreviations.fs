@@ -28,14 +28,17 @@ open System.Text
 [<AutoOpen>]
 module internal Abbreviations =
 
+    type AppDomain = System.AppDomain
     type Array = System.Array
     type Char = System.Char
     type BindingFlags = Reflection.BindingFlags
     type ConcurrentDictionary<'T1,'T2> = Concurrent.ConcurrentDictionary<'T1,'T2>
     type Dictionary<'T1,'T2> = Generic.Dictionary<'T1,'T2>
+    type Directory = IO.Directory
     type DirectoryInfo = IO.DirectoryInfo
     type Encoding = Text.Encoding
     type EqualityComparer<'T> = Generic.EqualityComparer<'T>
+    type File = IO.File
     type FileInfo = IO.FileInfo
     type Func<'T1,'T2> = System.Func<'T1,'T2>
     type HashSet<'T> = Generic.HashSet<'T>
@@ -46,16 +49,21 @@ module internal Abbreviations =
     type IEqualityComparer<'T> = Generic.IEqualityComparer<'T>
     type IReadOnlyDictionary<'T1,'T2> = Generic.IReadOnlyDictionary<'T1,'T2>
     type KeyValuePair<'T1,'T2> = Generic.KeyValuePair<'T1,'T2>
+    type Math = System.Math
+    type NotImplementedException = System.NotImplementedException
     type Object = System.Object
     type Path = IO.Path
+    type ParamArrayAttribute = System.ParamArrayAttribute
     type PropertyInfo = Reflection.PropertyInfo
     type Regex = RegularExpressions.Regex
     type SortedSet<'T> = Generic.SortedSet<'T>
+    type String = System.String
     type StringWriter = IO.StringWriter
     type TextWriter = IO.TextWriter
     type Type = System.Type
     type UnicodeCategory = Globalization.UnicodeCategory
     type UTF8Encoding = Text.UTF8Encoding
+    type Void = System.Void
 
     /// Represents a system file path.
     type FilePath = string
