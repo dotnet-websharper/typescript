@@ -1,5 +1,6 @@
 declare module A {
     var Id: number;
+    var x: I1;
 }
 
 interface I1 {
