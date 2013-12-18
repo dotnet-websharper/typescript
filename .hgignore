@@ -1,0 +1,11 @@
+(\.suo|\~)$
+(bin|obj)/(Debug|Release)
+/_
+^Web/Scripts/
+^Web/bin/
+^\.build
+^\.nuget
+^packages/
+^tools/packages/
+^build/
+user$
