@@ -109,6 +109,9 @@ module Scopes =
         member root.GetOrCreateScope(path) =
             getOrCreate root.ScopeRegistry path (fun () -> Scope())
 
+        member root.IsGlobal =
+            root.HintPath.IsNone // TODO: account for external modules
+
     type Scope with
         member x.BindContract(id, c) = x.Contracts.[id] <- c
         member x.BindModule(id, m) = x.Modules.[id] <- m

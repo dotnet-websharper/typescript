@@ -1,6 +1,12 @@
 declare module A {
-    var Id: number;
-    var x: I1;
+    var nestedNumber: number;
+    export var x: I1;
+}
+
+declare var globalString: string;
+
+declare module B.X {
+    var deeplyNestedBoolean: boolean;
 }
 
 interface I1 {
@@ -12,15 +18,4 @@ interface I1 {
     d: number[];
     e: boolean;
     [x: number]: string;
-    //type Type =
-    //    | TAny
-    //    | TNumber
-    //    | TBoolean
-    //    | TString
-    //    | TVoid
-    //    | TReference of TypeReference<Type>
-    //    | TQuery of TypeQuery
-    //    | TArray of Type
-    //    | TObject of list<TypeMember<Type>>
-
 }
