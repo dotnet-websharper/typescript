@@ -5,7 +5,7 @@ open IntelliFactory.Build
 let bt = BuildTool().PackageId("WebSharper.TypeScript", "2.5")
 
 let main =
-    bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript")
+    bt.WebSharper.Library("IntelliFactory.WebSharper.TypeScript")
         .SourcesFromProject()
         .References(fun r ->
             [
@@ -13,7 +13,7 @@ let main =
             ])
 
 let typeProvider =
-    bt.FSharp.ConsoleExecutable("IntelliFactory.WebSharper.TypeScript.TypeProvider")
+    bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript.TypeProvider")
         .SourcesFromProject()
         .References(fun r ->
             [
@@ -30,9 +30,20 @@ let tests =
                 r.NuGet("Fuchu").Reference()
             ])
 
+let testSite =
+    bt.WebSharper.HtmlWebsite("IntelliFactory.WebSharper.TypeScript.TestSite")
+        .SourcesFromProject()
+        .References(fun r ->
+            [
+                r.Assembly("FSharp.Data.TypeProviders")
+                r.Project(main)
+                r.Project(typeProvider)
+            ])
+
 bt.Solution [
     main
     typeProvider
     tests
+    testSite
 ]
 |> bt.Dispatch

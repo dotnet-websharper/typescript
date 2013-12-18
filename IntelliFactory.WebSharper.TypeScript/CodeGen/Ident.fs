@@ -105,6 +105,20 @@ module Ident =
         member id.Text =
             id.ToString()
 
+        static member Call =
+            {
+                Color = 0
+                Edges = HashSet()
+                Stem = "Call"
+            }
+
+        static member New =
+            {
+                Color = 0
+                Edges = HashSet()
+                Stem = "New"
+            }
+
     [<NoComparison>]
     [<ReferenceEquality>]
     type Builder =
