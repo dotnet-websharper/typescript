@@ -1,4 +1,5 @@
 (\.suo|\~)$
+\.dll$
 (bin|obj)/(Debug|Release)
 /_
 ^Web/Scripts/
