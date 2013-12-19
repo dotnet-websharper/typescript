@@ -1,6 +1,11 @@
 ﻿#r "Example1.dll"
 
-let f (x: WebSharper.JQuery.JQueryAjaxSettings) =
+type T = class end
+
+
+let f (x: WebSharper.JQuery.JQueryGenericPromise<T>) =
+    let o = x.stuck.doIt.Call(1) : T
+
     x.contents.["ABC"] <- "DEF"
 
 //let f (x: global.A.B.C.Anon) =

@@ -72,15 +72,17 @@ module internal Analysis =
                 ValueBuilder = ValueBuilder.Create()
             }
 
-        member st.Contract() =
-            st.Contracts.Contract()
+        member st.AnonymousContract() =
+            st.Contracts.AnonymousContract()
+
+        member st.NamedContract() =
+            st.Contracts.NamedContract()
 
     type Context =
         {
             CurrentModule : Sc.Module
             ExportedRoot : Sc.Root
             ExportedScope : Sc.Scope
-            IsInsideType : bool
             Generics : S.Identifier []
             GenericsM : S.Identifier []
             LocalRoot : Sc.Root
@@ -98,26 +100,56 @@ module internal Analysis =
     type Visit(st: State, ctx: Context) =
 
         member this.AnonContract() =
-            let c = st.Contract()
+            let c = st.AnonymousContract()
             match ctx.Path with
             | None -> ()
             | Some p -> c.HintPath <- Names.NP2 (p, c.HintPath.Name (* Anon *))
             c
 
+        member this0.AnonType(ms) =
+            let gs = Array.append ctx.Generics ctx.GenericsM
+            let self = Visit(st, { ctx with Generics = gs; GenericsM = Array.empty })
+            let c = self.AnonContract()
+            if gs.Length > 0 then
+                c.SetGenerics(List.ofArray gs)
+            self.BuildContract(c, ms)
+            let gArgs =
+                let l1 = ctx.Generics.Length
+                let l2 = ctx.GenericsM.Length
+                List.init (l1 + l2) (fun i ->
+                    if i < l1 then C.TGeneric i else C.TGenericM (i - l1))
+            C.TNamed (c, gArgs)
+
         member this.BuildContract(c: C.Contract, ms: list<_>) =
-            let inline ( ! ) t = this.Type t
             for body in ms do
                 match body with
-                | S.TM1 (S.Prop (name, ty)) -> c.AddProp(name, !ty)
-                | S.TM1 (S.OptProp (name, ty)) -> c.AddOptProp(name, !ty)
+                | S.TM1 prop ->
+                    this.BuildProperty(c, prop)
                 | S.TM2 callSig ->
                     for s in this.BuildSignatures(ctx, callSig) do
                         c.AddCall(s)
                 | S.TM3 newSig ->
                     for s in this.BuildSignatures(ctx, newSig) do
                         c.AddNew(s)
-                | S.TM4 (S.ByNumber (id, ty)) -> c.AddByNumber(id, !ty)
-                | S.TM4 (S.ByString (id, ty)) -> c.AddByString(id, !ty)
+                | S.TM4 (S.ByNumber (id, ty)) -> c.AddByNumber(id, this.Type(ty))
+                | S.TM4 (S.ByString (id, ty)) -> c.AddByString(id, this.Type(ty))
+
+        member this.BuildProperty(c: C.Contract, prop) =
+            let (name, ty, isOpt) =
+                match prop with
+                | S.Prop (name, ty) -> (name, ty, false)
+                | S.OptProp (name, ty) -> (name, ty, true)
+            let def () =
+                let ty = this.Type(ty)
+                if isOpt
+                    then c.AddOptProp(name, ty)
+                    else c.AddProp(name, ty)
+            match ty with
+            | S.TObject ms ->
+                match C.TryGetAnonymousPropertyContract c name with
+                | None -> def ()
+                | Some res -> this.BuildContract(res, ms)
+            | _ -> def ()
 
         member this.BuildSignatures(ctx, S.CS (tps, par, ret)) =
             let (this, gs) =
@@ -168,8 +200,7 @@ module internal Analysis =
                 match exp with
                 | S.Export -> (ctx.ExportedRoot, ctx.SubPath i.InterfaceName)
                 | S.NoExport -> (ctx.LocalRoot, Names.NP1 i.InterfaceName)
-            let c = root.GetOrCreateContract(path)
-            c.MarkNamedUse()
+            let c = root.GetOrCreateNamedContract(path)
             let vis =
                 match i.InterfaceTypeParameters with
                 | [] -> this
@@ -204,7 +235,6 @@ module internal Analysis =
                     CurrentModule = mo
                     Generics = ctx.Generics
                     GenericsM = ctx.GenericsM
-                    IsInsideType = ctx.IsInsideType
                     ExportedRoot = root
                     ExportedScope = expScope
                     LocalRoot = mo.InternalRoot
@@ -253,8 +283,7 @@ module internal Analysis =
                     | S.AD5 m -> this.Module(em, m)
                     | S.AD6 _ -> () // TODO: ambient external modules
 
-        member this.Type(t) =
-            let self = if ctx.IsInsideType then this else this.WithInsideType()
+        member this.Type(t: S.Type) =
             match t with
             | S.TAny -> C.TAny
             | S.TNumber -> C.TNumber
@@ -263,20 +292,7 @@ module internal Analysis =
             | S.TVoid -> C.TAny
             | S.TReference (S.TRef (tN, gs)) ->
                 let inline def () =
-                    let ty = ctx.ScopeChain.ResolveType(tN, List.map self.Type gs)
-                    if ctx.IsInsideType then
-                        match ty with
-                        | C.TLazy c ->
-                            C.TLazy <| lazy
-                                match c.Value with
-                                | C.TNamed (con, _) ->
-                                    match con.Kind with
-                                    | Shapes.MethodContract _ -> con.MarkNamedUse()
-                                    | _ -> ()
-                                | _ -> ()
-                                c.Value
-                        | r -> r
-                    else ty
+                    ctx.ScopeChain.ResolveType(tN, List.map this.Type gs)
                 match gs, tN with
                 | [], S.TN1 t ->
                     match Array.IndexOf(ctx.Generics, t) with
@@ -288,11 +304,8 @@ module internal Analysis =
                 | _ -> def ()
             | S.TQuery tQ ->
                 failwith "TODO: TypeQuery"
-            | S.TArray t -> C.TArray (self.Type t)
-            | S.TObject ms ->
-                let c = self.AnonContract()
-                self.BuildContract(c, ms)
-                C.TNamed (c, [])
+            | S.TArray t -> C.TArray (this.Type t)
+            | S.TObject ms -> this.AnonType(ms)
 
         member this.TypeParam(tP) =
             match tP with
@@ -312,9 +325,6 @@ module internal Analysis =
             | _ -> ()
             // TODO: record more information so that type-queries may work.
 
-        member this.WithInsideType() =
-            Visit(st, { ctx with IsInsideType = true })
-
     let createGlobalContext st =
         let globalModule = Sc.Module(st.Contracts, None)
         let globalRoot = globalModule.InternalRoot
@@ -325,7 +335,6 @@ module internal Analysis =
             ExportedScope = globalScope
             Generics = Array.empty
             GenericsM = Array.empty
-            IsInsideType = false
             LocalRoot = globalRoot
             LocalScope = globalScope
             Path = None
