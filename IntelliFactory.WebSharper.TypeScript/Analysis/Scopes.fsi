@@ -37,8 +37,8 @@ module internal Scopes =
         member ExportedValues : NameTable<C.Type>
 
     and [<Sealed>] Root =
-        member GetOrCreateContract : NamePath -> C.Contract
         member GetOrCreateModule : NamePath -> Module
+        member GetOrCreateNamedContract : NamePath -> C.Contract
         member GetOrCreateScope : NamePath -> Scope
         member IsGlobal : bool
 

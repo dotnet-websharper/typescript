@@ -105,3 +105,29 @@ module internal Abbreviations =
                     take i list
             ]
 
+    [<Sealed>]
+    type MultiDict<'T1,'T2 when 'T1 : equality>() =
+        let d = Dictionary<'T1,ResizeArray<'T2>>()
+
+        member x.Add(key: 'T1, v: 'T2) =
+            let mutable res = Unchecked.defaultof<_>
+            if d.TryGetValue(key, &res) then
+                res.Add(v)
+            else
+                let res = ResizeArray()
+                res.Add(v)
+                d.Add(key, res)
+
+        member x.All =
+            seq {
+                for KeyValue (k, vs) in d do
+                    for v in vs do
+                        yield KeyValuePair (k, v)
+            }
+
+        member x.Item
+            with get (key: 'T1) =
+                let mutable res = Unchecked.defaultof<_>
+                if d.TryGetValue(key, &res) then
+                    res.ToArray() |> Array.toList
+                else []

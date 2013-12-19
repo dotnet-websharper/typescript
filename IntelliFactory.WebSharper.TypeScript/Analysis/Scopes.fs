@@ -99,9 +99,9 @@ module Scopes =
 
     type Root with
 
-        member root.GetOrCreateContract(path) =
+        member root.GetOrCreateNamedContract(path) =
             getOrCreate root.ContractRegistry path (fun () ->
-                let c = root.Contracts.Contract()
+                let c = root.Contracts.NamedContract()
                 c.HintPath <- SubPath root path
                 c)
 

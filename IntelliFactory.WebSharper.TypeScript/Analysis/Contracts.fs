@@ -25,7 +25,6 @@ module S = Shapes
 
 module Contracts =
 
-    type ContractKind<'T> = S.ContractKind<'T>
     type Indexer<'T> = S.Indexer<Name,'T>
     type Parameter<'T> = S.Parameter<Name,'T>
     type Signature<'T> = S.Signature<Name,'T>
@@ -49,75 +48,44 @@ module Contracts =
         |> Names.NP1
 
     [<Sealed>]
-    type Contract<'T>() =
-        let mutable kind : ContractKind<'T> = S.EmptyContract
+    type Contract<'T>(isAnon) =
         let mutable byNumber : option<Indexer<'T>> = None
         let mutable byString : option<Indexer<'T>> = None
-        let props = Dictionary<Name,Property<'T>>()
+        let props = MultiDict<Name,Property<'T>>()
         let call = ResizeArray<Signature<'T>>()
         let ctors = ResizeArray<Signature<'T>>()
         let extends = ResizeArray<'T>()
         let mutable generics : list<Name> = []
-        let mutable isUsedAsNamed = false
 
-        member c.AddByNumber(n, t) =
-            kind <- S.ObjectContract
-            byNumber <- Some (indexer n t)
-
-        member c.AddByString(n, t) =
-            kind <- S.ObjectContract
-            byString <- Some (indexer n t)
-
-        member c.AddCall(s) =
-            kind <-
-                match kind, s with
-                | S.EmptyContract, S.FunctionSignature (dom, r)->
-                    S.FunctionContract (dom, r)
-                | S.EmptyContract, _
-                | S.FunctionContract _, _ -> S.MethodContract
-                | _ -> S.ObjectContract
-            call.Add(s)
-
-        member c.AddNew(s) =
-            kind <- S.ObjectContract
-            ctors.Add(s)
-
-        member c.AddOptProp(p, t) =
-            kind <- S.ObjectContract
-            props.Add(p, OptProp t)
-
-        member c.AddProp(p, t) =
-            kind <- S.ObjectContract
-            props.Add(p, Prop t)
-
-        member c.Extend(i) =
-            extends.Add(i)
-
-        member c.MarkNamedUse() =
-            isUsedAsNamed <- true
-
-        member c.SetGenerics(ns) =
-            match ns with
-            | [] -> ()
-            | _ -> kind <- S.ObjectContract
-            generics <- ns
-
+        member c.AddByNumber(n, t) = byNumber <- Some (indexer n t)
+        member c.AddByString(n, t) = byString <- Some (indexer n t)
+        member c.AddCall(s) = call.Add(s)
+        member c.AddNew(s) = ctors.Add(s)
+        member c.AddOptProp(p, t) = props.Add(p, OptProp t)
+        member c.AddProp(p, t) = props.Add(p, Prop t)
+        member c.Extend(i) = extends.Add(i)
+        member c.SetGenerics(ns) = generics <- ns
         member c.ByNumber = byNumber
         member c.ByString = byString
-        member c.Properties = props :> IReadOnlyDictionary<_,_>
         member c.Call = call :> seq<_>
         member c.Extends = extends :> seq<_>
-        member c.IsUsedAsNamed = isUsedAsNamed
-        member c.Kind = kind
         member c.Generics = generics
         member val HintPath = defaultHintPath with get, set
+        member c.IsAnonymous = isAnon
         member c.New = ctors :> seq<_>
+        member c.Props = props
+        member c.Properties = props.All
 
     and [<Sealed>] Contracts<'T>() =
         let contracts = ResizeArray<Contract<'T>>()
 
-        member x.Contract() =
-            let c = Contract()
+        member x.AnonymousContract() =
+            let c = Contract(isAnon = true)
+            contracts.Add(c)
+            c
+
+        member x.NamedContract() =
+            let c = Contract(isAnon = false)
             contracts.Add(c)
             c
 
@@ -142,3 +110,9 @@ module Contracts =
     type Property = Property<Type>
     type Signature = Signature<Type>
 
+    let TryGetAnonymousPropertyContract (c: Contract) name =
+        c.Props.[name]
+        |> List.tryPick (function
+            | Prop (TNamed (c, [])) when c.IsAnonymous -> Some c
+            | OptProp (TNamed (c, [])) when c.IsAnonymous -> Some c
+            | _ -> None)

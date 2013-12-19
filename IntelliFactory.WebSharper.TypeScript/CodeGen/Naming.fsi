@@ -52,11 +52,7 @@ module internal Naming =
             mutable Call : seq<Signature<'T>>
             mutable Extends : seq<'T>
             mutable Generics : seq<Id>
-
-            /// True if needs an explicit CLR representation.
-            mutable IsReified : bool
-
-            mutable Kind : S.ContractKind<'T>
+            IsAnonymous : bool
             mutable Name : Id
             mutable New : seq<Signature<'T>>
             mutable Properties : seq<Property<'T>>
@@ -80,6 +76,8 @@ module internal Naming =
         }
 
     type Contract = Contract<Type>
+    type Indexer = Indexer<Type>
+    type Parameter = Parameter<Type>
     type Property = Property<Type>
     type Signature = Signature<Type>
 
@@ -92,7 +90,5 @@ module internal Naming =
 
     type NestedModule = Module<Id>
     type TopModule = Module<unit>
-
-    val (|MethodType|_|) : Type -> option<seq<Signature>>
 
     val Do : A.Output -> TopModule

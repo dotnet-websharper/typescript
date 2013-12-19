@@ -56,22 +56,20 @@ module Naming =
             mutable Call : seq<Signature<'T>>
             mutable Extends : seq<'T>
             mutable Generics : seq<Id>
-            mutable IsReified : bool
-            mutable Kind : S.ContractKind<'T>
+            IsAnonymous : bool
             mutable Name : Id
             mutable New : seq<Signature<'T>>
             mutable Properties : seq<Property<'T>>
         }
 
-    let CreateContract name =
+    let CreateContract isAnon name =
         {
             ByNumber = None
             ByString = None
             Call = Seq.empty
             Extends = Seq.empty
             Generics = Seq.empty
-            IsReified = false
-            Kind = S.EmptyContract
+            IsAnonymous = isAnon
             Name = name
             New = Seq.empty
             Properties = Seq.empty
@@ -102,19 +100,13 @@ module Naming =
             | true, r -> r
             | _ ->
                 let map f xs = Seq.ofArray [| for x in xs -> f x |]
-                let isReified =
-                    match c.Kind with
-                    | S.MethodContract | S.FunctionContract _ -> c.IsUsedAsNamed
-                    | _ -> true
-                let r : Contract = CreateContract (idB.Id c.HintPath.Name.Text)
+                let r : Contract = CreateContract c.IsAnonymous (idB.Id c.HintPath.Name.Text)
                 contractMap.Add(c, r)
                 r.ByNumber <- Option.map p.Indexer c.ByNumber
                 r.ByString <- Option.map p.Indexer c.ByString
                 r.Call <- map p.Signature c.Call
                 r.Extends <- map p.Type c.Extends
                 r.Generics <- [| for g in c.Generics -> idB.Id(g.Text) |]
-                r.IsReified <- isReified
-                r.Kind <- p.Kind(c.Kind)
                 r.New <- map p.Signature c.New
                 r.Properties <- map p.Property c.Properties
                 idB.LinkAll <| seq {
@@ -130,14 +122,6 @@ module Naming =
                 IndexerName = idB.Id(i.IndexerName.Text)
                 IndexerType = p.Type(i.IndexerType)
             }
-
-        member p.Kind(k: S.ContractKind<C.Type>) : S.ContractKind<Type> =
-            match k with
-            | S.EmptyContract -> S.EmptyContract
-            | S.FunctionContract (xs, r) ->
-                S.FunctionContract (List.map p.Type xs, Option.map p.Type r)
-            | S.MethodContract -> S.MethodContract
-            | S.ObjectContract -> S.ObjectContract
 
         member p.Parameter(par: C.Parameter) : Parameter =
             match par with
@@ -251,23 +235,4 @@ module Naming =
         LinkNames idB [] m
         idB.Disambiguate()
         m
-
-    let (|FunContract|_|) (c: Contract) =
-        match c.Kind with
-        | S.FunctionContract (dom, r) -> Some (dom, r)
-        | _ -> None
-
-    let (|MethodType|_|) ty =
-        match ty with
-        | TNamed (con, []) ->
-            match con.Kind with
-            | S.FunctionContract _
-            | S.MethodContract -> Some con.Call
-            | _ -> None
-        | _ -> None
-
-    let (|FunType|_|) ty =
-        match ty with
-        | TNamed (FunContract (dom, r), []) -> Some (dom, r)
-        | _ -> None
 

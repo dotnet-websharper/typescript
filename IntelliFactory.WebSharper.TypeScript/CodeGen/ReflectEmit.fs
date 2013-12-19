@@ -37,6 +37,145 @@ module internal ReflectEmit =
             TopModule : N.TopModule
         }
 
+    /// A test for properites that may compile to CLR methods.
+    let TryGetMethodView (declaring: option<N.Contract>) (t: N.Type) : option<seq<N.Signature>> =
+        let genericArity =
+            match declaring with
+            | None -> 0
+            | Some c -> Seq.length c.Generics
+        let properGenerics gs =
+            let rec proper i gs =
+                match gs with
+                | [] -> genericArity = i
+                | N.TGeneric j :: gs when i = j -> proper (i + 1) gs
+                | _ -> false
+            proper 0 gs
+        let isMethod (c: N.Contract) (gs: list<N.Type>) =
+            c.IsAnonymous
+            && properGenerics gs
+            && Seq.length c.Generics = genericArity
+            && c.ByNumber.IsNone
+            && c.ByString.IsNone
+            && Seq.isEmpty c.Extends
+            && Seq.isEmpty c.New
+            && Seq.isEmpty c.Properties
+        match t with
+        | N.TNamed (c, gs) when isMethod c gs -> Some c.Call
+        | _ -> None
+
+    type FuncView =
+        {
+            FuncArgs : list<N.Type>
+            FuncRet : option<N.Type>
+        }
+
+    let (|FuncType|_|) (t: N.Type) : option<FuncView> =
+        match t with
+        | N.TNamed (c, [domain; range]) ->
+            let ok =
+                c.IsAnonymous
+                && Seq.length c.Generics = 2
+                && c.ByNumber.IsNone
+                && c.ByString.IsNone
+                && Seq.isEmpty c.Extends
+                && Seq.isEmpty c.New
+                && Seq.isEmpty c.Properties
+            if ok then
+                match Seq.toList c.Call with
+                | [s] ->
+                    let isSimpleParam p =
+                        match p with
+                        | N.Parameter.Param _ -> true
+                        | _ -> false
+                    let getParamType p =
+                        match p with
+                        | N.Parameter.Param (_, t) -> t
+                        | _ -> N.TAny
+                    let ok =
+                        s.MethodGenerics.IsEmpty
+                        && s.RestParameter.IsNone
+                        && List.forall isSimpleParam s.Parameters
+                    if ok then
+                        Some {
+                            FuncArgs = List.map getParamType s.Parameters
+                            FuncRet = s.ReturnType
+                        }
+                    else None
+                | _ -> None
+            else None
+         | _ -> None
+
+    /// For starters, we try to traverse all contracts to decide which ones
+    /// are `reified`, that is, need a CLR representation.
+    [<Sealed>]
+    type Pass0 private () =
+        let reified = HashSet<N.Contract>()
+
+        member private p.Contract(c: N.Contract) =
+            Seq.iter p.Type c.Extends
+            Option.iter p.Indexer c.ByNumber
+            Option.iter p.Indexer c.ByString
+            Seq.iter p.Signature c.Call
+            Seq.iter p.Signature c.New
+            for prop in c.Properties do
+                p.Property(c, prop)
+
+        member private p.Indexer(i: N.Indexer) =
+            p.Type i.IndexerType
+
+        member private p.IsReified(c: N.Contract) =
+            not c.IsAnonymous || reified.Contains c
+
+        member private p.Mark(c: N.Contract) =
+            if c.IsAnonymous then
+                reified.Add(c) |> ignore
+
+        member private p.Module<'T>(m: N.Module<'T>) : unit =
+            for sM in m.Modules do
+                p.Module(sM)
+            for c in m.Contracts do
+                p.Contract(c)
+            for v in m.Values do
+                p.Value(v)
+
+        member private p.Parameter(par: N.Parameter) =
+            match par with
+            | N.Parameter.Param (_, ty) -> p.Type ty
+            | _ -> ()
+
+        member private p.Property(c: N.Contract, prop: N.Property) =
+            match TryGetMethodView (Some c) prop.Type with
+            | Some ss -> Seq.iter p.Signature ss
+            | None -> p.Type prop.Type
+
+        member private p.Signature(s: N.Signature) =
+            List.iter p.Parameter s.Parameters
+            Option.iter p.Parameter s.RestParameter
+            Option.iter p.Type s.ReturnType
+
+        member private p.Type(t: N.Type) =
+            match t with
+            | N.TAny | N.TBoolean | N.TGeneric _ | N.TGenericM _ | N.TNumber | N.TString -> ()
+            | N.TArray t -> p.Type t
+            | N.TNamed (c, ts) ->
+                match t with
+                | FuncType view ->
+                    List.iter p.Type view.FuncArgs
+                    Option.iter p.Type view.FuncRet
+                | _ ->
+                    p.Mark(c)
+                    List.iter p.Type ts
+
+        member private p.Value(v: N.Value) =
+            match TryGetMethodView None v.Type with
+            | None -> p.Type v.Type
+            | Some ss -> Seq.iter p.Signature ss
+
+        static member Do(cfg) : (N.Contract -> bool) =
+            let p = Pass0()
+            p.Module(cfg.TopModule)
+            p.IsReified
+
     [<Sealed>]
     type ModuleTable<'T>() =
         let d = Dictionary<obj,'T>()
@@ -50,6 +189,7 @@ module internal ReflectEmit =
             ContainerTable : ModuleTable<TypeBuilder>
             ContractTable : Dictionary<N.Contract,TypeBuilder>
             CreatedTypes : ResizeArray<TypeBuilder>
+            IsReified : N.Contract -> bool
             ModuleBuilder : ModuleBuilder
         }
 
@@ -59,6 +199,7 @@ module internal ReflectEmit =
                 ContainerTable = ModuleTable()
                 ContractTable = Dictionary()
                 CreatedTypes = ResizeArray()
+                IsReified = Pass0.Do cfg
                 ModuleBuilder = mB
             }
 
@@ -69,15 +210,35 @@ module internal ReflectEmit =
             ||| MethodAttributes.SpecialName
             ||| MethodAttributes.RTSpecialName
 
+        let Indexer =
+            MethodAttributes.Abstract
+            ||| MethodAttributes.HideBySig
+            ||| MethodAttributes.PrivateScope
+            ||| MethodAttributes.Public
+            ||| MethodAttributes.SpecialName
+            ||| MethodAttributes.Virtual
+
         let Interface =
             TypeAttributes.Abstract
             ||| TypeAttributes.Interface
             ||| TypeAttributes.NestedPublic
 
+        let InterfaceMethod =
+            MethodAttributes.Abstract
+            ||| MethodAttributes.HideBySig
+            ||| MethodAttributes.PrivateScope
+            ||| MethodAttributes.Public
+            ||| MethodAttributes.Virtual
+
         let Module =
             TypeAttributes.Class
             ||| TypeAttributes.NestedPublic
             ||| TypeAttributes.Sealed
+
+        let StaticMethod =
+            MethodAttributes.PrivateScope
+            ||| MethodAttributes.Public
+            ||| MethodAttributes.Static
 
         let TopLevelModule =
             TypeAttributes.Abstract
@@ -99,14 +260,14 @@ module internal ReflectEmit =
     type Pass1(st) =
 
         member p.Contract(parent: TypeBuilder, c: N.Contract) =
-            if c.IsReified then
+            if st.IsReified c then
                 let name = c.Name
                 let tB = parent.DefineNestedType(name.Text, Attr.Interface)
                 st.ContractTable.Add(c, tB)
                 st.CreatedTypes.Add(tB)
                 let gs = [| for n in c.Generics -> n.Text |]
                 if gs.Length > 0 then
-                    tB.DefineGenericParameters()
+                    tB.DefineGenericParameters(gs)
                     |> ignore
 
         member p.Module<'T>(tB, m: N.Module<'T>) =
@@ -226,18 +387,8 @@ module internal ReflectEmit =
 
     let methodAttributes k =
         match k with
-        | CallMethod
-        | InterfaceMethod
-        | NewMethod ->
-            MethodAttributes.Abstract
-            ||| MethodAttributes.HideBySig
-            ||| MethodAttributes.PrivateScope
-            ||| MethodAttributes.Public
-            ||| MethodAttributes.Virtual
-        | StaticMethod ->
-            MethodAttributes.PrivateScope
-            ||| MethodAttributes.Public
-            ||| MethodAttributes.Static
+        | CallMethod | InterfaceMethod | NewMethod -> Attr.InterfaceMethod
+        | StaticMethod -> Attr.StaticMethod
 
     type PropertyKind =
         | InterfaceProperty
@@ -277,7 +428,7 @@ module internal ReflectEmit =
                 b.Value(tB, v)
 
         member b.Contract(c: N.Contract) =
-            if c.IsReified then
+            if st.IsReified c then
                 let tB = st.ContractTable.[c]
                 let ctx = { DefaultContext with Generics = tB.GenericTypeParameters }
                 for ty in c.Extends do
@@ -294,20 +445,15 @@ module internal ReflectEmit =
                     b.Signatures(CallMethod, ctx, tB, N.Id.Call, "Call", c.Call)
                 if Seq.isEmpty c.New |> not then
                     b.Signatures(NewMethod, ctx, tB, N.Id.New, "New", c.New)
+                let declaring = Some c
                 for prop in c.Properties do
-                    match prop.Type with
-                    | N.MethodType ss -> b.Signatures(InterfaceMethod, ctx, tB, prop.Id, prop.Name.Text, ss)
-                    | ty -> b.Property(InterfaceProperty, ctx, tB, prop.Id, Names.NP1 prop.Name, prop.Type)
+                    match TryGetMethodView declaring prop.Type with
+                    | Some ss -> b.Signatures(InterfaceMethod, ctx, tB, prop.Id, prop.Name.Text, ss)
+                    | None -> b.Property(InterfaceProperty, ctx, tB, prop.Id, Names.NP1 prop.Name, prop.Type)
 
         member b.Indexer(ctx, tB: TypeBuilder, paramName: N.Id, paramType, retType) =
             let pA = PropertyAttributes.None
-            let mA =
-                MethodAttributes.Abstract
-                ||| MethodAttributes.HideBySig
-                ||| MethodAttributes.PrivateScope
-                ||| MethodAttributes.Public
-                ||| MethodAttributes.SpecialName
-                ||| MethodAttributes.Virtual
+            let mA = Attr.Indexer
             let pT = [| paramType |]
             let rT = b.Type(ctx, retType)
             let pD = tB.DefineProperty("Item", pA, rT, pT)
@@ -423,35 +569,35 @@ module internal ReflectEmit =
                 b.Signature(mK, ctx, tB, methodName, jname, s)
 
         member b.Type(ctx, ty) : Type =
-            let inline ( ! ) t = b.Type(ctx, t)
             match ty with
             | N.TAny -> objT
-            | N.TArray x -> arrayType.[!x]
+            | N.TArray x -> arrayType.[b.Type(ctx, x)]
             | N.TBoolean -> boolT
             | N.TGeneric k -> ctx.Generics.[k]
             | N.TGenericM k -> ctx.GenericsM.[k]
             | N.TNamed (c, xs) ->
-                match c.Kind with
-                | S.FunctionContract (dom, range) ->
-                    let dom = Array.map (!) (Array.ofList dom)
+                match ty with
+                | FuncType { FuncArgs = dom; FuncRet = range } ->
+                    let ctx = { Generics = [| for x in xs -> b.Type(ctx, x) |]; GenericsM = Array.empty }
+                    let dom = [| for d in dom -> b.Type(ctx, d) |]
                     let range =
                         match range with
                         | None -> unitT
-                        | Some t -> !t
+                        | Some t -> b.Type(ctx, t)
                     funType.[(dom, range)]
                 | _ ->
                     match xs with
                     | [] -> st.ContractTable.[c] :> Type
                     | _ ->
-                        let xs = Array.map (!) (Array.ofList xs)
+                        let xs = Array.map (fun x -> b.Type(ctx, x)) (Array.ofList xs)
                         genInst.[(st.ContractTable.[c] :> Type, xs)]
             | N.TNumber -> numberT
             | N.TString -> stringT
 
         member b.Value(tB, v: N.Value) =
-            match v.Type with
-            | N.MethodType ss -> b.Signatures(StaticMethod, DefaultContext, tB, v.Id, v.NamePath.Name.Text, ss)
-            | ty -> b.Property(StaticProperty, DefaultContext, tB, v.Id, v.NamePath, ty)
+            match TryGetMethodView None v.Type with
+            | Some ss -> b.Signatures(StaticMethod, DefaultContext, tB, v.Id, v.NamePath.Name.Text, ss)
+            | None -> b.Property(StaticProperty, DefaultContext, tB, v.Id, v.NamePath, v.Type)
 
         static member Do(st: State) =
             Pass2(st).Container(st.Config.TopModule)
