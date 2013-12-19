@@ -8,21 +8,24 @@ type T = IntelliFactory.TypeScript.Generator<"../typescript/example1.d.ts">
 [<JavaScript>]
 module Client =
 
-    [<Inline "A.x">]
-    let Ax = Unchecked.defaultof<T.I1>
-
     let Main () =
+        T.A.x.a <- 12
+        T.A.nestedNumber <- 40
         Div [
             P [
+                Text "A.nestedNumber = "
+                Text (string T.A.nestedNumber)
+            ]
+            P [
                 Text "A.x.a = "
-                Text (string Ax.a)
+                Text (string T.A.x.a)
             ]
             P [
                 Text "A.x.incr(A.x.a, A.x.b) = "
-                Text (string (Ax.incr(Ax.a, Ax.b)))
+                Text (string (T.A.x.incr(T.A.x.a, T.A.x.b)))
             ]
             P [
                 Text "A.x.withRest(A.x.a, A.x.e, A.x.b, \"foo\") = "
-                Text (string (Ax.withRest(Ax.a, Ax.e, Ax.b, "foo")))
+                Text (string (T.A.x.withRest(T.A.x.a, T.A.x.e, T.A.x.b, "foo")))
             ]
         ]

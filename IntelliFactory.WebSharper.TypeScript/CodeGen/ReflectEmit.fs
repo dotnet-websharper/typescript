@@ -179,25 +179,32 @@ module internal ReflectEmit =
         let ParamArray = CustomAttributeBuilder(paramArrayCtor, [||])
 
         let private inlineCtor = typeof<A.InlineAttribute>.GetConstructor([|stringT|])
+        let private Inline (s: string) =
+            CustomAttributeBuilder(inlineCtor, [|s|])
+
         let InlineMethod (name: string) (numArgs: int) =
             let args =
                 Array.init numArgs (fun i -> "$" + string (i + 1))
                 |> String.concat ","
-            let inl = sprintf "$0.%s(%s)" name args
-            CustomAttributeBuilder(inlineCtor, [| inl |])
+            Inline <| sprintf "$0.%s(%s)" name args
 
         let MethodWithParamArray (name: string) (numArgs: int) =
             let normalArgs =
                 Array.init (numArgs - 1) (fun i -> "$" + string (i + 1))
                 |> String.concat ","
-            let inl = sprintf "$0.%s.apply($0, [%s].concat(%s))" name normalArgs ("$" + string (numArgs))
-            CustomAttributeBuilder(inlineCtor, [| inl |])
+            Inline <| sprintf "$0.%s.apply($0, [%s].concat(%s))" name normalArgs ("$" + string (numArgs))
 
         let PropertyGet (name: string) =
-            CustomAttributeBuilder(inlineCtor, [| "$0." + name |])
+            Inline <| "$0." + name
 
         let PropertySet (name: string) =
-            CustomAttributeBuilder(inlineCtor, [| "void($0." + name + "=$1)" |])
+            Inline <| "void($0." + name + "=$value)"
+
+        let StaticPropertyGet (name: string) =
+            Inline name
+
+        let StaticPropertySet (name: string) =
+            Inline <| "void(window." + name + "=$value)"
 
     type Context =
         {
@@ -290,7 +297,7 @@ module internal ReflectEmit =
                 for prop in c.Properties do
                     match prop.Type with
                     | N.MethodType ss -> b.Signatures(InterfaceMethod, ctx, tB, prop.Id, prop.Name.Text, ss)
-                    | ty -> b.Property(InterfaceProperty, ctx, tB, prop.Id, prop.Name, prop.Type)
+                    | ty -> b.Property(InterfaceProperty, ctx, tB, prop.Id, Names.NP1 prop.Name, prop.Type)
 
         member b.Indexer(ctx, tB: TypeBuilder, paramName: N.Id, paramType, retType) =
             let pA = PropertyAttributes.None
@@ -313,7 +320,7 @@ module internal ReflectEmit =
             pD.SetSetMethod(sM)
             pD.SetCustomAttribute(CustomAttr.Macro.Item)
 
-        member b.Property(pK, ctx, tB: TypeBuilder, name: N.Id, jname: Names.Name, ty: N.Type) =
+        member b.Property(pK, ctx, tB: TypeBuilder, name: N.Id, jname: Names.NamePath, ty: N.Type) =
             let pA = PropertyAttributes.None
             let pT = b.Type(ctx, ty)
             let pB = tB.DefineProperty(name.Text, pA, pT, Array.empty)
@@ -329,14 +336,14 @@ module internal ReflectEmit =
             pB.SetSetMethod(sM)
             match pK with
             | InterfaceProperty ->
-                gM.SetCustomAttribute(CustomAttr.PropertyGet jname.Text)
-                sM.SetCustomAttribute(CustomAttr.PropertySet jname.Text)
+                gM.SetCustomAttribute(CustomAttr.PropertyGet jname.Name.Text)
+                sM.SetCustomAttribute(CustomAttr.PropertySet jname.Name.Text)
             | StaticProperty ->
                 gM.NotImplemented()
                 sM.NotImplemented()
-                // TODO
-//                gM.SetCustomAttribute(CustomAttr.StaticPropertyGet)
-//                sM.SetCustomAttribute(CustomAttr.StaticPropertySet)
+                let fullName = jname.ToString()
+                gM.SetCustomAttribute(CustomAttr.StaticPropertyGet fullName)
+                sM.SetCustomAttribute(CustomAttr.StaticPropertySet fullName)
 
         /// An arbitrary object computed for comparing signatures for
         /// identity in compiled code, to signatures CLR sees as duplicate.
@@ -444,7 +451,7 @@ module internal ReflectEmit =
         member b.Value(tB, v: N.Value) =
             match v.Type with
             | N.MethodType ss -> b.Signatures(StaticMethod, DefaultContext, tB, v.Id, v.NamePath.Name.Text, ss)
-            | ty -> b.Property(StaticProperty, DefaultContext, tB, v.Id, v.NamePath.Name, ty)
+            | ty -> b.Property(StaticProperty, DefaultContext, tB, v.Id, v.NamePath, ty)
 
         static member Do(st: State) =
             Pass2(st).Container(st.Config.TopModule)
