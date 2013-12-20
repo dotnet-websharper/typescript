@@ -29,14 +29,20 @@ module Lexer =
     type UserState =
         {
             IdBuilder : Names.NameBuilder
+            IsAfterNewline : bool
             ReferencePaths : Set<string>
         }
 
         static member Create(nameBuilder) =
             {
                 IdBuilder = nameBuilder
+                IsAfterNewline = false
                 ReferencePaths = Set.empty
             }
+
+    let setAfterNewLine ok b =
+        if ok = b.IsAfterNewline then b else
+            { b with IsAfterNewline = ok }
 
     let addReferencePath path st =
         { st with ReferencePaths = st.ReferencePaths.Add(path) }
@@ -80,7 +86,11 @@ module Lexer =
         let sq = pchar '\''
         make dq dP <|> make sq sP
 
-    let whiteSpace : L<unit> =
+    let countLines (x: L<unit>) =
+        pipe2 (getPosition .>> x) getPosition
+            (fun p1 p2 -> int (p2.Line - p1.Line))
+
+    let whiteSpace =
         let nextLine =
             skipManySatisfy (fun c -> c <> '\n')
             >>. skipChar '\n'
@@ -98,7 +108,7 @@ module Lexer =
             >>. (stringLiteral >>= (addReferencePath >> updateUserState))
             .>> sp .>> skipString "/>" .>> nextLine
         let comment =
-            refComment
+            attempt refComment
             <|> singleLineComment
             <|> multiLineComment
         let space =
@@ -180,7 +190,12 @@ module Lexer =
             (fun st str -> st.IdBuilder.ShareString(str))
         .>> whiteSpace
 
-    let token s = skipString s >>. whiteSpace
+    let interTokenWhitespace =
+        countLines whiteSpace >>= fun k ->
+            updateUserState (setAfterNewLine (k > 0))
+
+    let token s =
+        skipString s .>> interTokenWhitespace
 
     let ``.`` = token "."
     let ``,`` = token ","
@@ -221,6 +236,13 @@ module Lexer =
     let Public = token "public"
     let Private = token "private"
 
+    let ActualOrImpliedSemicolon =
+        choice [
+            ``;``
+            userStateSatisfies (fun u -> u.IsAfterNewline)
+            lookAhead (``}`` <|> eof)
+        ]
+
     module Flags =
 
         let flag p =
@@ -232,4 +254,4 @@ module Lexer =
         let Static = flag "static"
 
     let Make main =
-        whiteSpace >>. main .>> eof
+        interTokenWhitespace >>. main .>> eof

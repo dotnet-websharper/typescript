@@ -29,6 +29,7 @@ module internal Lexer =
     type UserState =
         {
             IdBuilder : Names.NameBuilder
+            IsAfterNewline : bool
             ReferencePaths : Set<string>
         }
 
@@ -84,5 +85,7 @@ module internal Lexer =
         val ``?`` : L<bool>
         val Export : L<bool>
         val Static : L<bool>
+
+    val ActualOrImpliedSemicolon : L<unit>
 
     val Make : L<'T> -> L<'T>

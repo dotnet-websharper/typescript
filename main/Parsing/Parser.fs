@@ -82,9 +82,7 @@ module Parser =
     let gIdentName = Lexer.IdentifierName
     let gIdent = Lexer.Identifier
 
-    /// TODO: semicolon insertion also happens if looking-at a newline.
-    let gSemi =
-        Lexer.``;`` <|> lookAhead (Lexer.``}`` <|> eof)
+    let gSemi = Lexer.ActualOrImpliedSemicolon
 
     let gStringLiteral = Lexer.StringLiteral
 
@@ -170,8 +168,8 @@ module Parser =
     let defTypeMember g : P<S.TypeMember> =
         choice [
             g.CallSignature |>> S.TM2
-            g.ConstructSignature |>> S.TM3
             g.IndexSignature |>> S.TM4
+            attempt (g.ConstructSignature |>> S.TM3)
             attempt g.MethodSignature
             g.PropertySignature |>> S.TM1
         ]

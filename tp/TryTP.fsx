@@ -11,7 +11,7 @@ module C = TypeScript.TypeScriptCompiler
 
 let res =
     {
-        C.Configure "Ex" [Path.Combine(__SOURCE_DIRECTORY__, "..", "defs", "example2.d.ts")] with
+        C.Configure "Ex" [Path.Combine(__SOURCE_DIRECTORY__, "..", "defs", "example3.d.ts")] with
             Verbosity = TypeScript.Logging.Verbose
     }
     |> C.Compile
