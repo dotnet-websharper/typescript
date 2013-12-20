@@ -3,7 +3,7 @@ namespace IntelliFactory.WebSharper.TypeScript.TestSite
 open IntelliFactory.WebSharper
 open IntelliFactory.WebSharper.Html
 
-type T = IntelliFactory.TypeScript.Generator<"../typescript/example1.d.ts">
+type T = IntelliFactory.TypeScript.Generator<"../defs/example1.d.ts">
 
 [<JavaScript>]
 module Client =

@@ -5,7 +5,8 @@ open IntelliFactory.Build
 let bt = BuildTool().PackageId("WebSharper.TypeScript", "2.5")
 
 let main =
-    bt.WebSharper.Library("IntelliFactory.WebSharper.TypeScript")
+    (bt.WebSharper.Library("IntelliFactory.WebSharper.TypeScript")
+    |> FSharpConfig.BaseDir.Custom "main")
         .SourcesFromProject()
         .References(fun r ->
             [
@@ -13,7 +14,8 @@ let main =
             ])
 
 let typeProvider =
-    bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript.TypeProvider")
+    (bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript.TypeProvider")
+    |> FSharpConfig.BaseDir.Custom "tp")
         .SourcesFromProject()
         .References(fun r ->
             [
@@ -22,7 +24,8 @@ let typeProvider =
             ])
 
 let tests =
-    bt.FSharp.ConsoleExecutable("IntelliFactory.WebSharper.TypeScript.Tests")
+    (bt.FSharp.ConsoleExecutable("IntelliFactory.WebSharper.TypeScript.Tests")
+    |> FSharpConfig.BaseDir.Custom "tests")
         .SourcesFromProject()
         .References(fun r ->
             [
@@ -31,7 +34,8 @@ let tests =
             ])
 
 let testSite =
-    bt.WebSharper.HtmlWebsite("IntelliFactory.WebSharper.TypeScript.TestSite")
+    (bt.WebSharper.HtmlWebsite("IntelliFactory.WebSharper.TypeScript.TestSite")
+    |> FSharpConfig.BaseDir.Custom "web")
         .SourcesFromProject()
         .References(fun r ->
             [
