@@ -626,16 +626,24 @@ module internal ReflectEmit =
 
         let Do st =
             // NOTE: need to consider base types first, otherwise `ty.CreateType` fails with an exception.
-            let typeSet = HashSet<Type>(Seq.cast st.CreatedTypes)
             let baseTypes (ty: TypeBuilder) : seq<TypeBuilder> =
-                let res =
-                    if ty.IsInterface then
-                        ty.ImplementedInterfaces
-                        |> Seq.map (fun i -> if i.IsGenericType then i.GetGenericTypeDefinition() else i)
-                        |> Seq.filter typeSet.Contains
-                        |> Seq.cast
-                    else Seq.empty
-                res
+                let r = ResizeArray()
+                let rec visit (t: Type) =
+                    if t <> null then
+                        if t.IsArray then
+                            visit (t.GetElementType())
+                        elif t.IsGenericType && not t.IsGenericTypeDefinition then
+                            visit (t.GetGenericTypeDefinition())
+                            for t in t.GetGenericArguments() do
+                                visit t
+                        else
+                            match t with
+                            | :? TypeBuilder as b -> r.Add(b)
+                            | _ -> ()
+                visit ty.DeclaringType
+                for i in ty.ImplementedInterfaces do
+                    visit i
+                r :> seq<_>
             for ty in TopSort.Intrinsic st.CreatedTypes baseTypes do
                 ty.CreateType() |> ignore
 

@@ -45,6 +45,9 @@ module Logging =
         /// Reports an arbitrary exception.
         member Exception : exn -> unit
 
+        /// A warning triggered by a failure to resolve a type name.
+        member FailedToResolveTypeName : name: string -> unit
+
         /// System path that were not found.
         member MissingFile : FilePath -> unit
 

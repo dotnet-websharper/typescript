@@ -46,8 +46,9 @@ module TypeScriptCompiler =
         }
         |> SFD.Resolve
 
-    let AnalyzeSourceFiles (sourceFiles: SFD.Result) =
+    let AnalyzeSourceFiles logger (sourceFiles: SFD.Result) =
         Analysis.Analyze {
+            Logger = logger
             SourceFiles = sourceFiles.SourceFiles
         }
 
@@ -79,7 +80,7 @@ module TypeScriptCompiler =
             Run logger cfg.Verbosity <| fun () ->
                 let bytes =
                     GetSourceFileSet logger cfg
-                    |> AnalyzeSourceFiles
+                    |> AnalyzeSourceFiles logger
                     |> MangleNames
                     |> EmitAssembly cfg
                 CompiledAssembly(cfg, bytes)

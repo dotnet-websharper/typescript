@@ -51,7 +51,7 @@ module internal Scopes =
 
     [<Sealed>]
     type ScopeChain =
-        new : unit -> ScopeChain
+        new : Logger -> ScopeChain
         member Add : Scope -> ScopeChain
         member ResolveModule : S.ModuleName -> option<Module>
         member ResolveContract : S.TypeName -> option<C.Contract>
