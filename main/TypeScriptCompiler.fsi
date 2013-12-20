@@ -30,6 +30,7 @@ module TypeScriptCompiler =
             AssemblyName : string
             TopLevelClassName : string
             TypeScriptDeclarationFiles : seq<FilePath>
+            Verbosity : Logging.Level
         }
 
     [<Sealed>]
@@ -37,6 +38,11 @@ module TypeScriptCompiler =
         member GetBytes : unit -> byte []
         member TopLevelClassName : string
 
-    val Compile : Config -> CompiledAssembly
+    [<Sealed>]
+    type Result =
+        member CompiledAssembly : option<CompiledAssembly>
+        member Messages : seq<Logging.Message>
+
+    val Compile : Config -> Result
     val Configure : topLevelClassName : string -> paths: seq<FilePath> -> Config
 
