@@ -391,18 +391,27 @@ module internal Analysis =
         member this.TypeParam(tP) =
             match tP with
             | S.TP1 x -> x
-            | S.TP2 (x, y) -> x // ignoring constraint for now
+            | S.TP2 (x, y) -> x /// TODO: ignoring constraint for now
 
         member this.TypeRef(S.TRef (tN, args)) =
             ctx.ScopeChain.ResolveType(tN, List.map this.Type args)
 
         member this.Var(exp, id, ty) =
-            let ty = this.Type ty
+            /// TODO: merging anon types on duplicate `function` decls.
             match exp with
             | S.Export ->
-                ctx.CurrentModule.ExportedValues.Add(id, ty)
-                if ctx.ExportedRoot.IsGlobal then // TODO: account for external modules
-                    st.ValueBuilder.Value(ctx.SubPath(id), ty) |> ignore
+                let def () =
+                    let vs = ctx.CurrentModule.ExportedValues
+                    let ty = this.Type(ty)
+                    vs.[id] <- ty
+                    if ctx.ExportedRoot.IsGlobal then // TODO: account for external modules
+                        st.ValueBuilder.Value(ctx.SubPath(id), ty) |> ignore
+                match ctx.CurrentModule.ExportedValues.TryGetValue(id) with
+                | true, C.TNamed (c, _) ->
+                    match ty with
+                    | S.TObject ms -> this.BuildContract(c, ms)
+                    | _ -> def ()
+                | _ -> def ()
             | _ -> ()
             // TODO: record more information so that type-queries may work.
 
