@@ -184,7 +184,58 @@ module internal Analysis =
             | S.Ps3 (ps, opts, rest) -> makeSigs ps opts (Some (convP rest))
 
         member this.Class(c: S.AmbientClassDeclaration) =
-            () // TODO
+            this.Interface(S.Export, this.ClassToInterface(c))
+            this.Var(S.Export, c.ClassName, this.ClassToStatics(c))
+
+        member this.ClassToInterface(c: S.AmbientClassDeclaration) : S.InterfaceDeclaration =
+            {
+                InterfaceName = c.ClassName
+                InterfaceTypeParameters = c.ClassTypeParameters
+                InterfaceExtends = Option.toList c.ClassExtends @ c.ClassImplements
+                InterfaceBody =
+                    [
+                        for m in c.ClassBody do
+                            match m with
+                            | S.ClassConstructor _ -> ()
+                            | S.ClassIndex iS ->
+                                yield S.TM4 iS
+                            | S.ClassMethod (acc, sc, name, sign) ->
+                                match acc, sc with
+                                | S.Public, S.Instance ->
+                                    yield S.TM1 (S.Prop (name, S.TObject [S.TM2 sign]))
+                                | _ -> ()
+                            | S.ClassProperty (acc, sc, name, ty) ->
+                                match acc, sc with
+                                | S.Public, S.Instance ->
+                                    yield S.TM1 (S.Prop (name, ty))
+                                | _ -> ()
+                    ]
+            }
+
+        member this.ClassToStatics(s: S.AmbientClassDeclaration) : S.Type =
+            let selfTP = s.ClassTypeParameters
+            let mkT (t: S.TypeParameter) =
+                match t with
+                | S.TP1 n
+                | S.TP2 (n, _) -> S.TReference (S.TRef (S.TN1 n, []))
+            let selfType = S.TReference (S.TRef (S.TN1 s.ClassName, List.map mkT selfTP))
+            S.TObject [
+                for m in s.ClassBody do
+                    match m with
+                    | S.ClassConstructor ps ->
+                        yield S.TM3 (S.CS (selfTP, ps, selfType))
+                    | S.ClassIndex iS -> ()
+                    | S.ClassMethod (acc, sc, name, sign) ->
+                        match acc, sc with
+                        | S.Public, S.Static ->
+                            yield S.TM1 (S.Prop (name, S.TObject [S.TM2 sign]))
+                        | _ -> ()
+                    | S.ClassProperty (acc, sc, name, ty) ->
+                        match acc, sc with
+                        | S.Public, S.Static ->
+                            yield S.TM1 (S.Prop (name, ty))
+                        | _ -> ()
+            ]
 
         member this.Enum(e: S.AmbientEnumDeclaration) =
             () // TODO
@@ -243,7 +294,7 @@ module internal Analysis =
                     ScopeChain = ctx.ScopeChain.Add(expScope).Add(locScope)
                 }
             let v = Visit(st, subContext)
-            for el in body.List do
+            for el in body do
                 v.ModuleElement(el)
             // TODO: instantiated modules bind a variable
 
@@ -265,7 +316,7 @@ module internal Analysis =
             let decls =
                 match sf.Syntax with
                 | S.DSF decls -> decls
-            for decl in decls.List do
+            for decl in decls do
                 match decl with
                 | S.DE1 _ -> () // export assignments not possible in normal source files
                 | S.DE2 (_, i) -> // no export modifier in normal source files

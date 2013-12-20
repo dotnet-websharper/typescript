@@ -27,7 +27,6 @@ module internal TestRunner =
 
     let AllTests =
         testList "WebSharper.TypeScript" [
-            UniplateTests.AllTests
             GraphColoringTests.AllTests
         ]
 

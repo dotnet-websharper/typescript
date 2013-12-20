@@ -82,7 +82,10 @@ module Parser =
     let gIdentName = Lexer.IdentifierName
     let gIdent = Lexer.Identifier
 
-    let gSemi  = Lexer.``;``
+    /// TODO: semicolon insertion also happens if looking-at a newline.
+    let gSemi =
+        Lexer.``;`` <|> lookAhead (Lexer.``}`` <|> eof)
+
     let gStringLiteral = Lexer.StringLiteral
 
     let gChoice2 a b =
@@ -361,14 +364,15 @@ module Parser =
                 gAccess
                 gMemberScope
                 gPropertyName
-                (gChoice2 g.TypeAnnot g.CallSignature)
+                (gChoice2 g.CallSignature g.TypeAnnot)
                 (fun acc sc name body ->
                     match body with
-                    | Choice1Of2 ty ->
+                    | Choice2Of2 ty ->
                         ACBE.ClassProperty (acc, sc, name, ty)
-                    | Choice2Of2 cs ->
+                    | Choice1Of2 cs ->
                         ACBE.ClassMethod (acc, sc, name, cs))
             .>> gSemi
+            |> fun mem -> mem <?> "member"
         let heritage =
             fun x y -> (x, y)
             |> pipe2
@@ -385,7 +389,7 @@ module Parser =
                     ClassTypeParameters = tps
                     ClassExtends =  ext
                     ClassImplements = defaultArg impl []
-                    ClassBody =  S.Nodes body
+                    ClassBody = body
                 })
 
     let gAmbientEnumDeclaration : P<S.AmbientEnumDeclaration> =
@@ -395,7 +399,7 @@ module Parser =
                     match v with
                     | None -> S.AEM1 id
                     | Some v -> S.AEM2 (id, v)
-        fun id ms -> { EnumName = id; EnumBody = S.Nodes ms } : S.AmbientEnumDeclaration
+        fun id ms -> { EnumName = id; EnumBody = ms } : S.AmbientEnumDeclaration
         |> pipe2
             (Lexer.Enum >>. gIdent)
             (gCurly (sepEndBy m gComma))
@@ -469,7 +473,7 @@ module Parser =
             (gCurly (many el))
             (fun us p es ->
                 let name = E.Name.Parse(us.IdBuilder, p)
-                S.AEMD (getTopLevelName name, S.Nodes es))
+                S.AEMD (getTopLevelName name, es))
 
     let defAmbientDeclaration g : P<S.AmbientDeclaration> =
         Lexer.Declare >>.
@@ -512,7 +516,7 @@ module Parser =
                         | Choice4Of4 y -> S.DE5 (x, y))
             v1 <|> v2
         many el
-        |>> fun xs -> S.DSF (S.Nodes xs)
+        |>> S.DSF
 
     let grammar : Grammar =
         let rec mk (f: Grammar -> P<'T>) : P<'T> =

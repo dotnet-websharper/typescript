@@ -22,7 +22,6 @@
 namespace IntelliFactory.WebSharper.TypeScript
 
 module E = ExternalModuleNames
-module U = Uniplate
 
 /// Defines the syntax tree for the declarations (`.d.ts`)
 /// subset of TypeScript, extracted by tracing the grammar
@@ -125,17 +124,6 @@ module internal Syntax =
 
     (* Nodes *)
 
-    type INode =
-        abstract Match : U.R<INode>
-
-    val NodeUtility : U.NodeUtility<INode>
-
-    type Collection<'T when 'T :> INode> =
-        | Nodes of list<'T>
-
-        interface INode
-        member List : list<'T>
-
     type InterfaceDeclaration =
         {
             InterfaceName : Identifier
@@ -144,15 +132,11 @@ module internal Syntax =
             InterfaceBody : list<TypeMember>
         }
 
-        interface INode
-
     type AmbientClassBodyElement =
         | ClassConstructor of Parameters
         | ClassProperty of Access * MemberScope * Name * Type
         | ClassMethod of Access * MemberScope * Name * CallSignature
         | ClassIndex of IndexSignature
-
-        interface INode
 
     type AmbientClassDeclaration =
         {
@@ -160,49 +144,33 @@ module internal Syntax =
             ClassTypeParameters : list<TypeParameter>
             ClassExtends : option<TypeReference>
             ClassImplements : list<TypeReference>
-            ClassBody : Collection<AmbientClassBodyElement>
+            ClassBody : list<AmbientClassBodyElement>
         }
-
-        interface INode
 
     type AmbientEnumMember =
         | AEM1 of Name
         | AEM2 of Name * int
 
-        interface INode
-
     type AmbientEnumDeclaration =
         {
             EnumName : Identifier
-            EnumBody : Collection<AmbientEnumMember>
+            EnumBody : list<AmbientEnumMember>
         }
-
-        interface INode
 
     type AmbientVariableDeclaration =
         | AVD of Identifier * Type
 
-        interface INode
-
     type AmbientFunctionDeclaration =
         | AFD of Identifier * CallSignature
-
-        interface INode
 
     type ImportDeclaration =
         | ID of Identifier * EntityName
 
-        interface INode
-
     type ExportAssignment =
         | EA of Identifier
 
-        interface INode
-
     type ExternalImportDeclaration<'T> =
         | EID of Identifier * 'T
-
-        interface INode
 
     type AmbientModuleElement =
         | AME1 of AmbientVariableDeclaration
@@ -213,12 +181,8 @@ module internal Syntax =
         | AME6 of AmbientModuleDeclaration
         | AME7 of ExportModifier * ImportDeclaration
 
-        interface INode
-
     and AmbientModuleDeclaration =
-        | AMD of Identifier * Collection<AmbientModuleElement>
-
-        interface INode
+        | AMD of Identifier * list<AmbientModuleElement>
 
         static member Create :
             list<Identifier> * seq<AmbientModuleElement> ->
@@ -229,12 +193,8 @@ module internal Syntax =
         | AEME2 of ExportAssignment
         | AEME3 of ExportModifier * ExternalImportDeclaration<E.TopLevelName>
 
-        interface INode
-
     type AmbientExternalModuleDeclaration =
-        | AEMD of E.TopLevelName * Collection<AmbientExternalModuleElement>
-
-        interface INode
+        | AEMD of E.TopLevelName * list<AmbientExternalModuleElement>
 
     type AmbientDeclaration =
         | AD1 of AmbientVariableDeclaration
@@ -244,8 +204,6 @@ module internal Syntax =
         | AD5 of AmbientModuleDeclaration
         | AD6 of AmbientExternalModuleDeclaration
 
-        interface INode
-
     type DeclarationElement =
         | DE1 of ExportAssignment
         | DE2 of ExportModifier * InterfaceDeclaration
@@ -253,9 +211,5 @@ module internal Syntax =
         | DE4 of ExportModifier * ExternalImportDeclaration<E.Name>
         | DE5 of ExportModifier * AmbientDeclaration
 
-        interface INode
-
     type DeclarationSourceFile =
-        | DSF of Collection<DeclarationElement>
-
-        interface INode
+        | DSF of list<DeclarationElement>

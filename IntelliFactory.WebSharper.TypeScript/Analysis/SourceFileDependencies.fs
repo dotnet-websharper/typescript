@@ -24,7 +24,6 @@ namespace IntelliFactory.WebSharper.TypeScript
 module E = ExternalModuleNames
 module P = Parser
 module S = Syntax
-module U = Uniplate
 
 /// Implements source file dependency resolution
 /// according to section 11.1.1 of TypeScript manual 0.9.5.
@@ -111,6 +110,13 @@ module SourceFileDependencies =
         | UnknownFileType of FilePath
         | Unresolved of E.TopLevelName
 
+        override this.ToString() =
+            match this with
+            | Missing fP -> sprintf "Missing: %s" fP
+            | NoParse (fP, reason) -> sprintf "NoParse [%s]: %s" fP reason
+            | UnknownFileType fP -> sprintf "UnknownFileType: %s" fP
+            | Unresolved name -> sprintf "Unresovled: %O" name
+
     [<Sealed>]
     type SourceFile(path: FilePath, syntax: S.DeclarationSourceFile, ?name: E.TopLevelName) =
         member sf.FilePath = path
@@ -152,12 +158,12 @@ module SourceFileDependencies =
 
     let findExternImports (S.DSF dsf) =
         seq {
-            for decl in dsf.List do
+            for decl in dsf do
                 match decl with
                 | S.DE4 (_, S.EID (_, name)) ->
                     yield name
                 | S.DE5  (_, S.AD6 (S.AEMD (_, body))) ->
-                    for e in body.List do
+                    for e in body do
                         match e with
                         | S.AEME3 (_, S.EID (_, name)) ->
                             yield E.TopLevel name
