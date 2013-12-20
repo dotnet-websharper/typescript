@@ -63,12 +63,15 @@ module internal Analysis =
     type State =
         {
             Contracts : C.Contracts
+            Logger : Logger
             ValueBuilder : ValueBuilder
+
         }
 
-        static member Create() =
+        static member Create(logger) =
             {
                 Contracts = C.Contracts()
+                Logger = logger
                 ValueBuilder = ValueBuilder.Create()
             }
 
@@ -238,7 +241,40 @@ module internal Analysis =
             ]
 
         member this.Enum(e: S.AmbientEnumDeclaration) =
-            () // TODO
+            this.Interface(S.Export, this.EnumToInterface(e))
+            this.Var(S.Export, e.EnumName, this.EnumToStatics(e))
+
+        member this.EnumToInterface(e: S.AmbientEnumDeclaration) : S.InterfaceDeclaration =
+            {
+                InterfaceName = e.EnumName
+                InterfaceTypeParameters = []
+                InterfaceExtends = []
+                InterfaceBody = []
+            }
+
+        member this.EnumToStatics(e: S.AmbientEnumDeclaration) : S.Type =
+            let selfType = S.TReference (S.TRef (S.TN1 e.EnumName, []))
+            S.TObject [
+                for m in e.EnumBody do
+                    match m with
+                    | S.AEM1 name
+                    | S.AEM2 (name, _) -> // TODO: ignoring int value for now
+                        yield S.TM1 (S.Prop (name, selfType))
+            ]
+
+        member this.ExportContract(exp, name: Name, c: C.Contract) =
+            match exp with
+            | S.Export ->
+                ctx.ExportedScope.BindContract(name, c)
+                ctx.CurrentModule.ExportedContracts.[name] <- c
+            | S.NoExport -> ()
+
+        member this.ExportModule(exp, name: Name, mo: Sc.Module) =
+            match exp with
+            | S.Export ->
+                ctx.ExportedScope.BindModule(name, mo)
+                ctx.CurrentModule.ExportedModules.[name] <- mo
+            | S.NoExport -> ()
 
         member this.Import(exp, S.ID (id, name)) =
             ctx.LocalScope.Link(id, name)
@@ -261,13 +297,9 @@ module internal Analysis =
                     Visit(st, { ctx with Generics = Seq.toArray tps })
             vis.BuildContract(c, i.InterfaceBody)
             for r in i.InterfaceExtends do
-                c.Extend(this.TypeRef(r))
+                c.Extend(vis.TypeRef(r))
             ctx.LocalScope.BindContract(i.InterfaceName, c)
-            match exp with
-            | S.Export ->
-                ctx.ExportedScope.BindContract(i.InterfaceName, c)
-                ctx.CurrentModule.ExportedContracts.Add(i.InterfaceName, c)
-            | S.NoExport -> ()
+            this.ExportContract(exp, i.InterfaceName, c)
 
         member this.Module(exp, (S.AMD (id, body) as mdecl)) =
             let (root, path) =
@@ -276,9 +308,7 @@ module internal Analysis =
                 | S.NoExport -> (ctx.LocalRoot, Names.NP1 id)
             let mo = root.GetOrCreateModule(path)
             ctx.LocalScope.BindModule(id, mo)
-            match exp with
-            | S.Export -> ctx.ExportedScope.BindModule(id, mo)
-            | S.NoExport -> ()
+            this.ExportModule(exp, id, mo)
             let locScope = Sc.Scope()
             let expScope = root.GetOrCreateScope(path)
             let subContext =
@@ -389,11 +419,12 @@ module internal Analysis =
             LocalRoot = globalRoot
             LocalScope = globalScope
             Path = None
-            ScopeChain = Sc.ScopeChain().Add(globalScope)
+            ScopeChain = Sc.ScopeChain(st.Logger).Add(globalScope)
         }
 
     type Input =
         {
+            Logger : Logger
             SourceFiles : seq<D.SourceFile>
         }
 
@@ -404,7 +435,7 @@ module internal Analysis =
         }
 
     let Analyze input =
-        let st = State.Create()
+        let st = State.Create(input.Logger)
         let ctx = createGlobalContext st
         let vis = Visit(st, ctx)
         for sF in input.SourceFiles do

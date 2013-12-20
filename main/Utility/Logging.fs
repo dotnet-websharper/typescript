@@ -78,6 +78,9 @@ module Logging =
         member l.Exception(e: exn) =
             l.Log(Critical, string e)
 
+        member l.FailedToResolveTypeName(name: string) =
+            l.Log(Warn,  "Failed to resolve type name: {0}", name)
+
         member l.MissingFile(fP: FilePath) =
             l.Log(Error,  "MissingFile: {0}", fP)
 

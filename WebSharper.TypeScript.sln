@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "defs", "defs", "{794A64AE-D
 	ProjectSection(SolutionItems) = preProject
 		defs\example1.d.ts = defs\example1.d.ts
 		defs\example2.d.ts = defs\example2.d.ts
+		defs\example3.d.ts = defs\example3.d.ts
 	EndProjectSection
 EndProject
 Global

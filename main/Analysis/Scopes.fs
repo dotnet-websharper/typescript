@@ -193,12 +193,12 @@ module Scopes =
         let findContractInModule id mo = find (C2 (mo, id)) |> asC
 
     [<Sealed>]
-    type ScopeChain(scopes: list<Scope>) =
+    type ScopeChain(log: Logger, scopes: list<Scope>) =
 
-        new () = ScopeChain([])
+        new (log: Logger) = ScopeChain(log, [])
 
         member c.Add(scope) =
-            ScopeChain(scope :: scopes)
+            ScopeChain(log, scope :: scopes)
 
         member c.ResolveModule(m: S.ModuleName) =
             match m with
@@ -219,5 +219,7 @@ module Scopes =
         member c.ResolveType(t, ts) =
             C.TLazy <| lazy
                 match c.ResolveContract(t) with
-                | None -> C.TAny
+                | None ->
+                    log.FailedToResolveTypeName(string t)
+                    C.TAny
                 | Some tN -> C.TNamed (tN, ts)

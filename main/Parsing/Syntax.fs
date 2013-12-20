@@ -33,13 +33,37 @@ module Syntax =
         | MN1 of Identifier
         | MN2 of ModuleName * Identifier
 
+        member x.ToName() =
+            match x with
+            | MN1 x -> Names.NP1 x
+            | MN2 (x, y) -> Names.NP2 (x.ToName(), y)
+
+        override x.ToString() =
+            x.ToName() |> string
+
     type TypeName =
         | TN1 of Identifier
         | TN2 of ModuleName * Identifier
 
+        member x.ToName() =
+            match x with
+            | TN1 x -> Names.NP1 x
+            | TN2 (x, y) -> Names.NP2 (x.ToName(), y)
+
+        override x.ToString() =
+            x.ToName() |> string
+
     type EntityName =
         | EN1 of Identifier
         | EN2 of ModuleName * Identifier
+
+        member x.ToName() =
+            match x with
+            | EN1 x -> Names.NP1 x
+            | EN2 (x, y) -> Names.NP2 (x.ToName(), y)
+
+        override x.ToString() =
+            x.ToName() |> string
 
     type Access =
         | Private
