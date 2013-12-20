@@ -22,7 +22,6 @@
 namespace IntelliFactory.WebSharper.TypeScript
 
 module E = ExternalModuleNames
-module U = Uniplate
 
 module Syntax =
 
@@ -139,24 +138,6 @@ module Syntax =
 
     (* Nodes *)
 
-    type INode =
-        abstract Match : U.R<INode>
-
-    let NodeUtility =
-        U.NodeUtility<INode>(fun node -> node.Match)
-
-    let NU = NodeUtility
-
-    type Collection<'T when 'T :> INode> =
-        | Nodes of list<'T>
-
-        member x.List =
-            match x with
-            | Nodes ns -> ns
-
-        interface INode with
-            member x.Match = NU.MatchList(x.List, fun vs -> Nodes vs :> INode)
-
     type InterfaceDeclaration =
         {
             InterfaceName : Identifier
@@ -165,17 +146,11 @@ module Syntax =
             InterfaceBody : list<TypeMember>
         }
 
-        interface INode with
-            member x.Match = NU.Match x
-
     type AmbientClassBodyElement =
         | ClassConstructor of Parameters
         | ClassProperty of Access * MemberScope * Name * Type
         | ClassMethod of Access * MemberScope * Name * CallSignature
         | ClassIndex of IndexSignature
-
-        interface INode with
-            member x.Match = NU.Match x
 
     type AmbientClassDeclaration =
         {
@@ -183,57 +158,33 @@ module Syntax =
             ClassTypeParameters : list<TypeParameter>
             ClassExtends : option<TypeReference>
             ClassImplements : list<TypeReference>
-            ClassBody : Collection<AmbientClassBodyElement>
+            ClassBody : list<AmbientClassBodyElement>
         }
-
-        interface INode with
-            member x.Match = NU.Match x
 
     type AmbientEnumMember =
         | AEM1 of Name
         | AEM2 of Name * int
 
-        interface INode with
-            member x.Match = NU.Match x
-
     type AmbientEnumDeclaration =
         {
             EnumName : Identifier
-            EnumBody : Collection<AmbientEnumMember>
+            EnumBody : list<AmbientEnumMember>
         }
-
-        interface INode with
-            member x.Match = NU.Match x
 
     type AmbientVariableDeclaration =
         | AVD of Identifier * Type
 
-        interface INode with
-            member x.Match = NU.Match x
-
     type AmbientFunctionDeclaration =
         | AFD of Identifier * CallSignature
-
-        interface INode with
-            member x.Match = NU.Match x
 
     type ImportDeclaration =
         | ID of Identifier * EntityName
 
-        interface INode with
-            member x.Match = NU.Match x
-
     type ExportAssignment =
         | EA of Identifier
 
-        interface INode with
-            member x.Match = NU.Match x
-
     type ExternalImportDeclaration<'T> =
         | EID of Identifier * 'T
-
-        interface INode with
-            member x.Match = NU.Match x
 
     type AmbientModuleElement =
         | AME1 of AmbientVariableDeclaration
@@ -244,20 +195,14 @@ module Syntax =
         | AME6 of AmbientModuleDeclaration
         | AME7 of ExportModifier * ImportDeclaration
 
-        interface INode with
-            member x.Match = NU.Match x
-
     and AmbientModuleDeclaration =
-        | AMD of Identifier * Collection<AmbientModuleElement>
-
-        interface INode with
-            member x.Match = NU.Match x
+        | AMD of Identifier * list<AmbientModuleElement>
 
         static member Create(ids, body) =
             match List.rev ids with
             | last :: inverted ->
-                List.fold (fun s t -> AMD (t, Nodes [AME6 s]))
-                    (AMD (last, Nodes (Seq.toList body)))
+                List.fold (fun s t -> AMD (t, [AME6 s]))
+                    (AMD (last, (Seq.toList body)))
                     inverted
             | _ ->
                 invalidArg "ids" "Identifier path cannot be empty"
@@ -267,14 +212,8 @@ module Syntax =
         | AEME2 of ExportAssignment
         | AEME3 of ExportModifier * ExternalImportDeclaration<E.TopLevelName>
 
-        interface INode with
-            member x.Match = NU.Match x
-
     type AmbientExternalModuleDeclaration =
-        | AEMD of E.TopLevelName * Collection<AmbientExternalModuleElement>
-
-        interface INode with
-            member x.Match = NU.Match x
+        | AEMD of E.TopLevelName * list<AmbientExternalModuleElement>
 
     type AmbientDeclaration =
         | AD1 of AmbientVariableDeclaration
@@ -284,9 +223,6 @@ module Syntax =
         | AD5 of AmbientModuleDeclaration
         | AD6 of AmbientExternalModuleDeclaration
 
-        interface INode with
-            member x.Match = NU.Match x
-
     type DeclarationElement =
         | DE1 of ExportAssignment
         | DE2 of ExportModifier * InterfaceDeclaration
@@ -294,11 +230,5 @@ module Syntax =
         | DE4 of ExportModifier * ExternalImportDeclaration<E.Name>
         | DE5 of ExportModifier * AmbientDeclaration
 
-        interface INode with
-            member x.Match = NU.Match x
-
     type DeclarationSourceFile =
-        | DSF of Collection<DeclarationElement>
-
-        interface INode with
-            member x.Match = NU.Match x
+        | DSF of list<DeclarationElement>

@@ -11,7 +11,6 @@
   <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
   <ItemGroup>
     <Compile Include="TestUtility.fs" />
-    <Compile Include="UniplateTests.fs" />
     <Compile Include="GraphColoringTests.fs" />
     <Compile Include="ReflectEmitTest.fs" />
     <Compile Include="TestRunner.fs" />

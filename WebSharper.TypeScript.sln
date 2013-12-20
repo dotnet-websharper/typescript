@@ -17,8 +17,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "typescript", "typescript", 
 	ProjectSection(SolutionItems) = preProject
 		typescript\example1.d.ts = typescript\example1.d.ts
 		typescript\example2.d.ts = typescript\example2.d.ts
-		typescript\jquery.d.ts = typescript\jquery.d.ts
-		typescript\my.jquery.d.ts = typescript\my.jquery.d.ts
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.TestSite", "IntelliFactory.WebSharper.TypeScript.TestSite\IntelliFactory.WebSharper.TypeScript.TestSite.fsproj", "{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}"

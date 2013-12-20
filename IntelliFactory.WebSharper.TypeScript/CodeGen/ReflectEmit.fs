@@ -69,12 +69,28 @@ module internal ReflectEmit =
             FuncRet : option<N.Type>
         }
 
+    let SubstituteTypeGenerics (t: N.Type) (subst: list<N.Type>) =
+        match subst with
+        | [] -> t
+        | _ ->
+            let subst = List.toArray subst
+            let rec s t =
+                match t with
+                | N.TArray t -> N.TArray (s t)
+                | N.TGeneric i -> subst.[i]
+                | N.TNamed (c, ts) -> N.TNamed (c, List.map s ts)
+                | N.TAny
+                | N.TBoolean
+                | N.TGenericM _
+                | N.TNumber
+                | N.TString -> t
+            s t
+
     let (|FuncType|_|) (t: N.Type) : option<FuncView> =
         match t with
-        | N.TNamed (c, [domain; range]) ->
+        | N.TNamed (c, args) ->
             let ok =
                 c.IsAnonymous
-                && Seq.length c.Generics = 2
                 && c.ByNumber.IsNone
                 && c.ByString.IsNone
                 && Seq.isEmpty c.Extends
@@ -96,9 +112,13 @@ module internal ReflectEmit =
                         && s.RestParameter.IsNone
                         && List.forall isSimpleParam s.Parameters
                     if ok then
+                        let subst t = SubstituteTypeGenerics t args
+                        let ps =
+                            s.Parameters
+                            |> List.map (getParamType >> subst)
                         Some {
-                            FuncArgs = List.map getParamType s.Parameters
-                            FuncRet = s.ReturnType
+                            FuncArgs = ps
+                            FuncRet = Option.map subst s.ReturnType
                         }
                     else None
                 | _ -> None
@@ -578,7 +598,7 @@ module internal ReflectEmit =
             | N.TNamed (c, xs) ->
                 match ty with
                 | FuncType { FuncArgs = dom; FuncRet = range } ->
-                    let ctx = { Generics = [| for x in xs -> b.Type(ctx, x) |]; GenericsM = Array.empty }
+                    //let ctx = { Generics = [| for x in xs -> b.Type(ctx, x) |]; GenericsM = Array.empty }
                     let dom = [| for d in dom -> b.Type(ctx, d) |]
                     let range =
                         match range with
@@ -605,14 +625,17 @@ module internal ReflectEmit =
     module Pass3 =
 
         let Do st =
-            // NOTE: need to consider base types first, otherwise an exception happens.
+            // NOTE: need to consider base types first, otherwise `ty.CreateType` fails with an exception.
             let typeSet = HashSet<Type>(Seq.cast st.CreatedTypes)
             let baseTypes (ty: TypeBuilder) : seq<TypeBuilder> =
-                if ty.IsInterface then
-                    ty.ImplementedInterfaces
-                    |> Seq.filter typeSet.Contains
-                    |> Seq.cast
-                else Seq.empty
+                let res =
+                    if ty.IsInterface then
+                        ty.ImplementedInterfaces
+                        |> Seq.map (fun i -> if i.IsGenericType then i.GetGenericTypeDefinition() else i)
+                        |> Seq.filter typeSet.Contains
+                        |> Seq.cast
+                    else Seq.empty
+                res
             for ty in TopSort.Intrinsic st.CreatedTypes baseTypes do
                 ty.CreateType() |> ignore
 
