@@ -38,10 +38,6 @@ module SourceFileDependencies =
         member r.ComputeName(n) = r.Compute n
         member r.Resolve(n) = r.Find n
 
-
-    type Path = System.IO.Path
-    type FilePath = string
-
     let getRelativePath (dir: FilePath) (file: FilePath) =
         let dir = Path.GetFullPath(dir)
         let file = Path.GetFullPath(file)
@@ -100,22 +96,10 @@ module SourceFileDependencies =
     [<NoEquality>]
     type Config =
         {
+            Logger : Logger
             Resolver : Resolver
             StartFiles : seq<FilePath>
         }
-
-    type Warning =
-        | Missing of FilePath
-        | NoParse of FilePath * string
-        | UnknownFileType of FilePath
-        | Unresolved of E.TopLevelName
-
-        override this.ToString() =
-            match this with
-            | Missing fP -> sprintf "Missing: %s" fP
-            | NoParse (fP, reason) -> sprintf "NoParse [%s]: %s" fP reason
-            | UnknownFileType fP -> sprintf "UnknownFileType: %s" fP
-            | Unresolved name -> sprintf "Unresovled: %O" name
 
     [<Sealed>]
     type SourceFile(path: FilePath, syntax: S.DeclarationSourceFile, ?name: E.TopLevelName) =
@@ -124,13 +108,12 @@ module SourceFileDependencies =
         member sf.Syntax = syntax
 
     [<Sealed>]
-    type Result(sf: SourceFile[], ws: Warning[]) =
-        member r.HasWarnings = ws.Length > 0
+    type Result(sf: SourceFile[]) =
         member r.SourceFiles = sf :> seq<_>
-        member r.Warnings = ws :> seq<_>
 
-    let Configure paths =
+    let Configure logger paths =
         {
+            Logger = logger
             Resolver = Resolver.InFolder(".")
             StartFiles = Seq.toArray paths :> seq<_>
         }
@@ -141,7 +124,6 @@ module SourceFileDependencies =
             Parsed : Map<FilePath,SourceFile>
             ToConsider : Map<FilePath,option<E.TopLevelName>>
             ToResolve : Set<E.TopLevelName>
-            Warnings : list<Warning>
         }
 
     let init () =
@@ -150,98 +132,104 @@ module SourceFileDependencies =
             Parsed = Map.empty
             ToConsider = Map.empty
             ToResolve = Set.empty
-            Warnings = []
         }
 
-    let warn warning state =
-        { state with Warnings = warning :: state.Warnings }
+    [<Sealed>]
+    type Main(log: Logger) =
 
-    let findExternImports (S.DSF dsf) =
-        seq {
-            for decl in dsf do
-                match decl with
-                | S.DE4 (_, S.EID (_, name)) ->
-                    yield name
-                | S.DE5  (_, S.AD6 (S.AEMD (_, body))) ->
-                    for e in body do
-                        match e with
-                        | S.AEME3 (_, S.EID (_, name)) ->
-                            yield E.TopLevel name
-                        | _ -> ()
-                | _ -> ()
-        }
-        |> Seq.distinct
-        |> Seq.cache
+        let findExternImports (S.DSF dsf) =
+            seq {
+                for decl in dsf do
+                    match decl with
+                    | S.DE4 (_, S.EID (_, name)) ->
+                        yield name
+                    | S.DE5  (_, S.AD6 (S.AEMD (_, body))) ->
+                        for e in body do
+                            match e with
+                            | S.AEME3 (_, S.EID (_, name)) ->
+                                yield E.TopLevel name
+                            | _ -> ()
+                    | _ -> ()
+            }
+            |> Seq.distinct
+            |> Seq.cache
 
-    let withFileToConsider path name state =
-        let path = Path.GetFullPath(path)
-        if state.Parsed.ContainsKey(path) then state else
-            let tC = state.ToConsider.Add(path, name)
-            { state with ToConsider = tC }
+        let withFileToConsider path name state =
+            let path = Path.GetFullPath(path)
+            if state.Parsed.ContainsKey(path) then state else
+                let tC = state.ToConsider.Add(path, name)
+                { state with ToConsider = tC }
 
-    let withTopLevelName name state =
-        { state with ToResolve = state.ToResolve.Add name }
+        let withTopLevelName name state =
+            { state with ToResolve = state.ToResolve.Add name }
 
-    let withRelativeName dir (name: E.RelativeName) state =
-        withFileToConsider (Path.Combine(dir, name.Text + ".d.ts")) None state
+        let withRelativeName dir (name: E.RelativeName) state =
+            withFileToConsider (Path.Combine(dir, name.Text + ".d.ts")) None state
 
-    let withExternImports dir dsf state =
-        findExternImports dsf
-        |> Seq.fold (fun st x ->
-            match x with
-            | E.Relative name ->
-                withRelativeName dir name state
-            | E.TopLevel name ->
-                withTopLevelName name state)
-            state
+        let withExternImports dir dsf state =
+            findExternImports dsf
+            |> Seq.fold (fun st x ->
+                match x with
+                | E.Relative name ->
+                    withRelativeName dir name state
+                | E.TopLevel name ->
+                    withTopLevelName name state)
+                state
 
-    let withRefComment (dir: FilePath) comment state =
-        let p = Path.GetFullPath(Path.Combine(dir, comment))
-        withFileToConsider p None state
+        let withRefComment (dir: FilePath) comment state =
+            let p = Path.GetFullPath(Path.Combine(dir, comment))
+            withFileToConsider p None state
 
-    let withRefComments (dir: FilePath) comments state =
-        Seq.fold (fun st c -> withRefComment dir c st) state comments
+        let withRefComments (dir: FilePath) comments state =
+            Seq.fold (fun st c -> withRefComment dir c st) state comments
 
-    let parseFile topName (path: FilePath) (state: State) =
-        let path = Path.GetFullPath(path)
-        if state.Parsed.ContainsKey(path) then state else
-            let info = FileInfo(path)
-            if not info.Exists then
-                warn (Missing path) state
-            elif info.FullName.EndsWith(".d.ts") |> not then
-                warn (UnknownFileType path) state
-            else
-                match P.ParseFile state.NameBuilder path with
-                | P.ParseFailed err ->
-                    warn (NoParse (path, err)) state
-                | P.ParseOk (dsf, comments) ->
-                    let dir = Path.GetDirectoryName(path)
-                    let sourceFile = SourceFile(path, dsf, ?name = topName)
-                    { state with Parsed = state.Parsed.Add(path, sourceFile) }
-                    |> withRefComments dir comments
-                    |> withExternImports dir dsf
+        let parseFile topName (path: FilePath) (state: State) =
+            let path = Path.GetFullPath(path)
+            if state.Parsed.ContainsKey(path) then state else
+                let info = FileInfo(path)
+                if not info.Exists then
+                    log.MissingFile(path)
+                    state
+                elif info.FullName.EndsWith(".d.ts") |> not then
+                    log.UnknownFileType(path)
+                    state
+                else
+                    match P.ParseFile state.NameBuilder path with
+                    | P.ParseFailed err ->
+                        log.NoParse(path, err)
+                        state
+                    | P.ParseOk (dsf, comments) ->
+                        let dir = Path.GetDirectoryName(path)
+                        let sourceFile = SourceFile(path, dsf, ?name = topName)
+                        { state with Parsed = state.Parsed.Add(path, sourceFile) }
+                        |> withRefComments dir comments
+                        |> withExternImports dir dsf
+
+        member this.Resolve(cfg) =
+            let state = { init () with ToConsider = Map [for f in cfg.StartFiles -> (f, None)] }
+            let rec loop state =
+                if state.ToConsider.IsEmpty && state.ToResolve.IsEmpty then state else
+                    let state =
+                        state.ToResolve
+                        |> Seq.fold (fun state name ->
+                            match cfg.Resolver.Find name with
+                            | None ->
+                                log.UnresolvedExternalModule(name.Text)
+                                state
+                            | Some p -> withFileToConsider p (Some name) state)
+                            { state with ToResolve = Set.empty }
+                    let state =
+                        state.ToConsider
+                        |> Map.fold (fun state path topName ->
+                            let topName =
+                                match topName with
+                                | None -> cfg.Resolver.ComputeName(path)
+                                | r -> r
+                            parseFile topName path state)
+                            { state with ToConsider = Map.empty }
+                    loop state
+            let state = loop state
+            Result([| for kv in state.Parsed -> kv.Value |])
 
     let Resolve cfg =
-        let state = { init () with ToConsider = Map [for f in cfg.StartFiles -> (f, None)] }
-        let rec loop state =
-            if state.ToConsider.IsEmpty && state.ToResolve.IsEmpty then state else
-                let state =
-                    state.ToResolve
-                    |> Seq.fold (fun state name ->
-                        match cfg.Resolver.Find name with
-                        | None -> warn (Unresolved name) state
-                        | Some p -> withFileToConsider p (Some name) state)
-                        { state with ToResolve = Set.empty }
-                let state =
-                    state.ToConsider
-                    |> Map.fold (fun state path topName ->
-                        let topName =
-                            match topName with
-                            | None -> cfg.Resolver.ComputeName(path)
-                            | r -> r
-                        parseFile topName path state)
-                        { state with ToConsider = Map.empty }
-                loop state
-        let state = loop state
-        Result([| for kv in state.Parsed -> kv.Value |], Seq.toArray state.Warnings)
-
+        Main(cfg.Logger).Resolve(cfg)

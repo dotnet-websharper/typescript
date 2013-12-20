@@ -31,6 +31,7 @@ module TypeScriptCompiler =
             AssemblyName : string
             TopLevelClassName : string
             TypeScriptDeclarationFiles : seq<FilePath>
+            Verbosity : Logging.Level
         }
 
     [<Sealed>]
@@ -38,9 +39,9 @@ module TypeScriptCompiler =
         member a.GetBytes() = Array.copy bytes
         member a.TopLevelClassName = cfg.TopLevelClassName
 
-    let GetSourceFileSet cfg =
+    let GetSourceFileSet logger cfg =
         {
-            SFD.Configure(cfg.TypeScriptDeclarationFiles) with
+            SFD.Configure logger cfg.TypeScriptDeclarationFiles with
                 Resolver = SFD.Resolver.Failure // TODO
         }
         |> SFD.Resolve
@@ -60,13 +61,29 @@ module TypeScriptCompiler =
             TopModule = top
         }
 
-    let Compile (cfg: Config) =
-        let bytes =
-            GetSourceFileSet cfg
-            |> AnalyzeSourceFiles
-            |> MangleNames
-            |> EmitAssembly cfg
-        CompiledAssembly(cfg, bytes)
+    [<Sealed>]
+    type Result(msgs: seq<Logging.Message>, ?assem: CompiledAssembly) =
+        member r.CompiledAssembly = assem
+        member r.Messages = msgs
+
+    let Run (l: Logger) verb : (unit -> 'T) -> option<'T> =
+        match verb with
+        | Logging.Verbose ->
+            fun f -> Some (f ())
+        | _ ->
+            fun f -> try Some (f ()) with e -> l.Exception(e); None
+
+    let Compile cfg =
+        let logger = Logger(cfg.Verbosity)
+        let assem =
+            Run logger cfg.Verbosity <| fun () ->
+                let bytes =
+                    GetSourceFileSet logger cfg
+                    |> AnalyzeSourceFiles
+                    |> MangleNames
+                    |> EmitAssembly cfg
+                CompiledAssembly(cfg, bytes)
+        Result(logger.All, ?assem = assem)
 
     let GuessAssemblyName (topLevelClassName: string) =
         match topLevelClassName.Split([| '.' |], StringSplitOptions.RemoveEmptyEntries) with
@@ -80,4 +97,5 @@ module TypeScriptCompiler =
             AssemblyName = GuessAssemblyName topLevelClassName
             TopLevelClassName = topLevelClassName
             TypeScriptDeclarationFiles = paths
+            Verbosity = Logging.Warn
         }

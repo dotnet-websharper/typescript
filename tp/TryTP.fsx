@@ -6,12 +6,23 @@
 open System
 open System.IO
 open IntelliFactory.WebSharper
-open IntelliFactory.WebSharper.TypeScript
 
-module C = TypeScriptCompiler
+module C = TypeScript.TypeScriptCompiler
 
-let asm =
-    C.Configure "Ex" [Path.Combine(__SOURCE_DIRECTORY__, "..", "typescript", "example2.d.ts")]
+let res =
+    {
+        C.Configure "Ex" [Path.Combine(__SOURCE_DIRECTORY__, "..", "defs", "example2.d.ts")] with
+            Verbosity = TypeScript.Logging.Verbose
+    }
     |> C.Compile
 
-File.WriteAllBytes(Path.Combine(__SOURCE_DIRECTORY__, "Example1.dll"), asm.GetBytes())
+for msg in res.Messages do
+    printfn "%O" msg
+
+match res.CompiledAssembly with
+| Some asm ->
+    let p = Path.Combine(__SOURCE_DIRECTORY__, "..", "Example1.dll")
+    File.WriteAllBytes(p, asm.GetBytes())
+    printfn "Written: %s" p
+| None ->
+    printfn "FAILED"
