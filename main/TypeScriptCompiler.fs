@@ -29,6 +29,7 @@ module TypeScriptCompiler =
     type Config =
         {
             AssemblyName : string
+            TemporaryFolder : string
             TopLevelClassName : string
             TypeScriptDeclarationFiles : seq<FilePath>
             Verbosity : Logging.Level
@@ -55,9 +56,10 @@ module TypeScriptCompiler =
     let MangleNames (out: Analysis.Output) =
         Naming.Do out
 
-    let EmitAssembly (cfg: Config) top =
+    let EmitAssembly cfg top =
         ReflectEmit.ConstructAssembly {
             AssemblyName = cfg.AssemblyName
+            TemporaryFolder = cfg.TemporaryFolder
             TopLevelClassName = cfg.TopLevelClassName
             TopModule = top
         }
@@ -96,6 +98,7 @@ module TypeScriptCompiler =
     let Configure (topLevelClassName: string) (paths: seq<FilePath>) =
         {
             AssemblyName = GuessAssemblyName topLevelClassName
+            TemporaryFolder = Path.GetTempPath()
             TopLevelClassName = topLevelClassName
             TypeScriptDeclarationFiles = paths
             Verbosity = Logging.Warn

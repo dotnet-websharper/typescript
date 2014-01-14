@@ -1,163 +1,75 @@
-﻿namespace IntelliFactory.WebSharper.TypeScript
+﻿// $begin{copyright}
+//
+// This file is part of WebSharper
+//
+// Copyright (c) 2008-2013 IntelliFactory
+//
+// GNU Affero General Public License Usage
+// WebSharper is free software: you can redistribute it and/or modify it under
+// the terms of the GNU Affero General Public License, version 3, as published
+// by the Free Software Foundation.
+//
+// WebSharper is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+// for more details at <http://www.gnu.org/licenses/>.
+//
+// If you are unsure which license is appropriate for your use, please contact
+// IntelliFactory at http://intellifactory.com/contact.
+//
+// $end{copyright}
 
-open System
-open System.Collections.Generic
-open System.IO
-open System.Reflection
-open System.Reflection.Emit
-open System.Threading
-open System.Text
-open Microsoft.FSharp.Core.CompilerServices
-open Microsoft.FSharp.Data.TypeProviders
-open Microsoft.FSharp.Quotations
+namespace IntelliFactory.WebSharper.TypeScript
 
 module C = TypeScriptCompiler
-
-module internal Assembly =
-
-    /// See http://stackoverflow.com/questions/10357273/type-provider-calling-another-dll-in-f
-    let InstallLoadHack () =
-        AppDomain.CurrentDomain.add_AssemblyResolve(fun _ args ->
-            let name = AssemblyName(args.Name)
-            let existingAssembly =
-                AppDomain.CurrentDomain.GetAssemblies()
-                |> Seq.tryFind(fun a ->
-                    AssemblyName.ReferenceMatchesDefinition(name, a.GetName()))
-            defaultArg existingAssembly null)
 
 /// Implements a TypeProvider interface to `IntelliFactory.WebSharper.TypeScript`.
 [<Sealed>]
 [<TypeProvider>]
 type TypeProvider(config: TypeProviderConfig) =
+    inherit DelegatingProvider(TypeProvider.Create(config))
+    static do ProviderUtility.InstallAssemblyResolver()
 
-    static do Assembly.InstallLoadHack()
-    static let root = obj ()
-    static let date = DateTimeOffset.UtcNow
-    static let domainName = AppDomain.CurrentDomain.FriendlyName
-
-//    static let log =
-//        {
-//            new Logging.Log() with
-//                override this.Send(level, message) =
-//                    lock root <| fun () ->
-//                        let msg = String.Format("[DOMAIN={0} @ {1}] [{2}] {3}", domainName, date, level, message)
-//                        stderr.WriteLine(msg)
-//        }
-
-    let invalidation = Event<EventHandler,EventArgs>()
-    let dispose () = ()
-    let byteCache = Dictionary()
-    let fileCache = Dictionary()
-
-    let resolveFileName (file: string) =
-        if Path.IsPathRooted(file) then file else
-            Path.GetFullPath(Path.Combine(config.ResolutionFolder, file))
-
-    let doMakeType (className: string []) (typeScriptFile: string) : Type =
-        // log.Information("TP.doMakeType({0}, {1})", String.concat "." className, typeScriptFile)
+    static let buildAssembly (config: TypeProviderConfig)
+                             (className: string)
+                             (typeScriptFile: string) =
         let assembly =
-            C.Configure (String.concat "." className) [typeScriptFile]
+            {
+                C.Configure className [typeScriptFile] with
+                    TemporaryFolder = config.TemporaryFolder
+            }
             |> C.Compile
-        let bytes = assembly.GetBytes()
-        let result =
-            //log.Time "Assembly.Load()" <| fun () ->
-                Assembly.Load(bytes)
-        lock root <| fun () ->
-            byteCache.[result.FullName] <- bytes
-        result.GetType(assembly.TopLevelClassName)
+        match assembly.CompiledAssembly with
+        | Some asm -> asm
+        | None -> failwith "Failed to compile the generated assembly"
 
-    let makeType (className: string[]) (typeScriptFile: string) : Type =
-        lock root <| fun () ->
-            let key = (String.concat "." className, typeScriptFile, File.GetLastWriteTimeUtc(typeScriptFile))
-            match fileCache.TryGetValue(key) with
-            | true, t -> t
-            | _ ->
-                let t = doMakeType className typeScriptFile
-                fileCache.[key] <- t
-                t
-
-    static let generator =
-        let fullName = "IntelliFactory.TypeScript.Generator"
-        let aB = AppDomain.CurrentDomain.DefineDynamicAssembly(AssemblyName(fullName), AssemblyBuilderAccess.Run)
-        let mB = aB.DefineDynamicModule(fullName, false)
-        let tB = mB.DefineType(fullName, TypeAttributes.Public ||| TypeAttributes.Class ||| TypeAttributes.Sealed)
-        tB.CreateType()
-
-    let ns =
-        {
-            new IProvidedNamespace with
-                override this.GetNestedNamespaces() = Array.empty
-                override this.GetTypes() = [| generator |]
-                override this.ResolveTypeName(name) = generator.Assembly.GetType(name)
-                override this.NamespaceName = generator.Namespace
+    static member private Create(config: TypeProviderConfig) =
+        printfn "Creating TP"
+        ProviderUtility.DefineProvider {
+            TypeProviderConfig = config
+            BuildAssembly = fun tc ->
+                printfn "Building assembly"
+                let tsFile = tc.ParameterValues.[0] :?> string
+                let output =
+                    if tc.ParameterValues.Length > 1 then
+                        match tc.ParameterValues.[1] with
+                        | null -> None
+                        | :? string as s -> if s = "" then None else Some s
+                        | _ -> None
+                    else None
+                let tsFile = Path.Combine(config.ResolutionFolder, tsFile)
+                let asm = buildAssembly config tc.ClassName tsFile
+                let bytes = asm.GetBytes()
+                match output with
+                | None -> ()
+                | Some out ->
+                    let path = Path.Combine(config.ResolutionFolder, out)
+                    File.WriteAllBytes(path, bytes)
+                bytes
+            GeneratorParameters =
+                [
+                    ProviderUtility.RequiredParam("file", typeof<string>)
+                    ProviderUtility.OptionalParam("output", typeof<string>, "")
+                ]
+            GeneratorTypeName = "IntelliFactory.WebSharper.TypeScript.TypeScriptGenerator"
         }
-
-    let file =
-        {
-            new ParameterInfo() with
-                override this.Attributes = ParameterAttributes.None
-                override this.DefaultValue = null
-                override this.Name = "file"
-                override this.ParameterType = typeof<string>
-                override this.Position = 0
-                override this.RawDefaultValue = null
-        }
-
-    interface IDisposable with
-        member this.Dispose() = dispose ()
-
-    interface ITypeProvider with
-
-        member this.ApplyStaticArguments(t: Type, className: string[], args: obj []) : Type =
-            match args with
-            | [| :? string as path |] ->
-                try
-                    let fullPath = resolveFileName path
-                    if File.Exists(fullPath) then
-                        try
-                            makeType className fullPath
-                        with e ->
-                            // log.Error(e.ToString())
-                            invalidArg "args" ("Internal error when building " + fullPath)
-                    else
-                        invalidArg "args" (
-                            String.Format("File not found [{0}] when resolving [{1}] in [{2}]",
-                                fullPath, path, config.ResolutionFolder)
-                        )
-                with e ->
-                    // log.Error(e.ToString())
-                    invalidArg "args" "Error when resolving filename"
-            | _ ->
-                invalidArg "args" "Expecting a single string argument - the filename"
-
-        member this.GetGeneratedAssemblyContents(a: Assembly) : byte[] =
-            let bytes =
-                lock root <| fun () ->
-                    match byteCache.TryGetValue(a.FullName) with
-                    | true, bytes -> Some bytes
-                    | _ -> None
-            match bytes with
-            | None -> File.ReadAllBytes(a.ManifestModule.FullyQualifiedName)
-            | Some bytes -> bytes
-
-        member this.GetInvokerExpression(mb: MethodBase, par: Expr []) : Expr =
-            let par = Array.toList par
-            if mb.IsConstructor then
-                Expr.NewObject(mb :?> ConstructorInfo, par)
-            else
-                let m = mb :?> MethodInfo
-                if m.IsStatic
-                    then Expr.Call(m, par)
-                    else Expr.Call(par.Head, m, par.Tail)
-
-        member this.GetNamespaces() =
-            [| ns |]
-
-        member this.GetStaticParameters(t: Type) : ParameterInfo [] =
-            if t = generator then [| file |] else [||]
-
-        [<CLIEvent>]
-        member this.Invalidate = invalidation.Publish
-
-[<assembly:TypeProviderAssembly>]
-do ()

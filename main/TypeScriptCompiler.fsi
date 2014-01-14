@@ -28,6 +28,7 @@ module TypeScriptCompiler =
     type Config =
         {
             AssemblyName : string
+            TemporaryFolder : string
             TopLevelClassName : string
             TypeScriptDeclarationFiles : seq<FilePath>
             Verbosity : Logging.Level

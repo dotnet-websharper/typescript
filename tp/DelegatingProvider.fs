@@ -21,19 +21,31 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-module N = Naming
+[<AbstractClass>]
+type DelegatingProvider(p: ITypeProvider) =
 
-/// Implements assembly generation via `System.Reflection.Emit`.
-module internal ReflectEmit =
+    interface IDisposable with
 
-    /// Configures assembly generation.
-    type Config =
-        {
-            AssemblyName : string
-            TemporaryFolder : string
-            TopLevelClassName : string
-            TopModule : N.TopModule
-        }
+        member this.Dispose() =
+            p.Dispose()
 
-    /// Generates an assembly.
-    val ConstructAssembly : Config -> byte []
+    interface ITypeProvider with
+
+        member this.ApplyStaticArguments(t, className, args) =
+            p.ApplyStaticArguments(t, className, args)
+
+        member this.GetGeneratedAssemblyContents(assem) =
+            p.GetGeneratedAssemblyContents(assem)
+
+        member this.GetInvokerExpression(mb, par) =
+            p.GetInvokerExpression(mb, par)
+
+        member this.GetNamespaces() =
+            p.GetNamespaces()
+
+        member this.GetStaticParameters(t) =
+            p.GetStaticParameters(t)
+
+        [<CLIEvent>]
+        member this.Invalidate =
+            p.Invalidate
