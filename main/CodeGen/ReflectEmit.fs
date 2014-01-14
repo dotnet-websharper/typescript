@@ -33,6 +33,7 @@ module internal ReflectEmit =
     type Config =
         {
             AssemblyName : string
+            TemporaryFolder : string
             TopLevelClassName : string
             TopModule : N.TopModule
         }
@@ -274,7 +275,6 @@ module internal ReflectEmit =
             let gen = this.GetILGenerator()
             gen.Emit(OpCodes.Newobj, NotImplementedConstructor)
             gen.Emit(OpCodes.Throw)
-            gen.Emit(OpCodes.Ret)
 
     [<Sealed>]
     type Pass1(st) =
@@ -653,7 +653,7 @@ module internal ReflectEmit =
         let n = name.Name
         let fN = n + ".dll"
         let dom = AppDomain.CurrentDomain
-        let folder = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName())
+        let folder = Path.Combine(cfg.TemporaryFolder, Path.GetRandomFileName())
         let fP = Path.Combine(folder, fN)
         Directory.CreateDirectory(folder) |> ignore
         try

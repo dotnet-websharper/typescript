@@ -21,19 +21,5 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-module N = Naming
-
-/// Implements assembly generation via `System.Reflection.Emit`.
-module internal ReflectEmit =
-
-    /// Configures assembly generation.
-    type Config =
-        {
-            AssemblyName : string
-            TemporaryFolder : string
-            TopLevelClassName : string
-            TopModule : N.TopModule
-        }
-
-    /// Generates an assembly.
-    val ConstructAssembly : Config -> byte []
+[<assembly: TypeProviderAssembly>]
+do ()

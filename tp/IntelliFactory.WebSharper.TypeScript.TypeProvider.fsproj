@@ -12,8 +12,11 @@
   <Import Project="../build/net45/$(Name).proj" />
   <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
   <ItemGroup>
+    <Compile Include="Abbreviations.fs" />
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="ProviderUtility.fs" />
+    <Compile Include="DelegatingProvider.fs" />
     <Compile Include="TypeProvider.fs" />
-    <None Include="TryTP.fsx" />
-    <None Include="Example1.fsx" />
+    <None Include="T.fsx" />
   </ItemGroup>
 </Project>
