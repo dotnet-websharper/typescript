@@ -116,7 +116,6 @@ module internal ProviderUtility =
 
                 member this.ApplyStaticArguments(t, className, args) =
                     let className = String.concat "." className
-                    printfn "ApplyStaticArguments to %s" className
                     let bytes =
                         cfg.BuildAssembly {
                             ClassName = className
@@ -131,7 +130,6 @@ module internal ProviderUtility =
 
                 /// Default implementation: no quotation-level rewriting.
                 member this.GetInvokerExpression(mb, par) =
-                    printfn "GetInvokerExpression"
                     let par = Array.toList par
                     if mb.IsConstructor then
                         Expr.NewObject(mb :?> ConstructorInfo, par)
