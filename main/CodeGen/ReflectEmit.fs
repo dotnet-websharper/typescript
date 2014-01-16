@@ -647,6 +647,22 @@ module internal ReflectEmit =
             for ty in TopSort.Intrinsic st.CreatedTypes baseTypes do
                 ty.CreateType() |> ignore
 
+    module WebSharperCompiler =
+        open IntelliFactory.Core
+        module FE = IntelliFactory.WebSharper.Compiler.FrontEnd
+
+        (* TODO: propagate error messsages better *)
+
+        let CompileAssemblyWithWebSharper (fileName: string) =
+            let opts = FE.Options.Default
+            let compiler = FE.Prepare opts stdout.WriteLine
+            let resolver = AssemblyResolution.AssemblyResolver.Create()
+            let loader = FE.Loader.Create resolver stdout.WriteLine
+            let assem = loader.LoadFile fileName
+            if not (compiler.CompileAndModify assem) then
+                failwith "Could not compile the assembly with WebSharper"
+            assem.Write None fileName
+
     // TODO: does DefineDynamicAssembly leak any resources similar to Assembly.Load?
     let ConstructAssembly cfg =
         let name = AssemblyName(cfg.AssemblyName)
@@ -664,6 +680,7 @@ module internal ReflectEmit =
             Pass2.Do st
             Pass3.Do st
             aB.Save(fN)
+            WebSharperCompiler.CompileAssemblyWithWebSharper fP
             File.ReadAllBytes(fP)
         finally
             Directory.Delete(folder, true)
