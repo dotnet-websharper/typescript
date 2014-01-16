@@ -100,7 +100,7 @@ module Lexer =
             skipString "/*"
             >>. skipCharsTillString "*/" true Int32.MaxValue
         let refComment =
-            let sp = anyOf " \t"
+            let sp = skipMany (anyOf " \t")
             skipString "///" >>. sp
             >>. skipString "<reference" >>. sp
             >>. skipString "path" >>. sp
