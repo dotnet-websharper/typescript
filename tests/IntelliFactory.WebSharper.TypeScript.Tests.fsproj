@@ -1,19 +1,29 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputType>Library</OutputType>
     <Name>IntelliFactory.WebSharper.TypeScript.Tests</Name>
-    <ProjectGuid>79dca5ee-e994-42ca-af93-1535f2063ad3</ProjectGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
     <OutputPath>../build/net45</OutputPath>
+    <ProjectGuid>1fef4cf6-91c4-4e83-b990-3ff27ce54d37</ProjectGuid>
+    <WebSharperProject>Html</WebSharperProject>
+    <WebSharperHtmlDirectory>..\build\html</WebSharperHtmlDirectory>
   </PropertyGroup>
-  <Import Project="../build/net45/$(Name).proj" />
-  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
   <ItemGroup>
+    <None Include="prepare.fsx" />
+    <None Include="runTests.fsx" />
+    <None Include="extra.files" />
+    <None Include="Tests.d.ts" />
+    <Content Include="Tests.js" />
+    <Compile Include="ClientTests.fs" />
     <Compile Include="TestUtility.fs" />
     <Compile Include="GraphColoringTests.fs" />
-    <Compile Include="ReflectEmitTest.fs" />
     <Compile Include="TestRunner.fs" />
-    <None Include="App.config" />
+    <Compile Include="Main.fs" />
+    <Content Include="Main.html" />
   </ItemGroup>
+  <Import Project="../build/net45/$(Name).proj" />
+  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
 </Project>

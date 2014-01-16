@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Web
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{6DF6E294-0785-47E0-8AB9-3311307E1557}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{6DF6E294-0785-47E0-8AB9-3311307E1557}"
 	ProjectSection(SolutionItems) = preProject
 		.hgignore = .hgignore
 		Build.fsx = Build.fsx
@@ -9,18 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{6DF6E294-0
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript", "main\IntelliFactory.WebSharper.TypeScript.fsproj", "{E7666B0F-B8FD-4147-87E8-A9100223A6F1}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.Tests", "tests\IntelliFactory.WebSharper.TypeScript.Tests.fsproj", "{79DCA5EE-E994-42CA-AF93-1535F2063AD3}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.TestSite", "web\IntelliFactory.WebSharper.TypeScript.TestSite.fsproj", "{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.TypeProvider", "tp\IntelliFactory.WebSharper.TypeScript.TypeProvider.fsproj", "{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "defs", "defs", "{794A64AE-DC2F-4723-8900-F9F1B21A5979}"
-	ProjectSection(SolutionItems) = preProject
-		defs\example1.d.ts = defs\example1.d.ts
-		defs\example2.d.ts = defs\example2.d.ts
-		defs\example3.d.ts = defs\example3.d.ts
-	EndProjectSection
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.Tests", "tests\IntelliFactory.WebSharper.TypeScript.Tests.fsproj", "{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,18 +21,10 @@ Global
 		{E7666B0F-B8FD-4147-87E8-A9100223A6F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7666B0F-B8FD-4147-87E8-A9100223A6F1}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7666B0F-B8FD-4147-87E8-A9100223A6F1}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{79DCA5EE-E994-42CA-AF93-1535F2063AD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{79DCA5EE-E994-42CA-AF93-1535F2063AD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{79DCA5EE-E994-42CA-AF93-1535F2063AD3}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{79DCA5EE-E994-42CA-AF93-1535F2063AD3}.Release|Any CPU.Build.0 = Debug|Any CPU
 		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{5F26E271-4DC6-4D7C-9E65-ABA2D4A23DD5}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

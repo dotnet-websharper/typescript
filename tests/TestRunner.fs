@@ -19,19 +19,16 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace IntelliFactory.WebSharper.TypeScript.Tests
 
 open Fuchu
 
-module internal TestRunner =
+module TestRunner =
 
-    let AllTests =
+    let internal AllTests =
         testList "WebSharper.TypeScript" [
             GraphColoringTests.AllTests
         ]
 
-    [<EntryPoint>]
-    let Start args =
-        //ReflectEmitTest.Run ()
-        // 0
+    let RunAllTests args =
         defaultMain AllTests args

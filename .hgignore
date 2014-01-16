@@ -9,4 +9,5 @@
 ^packages/
 ^tools/packages/
 ^build/
+^contrib/
 user$

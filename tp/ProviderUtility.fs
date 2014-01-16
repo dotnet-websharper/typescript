@@ -24,13 +24,6 @@ namespace IntelliFactory.WebSharper.TypeScript
 [<AutoOpen>]
 module internal ProviderUtility =
 
-    let MemoizeBy (getKey: 'A -> 'K) (build: 'A -> 'B) : ('A -> 'B) =
-        let hasher x = hash (getKey x)
-        let eq x y = getKey x = getKey y
-        let comp = HashIdentity.FromFunctions hasher eq
-        let cache = ConcurrentDictionary<'A,'B>(comp)
-        fun a -> cache.GetOrAdd(a, build)
-
     let CreateGeneratorType (fullName: string) =
         let aB = AppDomain.CurrentDomain.DefineDynamicAssembly(AssemblyName(fullName), AssemblyBuilderAccess.Run)
         let mB = aB.DefineDynamicModule(fullName, false)
