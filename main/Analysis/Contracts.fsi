@@ -71,6 +71,7 @@ module internal Contracts =
         | TAny
         | TArray of Type
         | TBoolean
+        | TCompiled of System.Type * list<Type>
         | TGeneric of int
         | TGenericM of int
         | TLazy of Lazy<Type>

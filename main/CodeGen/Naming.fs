@@ -59,6 +59,7 @@ module Naming =
             IsAnonymous : bool
             mutable Name : Id
             mutable New : seq<Signature<'T>>
+            mutable Origin : option<NamePath>
             mutable Properties : seq<Property<'T>>
         }
 
@@ -72,6 +73,7 @@ module Naming =
             IsAnonymous = isAnon
             Name = name
             New = Seq.empty
+            Origin = None
             Properties = Seq.empty
         }
 
@@ -79,6 +81,7 @@ module Naming =
         | TAny
         | TArray of Type
         | TBoolean
+        | TCompiled of System.Type * list<Type>
         | TGeneric of int
         | TGenericM of int
         | TNamed of Contract<Type> * list<Type>
@@ -108,6 +111,7 @@ module Naming =
                 r.Extends <- map p.Type c.Extends
                 r.Generics <- [| for g in c.Generics -> idB.Id(g.Text) |]
                 r.New <- map p.Signature c.New
+                r.Origin <- Some c.HintPath
                 r.Properties <- map p.Property c.Properties
                 idB.LinkAll <| seq {
                     yield r.Name
@@ -148,6 +152,7 @@ module Naming =
             | C.TAny -> TAny
             | C.TArray t -> TArray (p.Type(t))
             | C.TBoolean -> TBoolean
+            | C.TCompiled (ty, ts) -> TCompiled (ty, List.map p.Type ts)
             | C.TGeneric k -> TGeneric k
             | C.TGenericM k -> TGenericM k
             | C.TLazy ty -> p.Type(ty.Value)

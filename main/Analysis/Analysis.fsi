@@ -37,6 +37,7 @@ module internal Analysis =
     type Input =
         {
             Logger : Logger
+            MetadataTable : Metadata.Table
             SourceFiles : seq<D.SourceFile>
         }
 

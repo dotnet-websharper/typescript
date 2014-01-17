@@ -23,6 +23,8 @@
     <Compile Include="Utility/Memoization.fs" />
     <Compile Include="Utility/TopSort.fsi" />
     <Compile Include="Utility/TopSort.fs" />
+    <Compile Include="Utility/Pickler.fsi" />
+    <Compile Include="Utility/Pickler.fs" />
     <Compile Include="Parsing/ExternalModuleNames.fsi" />
     <Compile Include="Parsing/ExternalModuleNames.fs" />
     <Compile Include="Parsing/Lexer.fsi" />
@@ -38,6 +40,8 @@
     <Compile Include="Analysis/Contracts.fs" />
     <Compile Include="Analysis/Scopes.fsi" />
     <Compile Include="Analysis/Scopes.fs" />
+    <Compile Include="Analysis/Metadata.fsi" />
+    <Compile Include="Analysis/Metadata.fs" />
     <Compile Include="Analysis/Analysis.fsi" />
     <Compile Include="Analysis/Analysis.fs" />
     <Compile Include="WebSharper.fs" />

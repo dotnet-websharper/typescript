@@ -29,6 +29,7 @@ module TypeScriptCompiler =
     type Config =
         {
             AssemblyName : string
+            References : seq<Assembly>
             TemporaryFolder : string
             TopLevelClassName : string
             TypeScriptDeclarationFiles : seq<FilePath>
@@ -47,8 +48,13 @@ module TypeScriptCompiler =
         }
         |> SFD.Resolve
 
-    let AnalyzeSourceFiles logger (sourceFiles: SFD.Result) =
+    let AnalyzeSourceFiles refs logger (sourceFiles: SFD.Result) =
         Analysis.Analyze {
+            MetadataTable =
+                refs
+                |> Seq.distinct
+                |> Seq.choose Metadata.Table.TryParseAssembly
+                |> Metadata.Table.Union
             Logger = logger
             SourceFiles = sourceFiles.SourceFiles
         }
@@ -82,7 +88,7 @@ module TypeScriptCompiler =
             Run logger cfg.Verbosity <| fun () ->
                 let bytes =
                     GetSourceFileSet logger cfg
-                    |> AnalyzeSourceFiles logger
+                    |> AnalyzeSourceFiles cfg.References logger
                     |> MangleNames
                     |> EmitAssembly cfg
                 CompiledAssembly(cfg, bytes)
@@ -98,6 +104,7 @@ module TypeScriptCompiler =
     let Configure (topLevelClassName: string) (paths: seq<FilePath>) =
         {
             AssemblyName = GuessAssemblyName topLevelClassName
+            References = Seq.empty
             TemporaryFolder = Path.GetTempPath()
             TopLevelClassName = topLevelClassName
             TypeScriptDeclarationFiles = paths
