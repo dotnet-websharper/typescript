@@ -28,6 +28,7 @@ module TypeScriptCompiler =
     type Config =
         {
             AssemblyName : string
+            References : seq<Assembly>
             TemporaryFolder : string
             TopLevelClassName : string
             TypeScriptDeclarationFiles : seq<FilePath>

@@ -33,6 +33,10 @@ module S = Syntax
 
 module Scopes =
 
+    type Contract =
+        | Foreign of Type
+        | Local of C.Contract
+
     let T<'T> () : NameTable<'T> =
         NameTable()
 
@@ -68,19 +72,19 @@ module Scopes =
     [<Sealed>]
     type Module(cs, hintPath) =
         member val InternalRoot = Root(cs, hintPath)
-        member val ExportedContracts = T<C.Contract>()
+        member val ExportedContracts = T<Contract>()
         member val ExportedModules = T<Module>()
         member val ExportedValues = T<C.Type>()
 
     and [<Sealed>] Root(cs: C.Contracts, hintPath: option<NamePath>) =
-        member val ContractRegistry = Dictionary<NamePath,C.Contract>()
+        member val ContractRegistry = Dictionary<NamePath,Contract>()
         member root.Contracts = cs
         member root.HintPath = hintPath
         member val ModuleRegistry = Dictionary<NamePath,Module>()
         member val ScopeRegistry = Dictionary<NamePath,Scope>()
 
     and [<Sealed>] Scope() =
-        member val Contracts = T<C.Contract>()
+        member val Contracts = T<Contract>()
         member val Modules = T<Module>()
         member val Links = T<S.EntityName>()
 
@@ -103,7 +107,7 @@ module Scopes =
             getOrCreate root.ContractRegistry path (fun () ->
                 let c = root.Contracts.NamedContract()
                 c.HintPath <- SubPath root path
-                c)
+                Local c)
 
         member root.GetOrCreateModule(path) =
             getOrCreate root.ModuleRegistry path (fun () ->
@@ -124,7 +128,7 @@ module Scopes =
         module Q = Search
 
         type R =
-            | C of C.Contract
+            | C of Contract
             | M of Module
 
         type T =
@@ -208,7 +212,7 @@ module Scopes =
                 | None -> None
                 | Some m -> EntitySearch.findSubModule name m
 
-        member c.ResolveContract(t: S.TypeName) : option<C.Contract> =
+        member c.ResolveContract(t: S.TypeName) : option<Contract> =
             match t with
             | S.TN1 id -> List.tryPick (EntitySearch.findContractInScope id) scopes
             | S.TN2 (m, name) ->
@@ -222,4 +226,5 @@ module Scopes =
                 | None ->
                     log.FailedToResolveTypeName(string t)
                     C.TAny
-                | Some tN -> C.TNamed (tN, ts)
+                | Some (Local tN) -> C.TNamed (tN, ts)
+                | Some (Foreign ty) -> C.TCompiled (ty, ts)

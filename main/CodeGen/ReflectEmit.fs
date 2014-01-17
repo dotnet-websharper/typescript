@@ -78,6 +78,7 @@ module internal ReflectEmit =
             let rec s t =
                 match t with
                 | N.TArray t -> N.TArray (s t)
+                | N.TCompiled (t, ts) -> N.TCompiled (t, List.map s ts)
                 | N.TGeneric i -> subst.[i]
                 | N.TNamed (c, ts) -> N.TNamed (c, List.map s ts)
                 | N.TAny
@@ -178,6 +179,7 @@ module internal ReflectEmit =
             match t with
             | N.TAny | N.TBoolean | N.TGeneric _ | N.TGenericM _ | N.TNumber | N.TString -> ()
             | N.TArray t -> p.Type t
+            | N.TCompiled (_, ts) -> List.iter p.Type ts
             | N.TNamed (c, ts) ->
                 match t with
                 | FuncType view ->
@@ -598,7 +600,6 @@ module internal ReflectEmit =
             | N.TNamed (c, xs) ->
                 match ty with
                 | FuncType { FuncArgs = dom; FuncRet = range } ->
-                    //let ctx = { Generics = [| for x in xs -> b.Type(ctx, x) |]; GenericsM = Array.empty }
                     let dom = [| for d in dom -> b.Type(ctx, d) |]
                     let range =
                         match range with
@@ -611,6 +612,14 @@ module internal ReflectEmit =
                     | _ ->
                         let xs = Array.map (fun x -> b.Type(ctx, x)) (Array.ofList xs)
                         genInst.[(st.ContractTable.[c] :> Type, xs)]
+            | N.TCompiled (ty, ts) ->
+                match ts with
+                | [] -> ty
+                | _ ->
+                    let ts =
+                        List.toArray ts
+                        |> Array.map (fun x -> b.Type(ctx, x))
+                    ty.MakeGenericType(ts)
             | N.TNumber -> numberT
             | N.TString -> stringT
 
@@ -647,6 +656,27 @@ module internal ReflectEmit =
             for ty in TopSort.Intrinsic st.CreatedTypes baseTypes do
                 ty.CreateType() |> ignore
 
+    /// Computes the metadata table.
+    [<Sealed>]
+    type Pass4(st: State) =
+
+        member p4.Container<'T>(m: N.Module<'T>) : seq<NamePath * Type> =
+            Seq.append
+                (Seq.collect p4.Container m.Modules)
+                (Seq.choose p4.Contract m.Contracts)
+
+        member p4.Contract(c: N.Contract) =
+            match c.Origin with
+            | Some orig when st.IsReified c ->
+                match st.ContractTable.TryGetValue(c) with
+                | true, ty -> Some (orig, ty :> Type)
+                | _ -> None
+            | _ -> None
+
+        static member Do(st: State) =
+            Pass4(st).Container(st.Config.TopModule)
+            |> Metadata.Table.Create
+
     module WebSharperCompiler =
         open IntelliFactory.Core
         module FE = IntelliFactory.WebSharper.Compiler.FrontEnd
@@ -679,6 +709,9 @@ module internal ReflectEmit =
             Pass1.Do st
             Pass2.Do st
             Pass3.Do st
+            let meta = Pass4.Do st
+            use s = new MemoryStream(meta.Serialize())
+            mB.DefineManifestResource(Metadata.ResourceName, s, ResourceAttributes.Public)
             aB.Save(fN)
             WebSharperCompiler.CompileAssemblyWithWebSharper fP
             File.ReadAllBytes(fP)

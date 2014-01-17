@@ -265,8 +265,8 @@ module internal Analysis =
         member this.ExportContract(exp, name: Name, c: C.Contract) =
             match exp with
             | S.Export ->
-                ctx.ExportedScope.BindContract(name, c)
-                ctx.CurrentModule.ExportedContracts.[name] <- c
+                ctx.ExportedScope.BindContract(name, Sc.Local c)
+                ctx.CurrentModule.ExportedContracts.[name] <- Sc.Local c
             | S.NoExport -> ()
 
         member this.ExportModule(exp, name: Name, mo: Sc.Module) =
@@ -288,18 +288,22 @@ module internal Analysis =
                 | S.Export -> (ctx.ExportedRoot, ctx.SubPath i.InterfaceName)
                 | S.NoExport -> (ctx.LocalRoot, Names.NP1 i.InterfaceName)
             let c = root.GetOrCreateNamedContract(path)
-            let vis =
-                match i.InterfaceTypeParameters with
-                | [] -> this
-                | ps ->
-                    let tps = List.map this.TypeParam ps
-                    c.SetGenerics(tps)
-                    Visit(st, { ctx with Generics = Seq.toArray tps })
-            vis.BuildContract(c, i.InterfaceBody)
-            for r in i.InterfaceExtends do
-                c.Extend(vis.TypeRef(r))
-            ctx.LocalScope.BindContract(i.InterfaceName, c)
-            this.ExportContract(exp, i.InterfaceName, c)
+            match c with
+            | Sc.Local c ->
+                let vis =
+                    match i.InterfaceTypeParameters with
+                    | [] -> this
+                    | ps ->
+                        let tps = List.map this.TypeParam ps
+                        c.SetGenerics(tps)
+                        Visit(st, { ctx with Generics = Seq.toArray tps })
+                vis.BuildContract(c, i.InterfaceBody)
+                for r in i.InterfaceExtends do
+                    c.Extend(vis.TypeRef(r))
+                ctx.LocalScope.BindContract(i.InterfaceName, Sc.Local c)
+                this.ExportContract(exp, i.InterfaceName, c)
+            | _ ->
+                st.Logger.Exception (Failure "Conflict between local and foreign contract")
 
         member this.Module(exp, (S.AMD (id, body) as mdecl)) =
             let (root, path) =
@@ -415,10 +419,11 @@ module internal Analysis =
             | _ -> ()
             // TODO: record more information so that type-queries may work.
 
-    let createGlobalContext st =
+    let createGlobalContext (metaTable: Metadata.Table) st =
         let globalModule = Sc.Module(st.Contracts, None)
         let globalRoot = globalModule.InternalRoot
         let globalScope = Sc.Scope()
+        metaTable.Install(globalRoot, globalModule)
         {
             CurrentModule = globalModule
             ExportedRoot = globalRoot
@@ -434,6 +439,7 @@ module internal Analysis =
     type Input =
         {
             Logger : Logger
+            MetadataTable : Metadata.Table
             SourceFiles : seq<D.SourceFile>
         }
 
@@ -445,7 +451,7 @@ module internal Analysis =
 
     let Analyze input =
         let st = State.Create(input.Logger)
-        let ctx = createGlobalContext st
+        let ctx = createGlobalContext input.MetadataTable st
         let vis = Visit(st, ctx)
         for sF in input.SourceFiles do
             vis.SourceFile(sF)

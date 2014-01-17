@@ -28,24 +28,28 @@ module S = Syntax
 /// Implements the complicated name resolution rules.
 module internal Scopes =
 
+    type Contract =
+        | Foreign of Type
+        | Local of C.Contract
+
     [<Sealed>]
     type Module =
         new : C.Contracts * option<NamePath> -> Module
         member InternalRoot : Root
-        member ExportedContracts : NameTable<C.Contract>
+        member ExportedContracts : NameTable<Contract>
         member ExportedModules : NameTable<Module>
         member ExportedValues : NameTable<C.Type>
 
     and [<Sealed>] Root =
         member GetOrCreateModule : NamePath -> Module
-        member GetOrCreateNamedContract : NamePath -> C.Contract
+        member GetOrCreateNamedContract : NamePath -> Contract
         member GetOrCreateScope : NamePath -> Scope
         member IsGlobal : bool
 
     and [<Sealed>] Scope =
         new : unit -> Scope
 
-        member BindContract : S.Identifier * C.Contract -> unit
+        member BindContract : S.Identifier * Contract -> unit
         member BindModule : S.Identifier * Module -> unit
         member Link : S.Identifier * S.EntityName -> unit
 
@@ -54,6 +58,6 @@ module internal Scopes =
         new : Logger -> ScopeChain
         member Add : Scope -> ScopeChain
         member ResolveModule : S.ModuleName -> option<Module>
-        member ResolveContract : S.TypeName -> option<C.Contract>
+        member ResolveContract : S.TypeName -> option<Contract>
         member ResolveType : S.TypeName * list<C.Type> -> C.Type
 

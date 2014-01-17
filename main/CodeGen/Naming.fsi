@@ -55,6 +55,7 @@ module internal Naming =
             IsAnonymous : bool
             mutable Name : Id
             mutable New : seq<Signature<'T>>
+            mutable Origin : option<NamePath>
             mutable Properties : seq<Property<'T>>
         }
 
@@ -62,6 +63,7 @@ module internal Naming =
         | TAny
         | TArray of Type
         | TBoolean
+        | TCompiled of System.Type * list<Type>
         | TGeneric of int
         | TGenericM of int
         | TNamed of Contract<Type> * list<Type>
