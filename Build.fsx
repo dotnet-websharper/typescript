@@ -35,6 +35,8 @@ let downloadContrib () =
 let wsPaths () =
     [
         "tools/net45/Mono.Cecil.dll"
+        "tools/net45/Mono.Cecil.Mdb.dll"
+        "tools/net45/Mono.Cecil.Pdb.dll"
         "tools/net45/IntelliFactory.Core.dll"
         "tools/net45/IntelliFactory.JavaScript.dll"
         "tools/net45/IntelliFactory.WebSharper.Core.dll"
@@ -47,6 +49,18 @@ let main () =
         .SourcesFromProject()
         .References(fun r ->
             [
+                r.NuGet("FParsec").Reference()
+                bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
+            ])
+    |> BuildConfig.KeyFile.Custom None
+
+let exe main =
+    (bt.FSharp.ConsoleExecutable("WebSharper.TSC")
+    |> FSharpConfig.BaseDir.Custom "exe")
+        .SourcesFromProject()
+        .References(fun r ->
+            [
+                r.Project(main)
                 r.NuGet("FParsec").Reference()
                 bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
             ])
@@ -147,6 +161,7 @@ let mainPkg main libPkg =
                         LicenseUrl = Some Config.LicenseUrl
                 })
             .AddNuGetExportingProject(main)
+            .AddNuGetExportingProject(exe main)
     nuPkg.AddNuGetExportingProject {
         new INuGetExportingProject with
             member p.NuGetFiles =
@@ -157,6 +172,11 @@ let mainPkg main libPkg =
                         new INuGetFile with
                             member x.Read() = File.OpenRead(typedefof<list<_>>.Assembly.Location) :> _
                             member x.TargetPath = "/tools/net45/FSharp.Core.dll"
+                    }
+                    yield {
+                        new INuGetFile with
+                            member x.Read() = File.OpenRead("exe/App.config") :> _
+                            member x.TargetPath = "/tools/net45/WebSharper.TSC.exe.config"
                     }
                 }
     }
@@ -177,7 +197,7 @@ let buildLib () =
 let build () =
     downloadContrib ()
     let main = main ()
-    bt.Solution [ main ] |> bt.Dispatch
+    bt.Solution [ main; exe main ] |> bt.Dispatch
     prepareTests ()
     let tests = tests main
     bt.Solution [ tests ] |> bt.Dispatch

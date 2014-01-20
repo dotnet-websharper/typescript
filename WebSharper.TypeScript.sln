@@ -25,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{A2E9
 		scripts\runTests.fsx = scripts\runTests.fsx
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WebSharper.TSC", "exe\WebSharper.TSC.fsproj", "{63510D0C-4591-440B-BB71-96C37D58D8E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{63510D0C-4591-440B-BB71-96C37D58D8E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63510D0C-4591-440B-BB71-96C37D58D8E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63510D0C-4591-440B-BB71-96C37D58D8E0}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{63510D0C-4591-440B-BB71-96C37D58D8E0}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
