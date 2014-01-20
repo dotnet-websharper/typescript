@@ -51,6 +51,17 @@
     <Compile Include="CodeGen/Naming.fs" />
     <Compile Include="CodeGen/ReflectEmit.fsi" />
     <Compile Include="CodeGen/ReflectEmit.fs" />
+    <Content Include="VS/VisualStudio.fsx" />
+    <Content Include="VS/VisualStudioIntegration.fsi" />
+    <Content Include="VS/VisualStudioIntegration.fs" />
+    <Content Include="VS/VisualStudioTools.Extensions.fsi" />
+    <Content Include="VS/VisualStudioTools.Extensions.fs" />
+    <Content Include="VS/VisualStudioTools.NuGet.fsi" />
+    <Content Include="VS/VisualStudioTools.NuGet.fs" />
+    <Content Include="VS/VisualStudioTools.Templates.fsi" />
+    <Content Include="VS/VisualStudioTools.Templates.fs" />
+    <Content Include="VS/VisualStudioTools.Utils.fsi" />
+    <Content Include="VS/VisualStudioTools.Utils.fs" />
     <Compile Include="TypeScriptCompiler.fsi" />
     <Compile Include="TypeScriptCompiler.fs" />
   </ItemGroup>
