@@ -1,4 +1,5 @@
 #load "tools/includes.fsx"
+#load "main/VS/VisualStudio.fsx"
 #r "System.IO.Compression"
 #r "System.IO.Compression.FileSystem"
 
@@ -7,8 +8,20 @@ open System.IO
 open System.IO.Compression
 open System.Net
 open IntelliFactory.Build
+module VSI = IntelliFactory.WebSharper.VisualStudioIntegration
 
-let bt = BuildTool().PackageId("WebSharper.TypeScript", "2.5")
+module Config =
+    let PackageId = "WebSharper.TypeScript"
+    let NumericVersion = Version("2.5.0.0")
+    let VersionSuffix = Some "alpha"
+    let PackageVerion = "2.5"
+    let Company = "IntelliFactory"
+    let Description = "Supports cross-compiling TypeScript definition files to WebSharper libraries"
+    let LicenseUrl = "http://websharper.com/licensing"
+    let Tags = ["Web"; "JavaScript"; "F#"; "TypeScript"]
+    let Website = "http://bitbucket.org/IntelliFactory/websharper.typescript"
+
+let bt = BuildTool().PackageId(Config.PackageId, "2.5-alpha")
 
 let downloadContrib () =
     let url = "http://github.com/borisyankov/DefinitelyTyped/archive/master.zip"
@@ -19,9 +32,7 @@ let downloadContrib () =
         c.DownloadFile(url, file)
         ZipFile.ExtractToDirectory(file, "contrib")
 
-downloadContrib ()
-
-let wsPaths =
+let wsPaths () =
     [
         "tools/net45/Mono.Cecil.dll"
         "tools/net45/IntelliFactory.Core.dll"
@@ -30,18 +41,18 @@ let wsPaths =
         "tools/net45/IntelliFactory.WebSharper.Compiler.dll"
     ]
 
-let main =
+let main () =
     (bt.WebSharper.Library("IntelliFactory.WebSharper.TypeScript")
     |> FSharpConfig.BaseDir.Custom "main")
         .SourcesFromProject()
         .References(fun r ->
             [
                 r.NuGet("FParsec").Reference()
-                bt.Reference.NuGet("WebSharper").At(wsPaths).Reference()
+                bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
             ])
     |> BuildConfig.KeyFile.Custom None
 
-//let typeProvider =
+//let typeProvider () =
 //    (bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript.TypeProvider")
 //    |> FSharpConfig.BaseDir.Custom "tp")
 //        .SourcesFromProject()
@@ -56,18 +67,18 @@ let prepareTests () =
     let refs =
         bt.ResolveReferences bt.Framework.Net45 [
             fparsec
-            bt.Reference.NuGet("WebSharper").At(wsPaths).Reference()
+            bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
         ]
-    bt.FSharp.ExecuteScript("tests/prepare.fsx", refs)
+    bt.FSharp.ExecuteScript("scripts/prepareTests.fsx", refs)
 
 let runTests () =
     let refs =
         bt.ResolveReferences bt.Framework.Net45 [
             bt.Reference.NuGet("Fuchu").Reference()
         ]
-    bt.FSharp.ExecuteScript("tests/runTests.fsx", refs)
+    bt.FSharp.ExecuteScript("scripts/runTests.fsx", refs)
 
-let tests =
+let tests main =
     (bt.WebSharper.HtmlWebsite("IntelliFactory.WebSharper.TypeScript.Tests")
     |> FSharpConfig.BaseDir.Custom "tests")
         .SourcesFromProject()
@@ -81,7 +92,100 @@ let tests =
             ])
     |> BuildConfig.KeyFile.Custom None
 
-bt.Solution [ main ] |> bt.Dispatch
-prepareTests ()
-bt.Solution [ tests ] |> bt.Dispatch
-runTests ()
+let configureVSI (mainPkg: NuGetPackageBuilder) (libPkg: NuGetPackageBuilder) : VSI.Config =
+    let root = __SOURCE_DIRECTORY__
+    let packages =
+        [
+            (Config.PackageId, mainPkg)
+            ("WebSharper.TypeScript.Lib", libPkg)
+        ]
+    let nuPkg = mainPkg
+    let nupkgPath = nuPkg.GetComputedFileName()
+    let vsixPath = Path.ChangeExtension(nupkgPath, ".vsix")
+    {
+        NuPkgs =
+            [
+                for (id, p) in packages ->
+                    {
+                        Path = p.GetComputedFileName()
+                        Id = id
+                    }]
+        RootPath = root
+        VsixPath = vsixPath
+    }
+
+let libPkg libPath =
+    let nuPkg = bt.NuGet.CreatePackage()
+    let nuPkg =
+        nuPkg.Configure(fun x ->
+            {
+                x with
+                    Description = "WebSharper-compiled TypeScript standard libirary (`lib.d.ts`)"
+                    ProjectUrl = Some Config.Website
+                    LicenseUrl = Some Config.LicenseUrl
+                    Id = "WebSharper.TypeScript.Lib"
+                    OutputPath = x.OutputPath.Replace(Config.PackageId, "WebSharper.TypeScript.Lib")
+            })
+    nuPkg.AddNuGetExportingProject {
+        new INuGetExportingProject with
+            member p.NuGetFiles =
+                Seq.singleton {
+                    new INuGetFile with
+                        member x.Read() = File.OpenRead(libPath) :> _
+                        member x.TargetPath = "/lib/net45/" + Path.GetFileName(libPath)
+                }
+    }
+
+let mainPkg main libPkg =
+    let nuPkg =
+        bt.NuGet.CreatePackage()
+            .Configure(fun x ->
+                {
+                    x with
+                        Description = Config.Description
+                        ProjectUrl = Some Config.Website
+                        LicenseUrl = Some Config.LicenseUrl
+                })
+            .AddNuGetExportingProject(main)
+    nuPkg.AddNuGetExportingProject {
+        new INuGetExportingProject with
+            member p.NuGetFiles =
+                seq {
+                    let cfg = configureVSI nuPkg libPkg
+                    yield! VSI.BuildContents cfg
+                    yield {
+                        new INuGetFile with
+                            member x.Read() = File.OpenRead(typedefof<list<_>>.Assembly.Location) :> _
+                            member x.TargetPath = "/tools/net45/FSharp.Core.dll"
+                    }
+                }
+    }
+
+let buildVsix nuPkg libPkg =
+    configureVSI nuPkg libPkg
+    |> VSI.BuildVsixFile
+
+let buildLib () =
+    let fparsec = bt.Reference.NuGet("FParsec").Reference()
+    let refs =
+        bt.ResolveReferences bt.Framework.Net45 [
+            fparsec
+            bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
+        ]
+    bt.FSharp.ExecuteScript("scripts/buildLib.fsx", refs)
+
+let build () =
+    downloadContrib ()
+    let main = main ()
+    bt.Solution [ main ] |> bt.Dispatch
+    prepareTests ()
+    let tests = tests main
+    bt.Solution [ tests ] |> bt.Dispatch
+    runTests ()
+    buildLib ()
+    let libPkg = libPkg "build/net45/IntelliFactory.WebSharper.TypeScript.Lib.dll"
+    let mainPkg = mainPkg main libPkg
+    bt.Solution [ libPkg; mainPkg ] |> bt.Dispatch
+    buildVsix mainPkg libPkg
+
+build ()

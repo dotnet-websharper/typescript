@@ -46,6 +46,6 @@ module ClientTests =
             let w = Tests.window
             (w.outerHeight > 0) =? true
             w.location.href.Contains("://") =? true
-            Tests.isNaN(1) =? false
-            Tests.isNaN(As nan) =? true
+//            Tests.isNaN(1) =? false
+//            Tests.isNaN(As nan) =? true
         }

@@ -12,8 +12,6 @@
     <WebSharperHtmlDirectory>..\build\html</WebSharperHtmlDirectory>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="prepare.fsx" />
-    <None Include="runTests.fsx" />
     <None Include="extra.files" />
     <None Include="Tests.d.ts" />
     <Content Include="Tests.js" />
