@@ -35,6 +35,8 @@ module Logging =
         member Level : Level
         member Text : string
 
+        static member internal Create : Level * string -> Message
+
     /// Internal logging utility.
     [<Sealed>]
     type internal Logger =

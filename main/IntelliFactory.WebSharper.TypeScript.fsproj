@@ -25,6 +25,8 @@
     <Compile Include="Utility/TopSort.fs" />
     <Compile Include="Utility/Pickler.fsi" />
     <Compile Include="Utility/Pickler.fs" />
+    <Compile Include="Utility/AppDomains.fsi" />
+    <Compile Include="Utility/AppDomains.fs" />
     <Compile Include="Parsing/ExternalModuleNames.fsi" />
     <Compile Include="Parsing/ExternalModuleNames.fs" />
     <Compile Include="Parsing/Lexer.fsi" />

@@ -2,7 +2,7 @@
 //
 // This file is part of WebSharper
 //
-// Copyright (c) 2008-2013 IntelliFactory
+// Copyright (c) 2008-2014 IntelliFactory
 //
 // GNU Affero General Public License Usage
 // WebSharper is free software: you can redistribute it and/or modify it under
@@ -31,15 +31,12 @@ module C = TypeScriptCompiler
 
 module internal Main =
 
-    let TryLoadAssembly (path: string) : option<Assembly> =
-        try Some (Assembly.LoadFrom(path)) with _ -> None
-
     type ParseState =
         {
             AssemblyName : option<string>
             Errors : list<string>
             FilePaths : list<string>
-            References : list<Assembly>
+            References : list<C.ReferenceAssembly>
             TempDir : option<string>
             TopLevelClassName : option<string>
             OutputPath : option<string>
@@ -132,9 +129,8 @@ module internal Main =
             | "-r" :: path :: rest ->
                 let st =
                     if File.Exists(path) then
-                        match TryLoadAssembly path with
-                        | Some asm -> { st with References = asm :: st.References }
-                        | None -> Error st "Failed to load assembly from: %s" path
+                        let asm = C.ReferenceAssembly.File path
+                        { st with References = asm :: st.References }
                     else Error st "File does not exist: %s" path
                 loop st rest
             | path :: rest ->

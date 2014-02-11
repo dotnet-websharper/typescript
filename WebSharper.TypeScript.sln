@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Web
+# Visual Studio Express 2013 for Web
+VisualStudioVersion = 12.0.30110.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{6DF6E294-0785-47E0-8AB9-3311307E1557}"
 	ProjectSection(SolutionItems) = preProject
 		.hgignore = .hgignore
@@ -27,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{A2E9
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WebSharper.TSC", "exe\WebSharper.TSC.fsproj", "{63510D0C-4591-440B-BB71-96C37D58D8E0}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.MSBuild", "msbuild-tasks\IntelliFactory.WebSharper.TypeScript.MSBuild.fsproj", "{D936C3E8-6F01-468B-BE56-8981F32FE860}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,10 @@ Global
 		{63510D0C-4591-440B-BB71-96C37D58D8E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63510D0C-4591-440B-BB71-96C37D58D8E0}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{63510D0C-4591-440B-BB71-96C37D58D8E0}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{D936C3E8-6F01-468B-BE56-8981F32FE860}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D936C3E8-6F01-468B-BE56-8981F32FE860}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D936C3E8-6F01-468B-BE56-8981F32FE860}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D936C3E8-6F01-468B-BE56-8981F32FE860}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

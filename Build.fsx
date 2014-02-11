@@ -54,17 +54,35 @@ let main () =
             ])
     |> BuildConfig.KeyFile.Custom None
 
-let exe main =
+let msbuildTasks main =
+    (bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript.MSBuild")
+    |> FSharpConfig.BaseDir.Custom "msbuild-tasks")
+        .SourcesFromProject()
+        .References(fun r ->
+            [
+                r.Project(main)
+                r.Assembly "Microsoft.Build"
+                r.Assembly "Microsoft.Build.Engine"
+                r.Assembly "Microsoft.Build.Framework"
+                r.Assembly "Microsoft.Build.Tasks.v4.0"
+                r.Assembly "Microsoft.Build.Utilities.v4.0"
+            ])
+    |> BuildConfig.KeyFile.Custom None
+
+let exe msb main =
     (bt.FSharp.ConsoleExecutable("WebSharper.TSC")
     |> FSharpConfig.BaseDir.Custom "exe")
         .SourcesFromProject()
         .References(fun r ->
             [
+                r.Project(msb)
                 r.Project(main)
                 r.NuGet("FParsec").Reference()
                 bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
             ])
     |> BuildConfig.KeyFile.Custom None
+
+
 
 //let typeProvider () =
 //    (bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript.TypeProvider")
@@ -150,7 +168,7 @@ let libPkg libPath =
                 }
     }
 
-let mainPkg main libPkg =
+let mainPkg main libPkg msb =
     let nuPkg =
         bt.NuGet.CreatePackage()
             .Configure(fun x ->
@@ -160,8 +178,8 @@ let mainPkg main libPkg =
                         ProjectUrl = Some Config.Website
                         LicenseUrl = Some Config.LicenseUrl
                 })
-            .AddNuGetExportingProject(main)
-            .AddNuGetExportingProject(exe main)
+            // .AddNuGetExportingProject(main)
+            .AddNuGetExportingProject(exe main msb)
     nuPkg.AddNuGetExportingProject {
         new INuGetExportingProject with
             member p.NuGetFiles =
@@ -197,14 +215,15 @@ let buildLib () =
 let build () =
     downloadContrib ()
     let main = main ()
-    bt.Solution [ main; exe main ] |> bt.Dispatch
+    let msb = msbuildTasks main
+    bt.Solution [ main; msb; exe msb main ] |> bt.Dispatch
     prepareTests ()
     let tests = tests main
     bt.Solution [ tests ] |> bt.Dispatch
     runTests ()
     buildLib ()
     let libPkg = libPkg "build/net45/IntelliFactory.WebSharper.TypeScript.Lib.dll"
-    let mainPkg = mainPkg main libPkg
+    let mainPkg = mainPkg main libPkg msb
     bt.Solution [ libPkg; mainPkg ] |> bt.Dispatch
     buildVsix mainPkg libPkg
 
