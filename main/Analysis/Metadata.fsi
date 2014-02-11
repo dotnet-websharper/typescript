@@ -42,7 +42,7 @@ module internal Metadata =
         static member Create : seq<NamePath * Type> -> Table
 
         /// Tries to parse a table from an assembly.
-        static member TryParseAssembly : Assembly -> option<Table>
+        static member TryParseAssembly : Names.NameBuilder * Assembly -> option<Table>
 
         /// Takes a union of multiple tables.
         static member Union : seq<Table> -> Table

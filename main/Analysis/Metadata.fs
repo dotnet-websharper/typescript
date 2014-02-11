@@ -65,25 +65,45 @@ module Metadata =
             d.[k] <- v // TODO: detect & report conflicts
         { T = d }
 
-    let NamePickler : Pickler.T<NamePath> =
-        Unchecked.defaultof<_>
+    let inline ( ^ ) f x =
+        f x
 
-    let TablePickler =
-        Pickler.Dictionary NamePickler Pickler.Type
+    type N = Name
+
+    let NamePickler (builder: Names.NameBuilder) : Pickler.T<Name> =
+        Pickler.String
+        |> Pickler.Wrap
+            (fun str -> builder.CreateName(str))
+            (fun name -> name.Text)
+
+    let NamePathPickler builder : Pickler.T<NamePath> =
+        let name = NamePickler builder
+        Pickler.Fix <| fun self ->
+            Pickler.DefSum (fun x k1 k2 ->
+                match x with
+                | NamePath.NP1 v -> k1 v
+                | NamePath.NP2 (x, y) -> k2 (x, y))
+            ^ Pickler.Case NamePath.NP1 name
+            ^ Pickler.LastCase NamePath.NP2 (Pickler.Pair self name)
+
+    let TablePickler builder =
+        Pickler.Dictionary (NamePathPickler builder) Pickler.Type
         |> Pickler.Wrap (fun x -> { T = x }) (fun x -> x.T)
 
-    let Serialize t =
-        Pickler.Pickle TablePickler t
+    let Serialize builder t =
+        Pickler.Pickle (TablePickler builder) t
 
-    let Deserialize s =
-        Pickler.ReadFromStream TablePickler s
+    let Deserialize builder s =
+        Pickler.ReadFromStream (TablePickler builder) s
 
-    let TryParseAssembly (assem: Assembly) =
-        match assem.GetManifestResourceStream(ResourceName) with
-        | null -> None
-        | stream ->
-            use s = stream
-            Some (Deserialize s)
+    let TryParseAssembly builder (assem: Assembly) =
+        try
+            use s = assem.GetManifestResourceStream(ResourceName)
+            match s with
+            | null -> None
+            | s -> Some (Deserialize builder s)
+        with e ->
+            failwithf "Failed to parse assembly: %O with error %O" assem e
 
     type Table with
 
@@ -91,13 +111,14 @@ module Metadata =
             Install t sc glob
 
         member t.Serialize() =
-            Array.empty<byte>
+            let builder = Names.NameBuilder.Create() // does not matter, only for de-serialization.
+            Pickler.Pickle (TablePickler builder) t
 
         static member Create(ts) =
             Create ts
 
-        static member TryParseAssembly(a) =
-            TryParseAssembly a
+        static member TryParseAssembly(builder, a) =
+            TryParseAssembly builder a
 
         static member Union(ts) =
             Union ts

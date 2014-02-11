@@ -48,6 +48,7 @@ module internal Abbreviations =
     type File = IO.File
     type FileInfo = IO.FileInfo
     type Func<'T1,'T2> = System.Func<'T1,'T2>
+    type Guid = System.Guid
     type HashSet<'T> = Generic.HashSet<'T>
     type Int32 = System.Int32
     type Interlocked = Threading.Interlocked

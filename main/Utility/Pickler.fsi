@@ -105,6 +105,9 @@ module internal Pickler =
     /// Pickler for `System.Type` using the assembly-qualified name.
     val Type : T<Type>
 
+    /// Fixpoint.
+    val Fix : (T<'T> -> T<'T>) -> T<'T>
+
     module ProductInternals =
 
         [<Sealed>]

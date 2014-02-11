@@ -277,3 +277,10 @@ module Pickler =
             | Some r -> k2 r)
         ^ Variant None
         ^ LastCase Some p
+
+    let Fix f =
+        let rec read r = res.Unpickle r
+        and write w x = res.Pickle w x
+        and p = FromPrimitives read write
+        and res = f p
+        res
