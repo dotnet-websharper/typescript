@@ -81,6 +81,9 @@ module internal Pickler =
     /// Pickler for a sequence.
     val Seq : T<'T> -> T<seq<'T>>
 
+    /// Pickler for options.
+    val Option : T<'T> -> T<option<'T>>
+
     /// Pickler for `Choice<'A,'B>`.
     val Choice2 : T<'T1> -> T<'T2> -> T<Choice<'T1,'T2>>
 
@@ -102,113 +105,26 @@ module internal Pickler =
     /// Pickler for `System.Type` using the assembly-qualified name.
     val Type : T<Type>
 
-    /// Experimental support for n-way product types such as records.
-    /// See `product` and `field` combinators.
     module ProductInternals =
 
-        /// Internal type for type-checking intermediate values.
         [<Sealed>]
-        type Part<'R,'X,'Z> 
-
-        /// Internal type for type-checking intermediate values.
-        [<Sealed>]
-        type Wrap<'T> =
-
-            /// Defines an extra field.
-            static member ( ^+ ) : Wrap<'A->'B> * 'A -> 'B
-
-            /// Defines the last field.
-            static member ( ^. ) : Wrap<'A->'B> * Wrap<Part<'C,'C,unit>->'A> -> 'B
+        type Part<'R,'X,'Z>
 
     module PI = ProductInternals
 
-    /// Starts defining a pickler for an n-ary product, such as
-    /// record. Example:
-    ///
-    ///    type Person =
-    ///        {
-    ///            Address : string
-    ///            Age : int
-    ///            Name : string
-    ///        }
-    ///
-    ///    let makePerson name age address =
-    ///        {
-    ///            Address = address
-    ///            Age = age
-    ///            Name = name
-    ///        }
-    ///
-    ///    let personPickler =
-    ///        Pickler.Product makePerson
-    ///        ^+ Pickler.Field (fun p -> p.Name) Pickler.String
-    ///        ^+ Pickler.Field (fun p -> p.Age) Pickler.Int
-    ///        ^. Pickler.Field (fun p -> p.Address) Pickler.String
-    ///
-    /// The implementation is not currently efficient, though it
-    /// may improve in the future.
-    val Product : 'A -> PI.Wrap<PI.Part<'B,'A,'C> -> Pickler<'B>>
+    val DefProduct : evidence:'a -> mk:PI.Part<'b,'a,'c> -> Pickler<'b>
+    val Field : proj:('a -> 'b) -> pickler:Pickler<'b> -> (PI.Part<'a,'c,'d> -> PI.Part<'a,('b -> 'c),('b * 'd)>)
+    val EndProduct : unit -> PI.Part<'a,'a,unit>
 
-    /// See `product`.
-    val Field : ('A -> 'B) -> Pickler<'B> -> PI.Wrap<PI.Part<'A,'C,'D> -> PI.Part<'A,'B->'C,'B*'D>>
-
-    /// Experimental support for n-way sum types such as unions. See `Sum`.
     module SumInternals =
 
-        /// Internal type for type-checking intermediate values.
         [<Sealed>]
         type Part<'U,'T,'X,'Y>
 
-        /// Internal type for type-checking intermediate values.
-        [<Sealed>]
-        type Case<'T1,'T2> =
-
-            /// Adds a case.
-            static member ( ^+ ) :
-                Case<'A->'B,Pickler<'A>> * Wrap<Part<'B,'C,'D,'E>> ->
-                Wrap<Part<'B,('A->'E)->'C,Choice<'A,'D>,'E>>
- 
-            /// Adds the last case.
-            static member ( ^. ) :
-                Case<'A->'B,Pickler<'A>> * Case<'C->'B,Pickler<'C>> ->
-                Wrap<Part<'B,('A->'D)->('C->'D)->'D,Choice<'A,'C>,'D>>
-
-        /// Internal type for type-checking intermediate values.
-        and [<Sealed>] Wrap<'T> =
-
-            /// Adds a case.
-            static member ( ^+ ) : Wrap<'A->'B> * Wrap<'A> -> 'B
-
-            /// Adds the last case.
-            static member ( ^. ) :
-                Wrap<Part<'A,('B->'C)->'C,'B,'C>->'D> * Case<'B->'A,Pickler<'B>> -> 'D
-
     module SI = SumInternals
 
-    /// Starts defining a pickler for an n-ary sum type, such as
-    /// a union type. For example:
-    ///
-    ///    type UnionT =
-    ///        | Case1
-    ///        | Case2 of int
-    ///        | Case3 of string * int
-    ///
-    ///    let unionTPickler =
-    ///        Pickler.Sum (fun x k1 k2 k3 ->
-    ///            match x with
-    ///            | Case1 -> k1 ()
-    ///            | Case2 x -> k2 x
-    ///            | Case3 (x, y) -> k3 (x, y))
-    ///        ^+ Pickler.Variant Case1
-    ///        ^+ Pickler.Case Case2 Pickler.Int
-    ///        ^. Pickler.Case Case3 (Pickler.Pair Pickler.String Pickler.Int)
-    ///
-    /// Note that the implementation is not currently efficient,
-    /// though it may improve in the future.
-    val Sum : ('A -> 'B) -> SI.Wrap<SI.Part<'A,'B,'C,'C> -> Pickler<'A>>
-
-    /// See `sum`.
-    val Case : 'A -> 'B -> SI.Case<'A,'B>
-
-    /// Useful for union cases without arguments.
-    val Variant : 'A -> SI.Case<unit->'A,Pickler<unit>>
+    val DefSum : evidence:('a -> 'b) -> part:SI.Part<'a,'b,'c,'c> -> Pickler<'a>
+    val Case : inj:('a -> 'b) -> pickler:Pickler<'a> -> (SI.Part<'b,'c,'d,'e> -> SI.Part<'b,(('a -> 'e) -> 'c),Choice<'a,'d>,'e>)
+    val LastCase : inj:('a -> 'b) -> pickler:Pickler<'a> -> SI.Part<'b,(('a -> 'c) -> 'c),'a,'c>
+    val Variant : v:'a -> (SI.Part<'a,'b,'c,'d> -> SI.Part<'a,((unit -> 'd) -> 'b),Choice<unit,'c>,'d>)
+    val LastVariant : v:'a -> SI.Part<'a,((unit -> 'b) -> 'b),unit,'b>

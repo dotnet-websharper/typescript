@@ -28,9 +28,12 @@ open System.Text
 [<AutoOpen>]
 module internal Abbreviations =
 
+    type Activator = System.Activator
     type AppDomain = System.AppDomain
+    type AppDomainSetup = System.AppDomainSetup
     type Array = System.Array
     type Assembly = Reflection.Assembly
+    type AssemblyName = Reflection.AssemblyName
     type BinaryReader = IO.BinaryReader
     type BinaryWriter = IO.BinaryWriter
     type BindingFlags = Reflection.BindingFlags
@@ -53,6 +56,7 @@ module internal Abbreviations =
     type IEqualityComparer<'T> = Generic.IEqualityComparer<'T>
     type IReadOnlyDictionary<'T1,'T2> = Generic.IReadOnlyDictionary<'T1,'T2>
     type KeyValuePair<'T1,'T2> = Generic.KeyValuePair<'T1,'T2>
+    type MarshalByRefObject = System.MarshalByRefObject
     type Math = System.Math
     type MemoryStream = IO.MemoryStream
     type NotImplementedException = System.NotImplementedException
@@ -64,6 +68,7 @@ module internal Abbreviations =
     type SortedSet<'T> = Generic.SortedSet<'T>
     type Stream = IO.Stream
     type String = System.String
+    type StringSplitOptions = System.StringSplitOptions
     type StringWriter = IO.StringWriter
     type TextWriter = IO.TextWriter
     type Type = System.Type

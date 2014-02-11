@@ -2,7 +2,7 @@
 //
 // This file is part of WebSharper
 //
-// Copyright (c) 2008-2013 IntelliFactory
+// Copyright (c) 2008-2014 IntelliFactory
 //
 // GNU Affero General Public License Usage
 // WebSharper is free software: you can redistribute it and/or modify it under
@@ -21,30 +21,68 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-open System
-
+/// Provides the main functionality: cross-compiling TypeScript
+/// definitions for use in WebSharper.
 module TypeScriptCompiler =
 
+    /// Represents a reference assembly.
+    [<Sealed>]
+    type ReferenceAssembly =
+
+        /// An assembly file located at a given path.
+        static member File : path: string -> ReferenceAssembly
+
+        /// In-memory assembly represented by raw bytes.
+        static member Raw : bytes: byte [] -> ReferenceAssembly
+
+    /// Configures the TypeScript cross-compilation process.
     type Config =
         {
+            /// The name of the generated assembly.
             AssemblyName : string
-            References : seq<Assembly>
+
+            /// References used by the compilation process.
+            References : seq<ReferenceAssembly>
+
+            /// Temporary folder to use.
             TemporaryFolder : string
+
+            /// The class name under which all generated code is nested.
             TopLevelClassName : string
+
+            /// TypeScript declaration files to process.
             TypeScriptDeclarationFiles : seq<FilePath>
+
+            /// Verbosity of the logging output.
             Verbosity : Logging.Level
         }
 
+    /// Represents a compiled assembly.
     [<Sealed>]
     type CompiledAssembly =
+
+        /// The name of the assembly.
+        member AssemblyName : string
+
+        /// Returns the contents as raw bytes.
         member GetBytes : unit -> byte []
+
+        /// The class name under which all generated code is nested.
         member TopLevelClassName : string
 
+    /// Represents the compilation result.
     [<Sealed>]
     type Result =
+
+        /// The resulting assembly, if successulf.
         member CompiledAssembly : option<CompiledAssembly>
+
+        /// Messages from the compiler.
         member Messages : seq<Logging.Message>
 
+    /// Compiles a given configuration.
     val Compile : Config -> Result
-    val Configure : topLevelClassName : string -> paths: seq<FilePath> -> Config
+
+    /// Configures the compilation process.
+    val Configure : topLevelClassName: string -> paths: seq<FilePath> -> Config
 

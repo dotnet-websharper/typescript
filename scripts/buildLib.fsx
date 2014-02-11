@@ -18,7 +18,7 @@ let p xs =
 
 let main () =
     let result =
-        C.Configure "Tests" [p ["Lib.d.ts"]]
+        C.Configure "IntelliFactory.WebSharper.TypeScript.Lib" [p ["Lib.d.ts"]]
         |> C.Compile
 
     for msg in result.Messages do

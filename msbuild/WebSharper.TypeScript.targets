@@ -21,4 +21,25 @@
 // $end{copyright}
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TaskAssemblyFile>$(MSBuildThisFileDirectory)\..\tools\net45\IntelliFactory.WebSharper.TypeScript.MSBuild.dll</TaskAssemblyFile>
+  </PropertyGroup>
+  <UsingTask AssemblyFile="$(TaskAssemblyFile)" TaskName="BuildTypeScriptDefinitions" />
+  <UsingTask AssemblyFile="$(TaskAssemblyFile)" TaskName="CleanTypeScriptDefinitions" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
+  <Target Name="Build" DependsOnTargets="ResolveReferences">
+    <BuildTypeScriptDefinitions
+        AssemblyName="$(Name)"
+        Compile="@(Compile)"
+        MSBuildProjectDirectory="$(MSBuildProjectDirectory)"
+        OutputPath="$(OutputPath)"
+        ReferencePaths="@(ReferencePath)"
+        TopLevelClassName="$(Name)" />
+  </Target>
+  <Target Name="Clean">
+    <CleanTypeScriptDefinitions
+        AssemblyName="$(Name)"
+        MSBuildProjectDirectory="$(MSBuildProjectDirectory)"
+        OutputPath="$(OutputPath)" />
+  </Target>
 </Project>

@@ -21,8 +21,7 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-/// Pickler combinators.
-module internal Pickler =
+module Pickler =
 
     type PickleWriter =
         {
@@ -206,15 +205,6 @@ module internal Pickler =
         let finish () =
             pp ignore (fun r () -> r) Unit
 
-        type Wrap<'T> =
-            | W of 'T
-
-            static member ( ^+ ) (W f, x) =
-                f x
-
-            static member ( ^. ) (W f, W x) =
-                f (x (finish ()))
-
         let defProduct e p =
             match p with
             | P (f, g, t) ->
@@ -227,6 +217,17 @@ module internal Pickler =
                     (fun rr -> (proj rr, g rr))
                     (fun c fx -> h (c (fst fx)) (snd fx))
                     (Pair tf tr)
+
+    module PI = ProductInternals
+
+    let DefProduct evidence mk =
+        PI.defProduct evidence mk
+
+    let Field proj pickler =
+        PI.defField proj pickler
+
+    let EndProduct () =
+        PI.finish ()
 
     module SumInternals =
 
@@ -251,41 +252,28 @@ module internal Pickler =
         let defSum ev (P (tr, xu, f)) =
             Wrap xu (fun u -> f (fun x -> x) (ev u)) tr
 
-        type Case<'T1,'T2> =
-            | C of 'T1 * 'T2
+    module SI = SumInternals
 
-            static member ( ^+ ) (C (i1, p1), W x) =
-                W (defNextCase i1 p1 x)
+    let DefSum evidence part =
+        SI.defSum evidence part
 
-            static member ( ^. ) (C (i1, p1), C (i2, p2)) =
-                W (defNextCase i1 p1 (defLastCase i2 p2))
+    let Case inj pickler =
+        SI.defNextCase inj pickler
 
-        and Wrap<'T> =
-            | W of 'T
-
-            static member ( ^+ ) (W f, W x) =
-                f x
-
-            static member ( ^. ) (W f, C (inj, p)) =
-                f (defLastCase inj p)
-
-        let makeCase inj p =
-            C (inj, p)
-
-        let makeSum f =
-            W (defSum f)
-
-    let Product f =
-        ProductInternals.W (ProductInternals.defProduct f)
-
-    let Field f p =
-        ProductInternals.W (ProductInternals.defField f p)
-
-    let Sum f =
-        SumInternals.makeSum f
-
-    let Case inj p =
-        SumInternals.makeCase inj p
+    let LastCase inj pickler =
+        SI.defLastCase inj pickler
 
     let Variant v =
         Case (fun () -> v) Unit
+
+    let LastVariant v =
+        LastCase (fun () -> v) Unit
+
+    let Option p =
+        let inline ( ^ ) f x = f x
+        DefSum (fun x k1 k2 ->
+            match x with
+            | None -> k1 ()
+            | Some r -> k2 r)
+        ^ Variant None
+        ^ LastCase Some p
