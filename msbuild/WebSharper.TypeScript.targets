@@ -25,21 +25,18 @@
     <TaskAssemblyFile>$(MSBuildThisFileDirectory)\..\tools\net45\IntelliFactory.WebSharper.TypeScript.MSBuild.dll</TaskAssemblyFile>
   </PropertyGroup>
   <UsingTask AssemblyFile="$(TaskAssemblyFile)" TaskName="BuildTypeScriptDefinitions" />
-  <UsingTask AssemblyFile="$(TaskAssemblyFile)" TaskName="CleanTypeScriptDefinitions" />
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
-  <Target Name="Build" DependsOnTargets="ResolveReferences">
+  <Target Name="CoreCompile" DependsOnTargets="ResolveReferences">
     <BuildTypeScriptDefinitions
-        AssemblyName="$(Name)"
-        Compile="@(Compile)"
-        MSBuildProjectDirectory="$(MSBuildProjectDirectory)"
-        OutputPath="$(OutputPath)"
-        ReferencePaths="@(ReferencePath)"
-        TopLevelClassName="$(Name)" />
+      AssemblyName="$(AssemblyName)"
+      IntermediateAssembly="@(IntermediateAssembly)"
+      Compile="@(Compile)"
+      MSBuildProjectDirectory="$(MSBuildProjectDirectory)"
+      ReferencePaths="@(ReferencePath)"
+      TopLevelClassName="$(TopLevelClassName)" />
   </Target>
-  <Target Name="Clean">
-    <CleanTypeScriptDefinitions
-        AssemblyName="$(Name)"
-        MSBuildProjectDirectory="$(MSBuildProjectDirectory)"
-        OutputPath="$(OutputPath)" />
-  </Target>
+  <!-- This target seems to be required by Microsoft.Common.targets: currently no-op -->
+  <Target Name="CreateManifestResourceNames"
+          Condition="'@(EmbeddedResource)' != ''"
+          DependsOnTargets="$(CreateManifestResourceNamesDependsOn)" />
 </Project>

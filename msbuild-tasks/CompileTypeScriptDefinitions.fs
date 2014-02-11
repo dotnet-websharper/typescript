@@ -58,13 +58,16 @@ type BuildTypeScriptDefinitions() =
                 t.Log.LogMessage(MessageImportance.Low, m.Text)
 
     member t.Write(r: C.CompiledAssembly) =
-        let fileName = AssemblyName(t.AssemblyName).Name + ".dll"
-        let fullPath = Path.Combine(t.MSBuildProjectDirectory, t.OutputPath, fileName)
-        let dir = DirectoryInfo(Path.GetDirectoryName(fullPath))
-        if not <| dir.Exists then
-            dir.Create()
-        File.WriteAllBytes(fullPath, r.GetBytes())
-        t.Log.LogMessage(MessageImportance.Low, "Written: {0}", fullPath)
+        match t.IntermediateAssembly with
+        | [| path |] ->
+            let fullPath = Path.Combine(t.MSBuildProjectDirectory, path.ItemSpec)
+            let dir = DirectoryInfo(Path.GetDirectoryName(fullPath))
+            if not <| dir.Exists then
+                dir.Create()
+            File.WriteAllBytes(fullPath, r.GetBytes())
+            t.Log.LogMessage(MessageImportance.Low, "Written: {0}", fullPath)
+        | _ ->
+            t.Log.LogError("Invalid IntermediateAssembly")
 
     override t.Execute() =
         let cfg = t.Configure()
@@ -80,34 +83,13 @@ type BuildTypeScriptDefinitions() =
     member val Compile : ITaskItem [] = Array.empty with get, set
 
     [<Required>]
-    member val MSBuildProjectDirectory : string = null with get, set
+    member val IntermediateAssembly : ITaskItem [] = Array.empty with get, set
 
     [<Required>]
-    member val OutputPath : string = null with get, set
+    member val MSBuildProjectDirectory : string = null with get, set
 
     member val ReferencePaths : ITaskItem [] = Array.empty with get, set
 
     member val TempDirectory : string = null with get, set
 
     member val TopLevelClassName : string = null with get, set
-
-[<Sealed>]
-type CleanTypeScriptDefinitions() =
-    inherit Task()
-
-    [<Required>]
-    member val AssemblyName : string = null with get, set
-
-    [<Required>]
-    member val MSBuildProjectDirectory : string = null with get, set
-
-    [<Required>]
-    member val OutputPath : string = null with get, set
-
-    override t.Execute() =
-        let fileName = AssemblyName(t.AssemblyName).Name + ".dll"
-        let fullPath = Path.Combine(t.MSBuildProjectDirectory, t.OutputPath, fileName)
-        let info = FileInfo(fullPath)
-        if info.Exists then
-            info.Delete()
-        true
