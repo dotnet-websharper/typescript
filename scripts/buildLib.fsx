@@ -16,9 +16,15 @@ let p xs =
         yield! xs
     |]
 
+let name =
+    "IntelliFactory.WebSharper.TypeScript.Lib"
+
 let main () =
     let result =
-        C.Configure "IntelliFactory.WebSharper.TypeScript.Lib" [p ["Lib.d.ts"]]
+        {
+            C.Configure name  [p ["Lib.d.ts"]] with
+                AssemblyName = name
+        }
         |> C.Compile
 
     for msg in result.Messages do
@@ -28,7 +34,7 @@ let main () =
     | None -> failwith "Failed to compile Lib.d.ts"
     | Some assem ->
         let bytes = assem.GetBytes()
-        let path = p [".."; "build"; "net45"; "IntelliFactory.WebSharper.TypeScript.Lib.dll"]
+        let path = p [".."; "build"; "net45"; name + ".dll"]
         File.WriteAllBytes(path, bytes)
         stdout.WriteLine("Written: {0}", path)
 

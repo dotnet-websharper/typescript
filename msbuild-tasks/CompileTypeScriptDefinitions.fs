@@ -5,7 +5,6 @@ open System.IO
 open System.Reflection
 open Microsoft.Build
 open Microsoft.Build.Framework
-open Microsoft.Build.Tasks
 open Microsoft.Build.Utilities
 open IntelliFactory.WebSharper.TypeScript
 module C = IntelliFactory.WebSharper.TypeScript.TypeScriptCompiler

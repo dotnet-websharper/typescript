@@ -65,6 +65,9 @@ module internal SourceFileDependencies =
             /// The logger to report errors to.
             Logger : Logger
 
+            /// The name builder.
+            NameBuilder : Names.NameBuilder
+
             /// The resolver to use for external modules.
             Resolver : Resolver
 
@@ -93,7 +96,7 @@ module internal SourceFileDependencies =
         member SourceFiles : seq<SourceFile>
 
     /// Configures the resolution with given start files.
-    val Configure : Logger -> seq<FilePath> -> Config
+    val Configure : Names.NameBuilder -> Logger -> seq<FilePath> -> Config
 
     /// Performs source file dependency resolution.
     val Resolve : Config -> Result

@@ -29,13 +29,25 @@ module TypeScriptCompiler =
         | AFile of string
         | ARaw of byte []
 
-        member r.Load() =
-            match r with
-            | AFile f -> Assembly.LoadFile(f)
-            | ARaw bytes -> Assembly.Load(bytes)
-
         static member File(path) = AFile path
         static member Raw(bytes) = ARaw bytes
+
+    let LoadAndInstallReferences (refs: seq<ReferenceAssembly>) =
+        // TODO: perhaps complain on duplicate refs.
+        let all =
+            dict <| seq {
+                for a in refs do
+                    let assem =
+                        match a with
+                        | AFile f -> Assembly.LoadFile(f)
+                        | ARaw bytes -> Assembly.Load(bytes)
+                    yield (assem.GetName().Name, assem)
+            }
+        AppDomain.CurrentDomain.add_AssemblyResolve(fun obj ev ->
+            let name = AssemblyName(ev.Name).Name
+            let mutable res = Unchecked.defaultof<_>
+            if all.TryGetValue(name, &res) then res else null)
+        [| for KeyValue (_, v) in all -> v |]
 
     type Config =
         {
@@ -54,19 +66,20 @@ module TypeScriptCompiler =
         member a.AssemblyName = cfg.AssemblyName
         member a.TopLevelClassName = cfg.TopLevelClassName
 
-    let GetSourceFileSet logger cfg =
+    let GetSourceFileSet nb logger cfg =
+        /// TODO: perhaps warn if no input files found.
         {
-            SFD.Configure logger cfg.TypeScriptDeclarationFiles with
+            SFD.Configure nb logger cfg.TypeScriptDeclarationFiles with
                 Resolver = SFD.Resolver.Failure // TODO
         }
         |> SFD.Resolve
 
-    let AnalyzeSourceFiles refs logger (sourceFiles: SFD.Result) =
+    let AnalyzeSourceFiles builder (refs: seq<Assembly>) logger (sourceFiles: SFD.Result) =
         Analysis.Analyze {
             MetadataTable =
                 refs
                 |> Seq.distinct
-                |> Seq.choose Metadata.Table.TryParseAssembly
+                |> Seq.choose (fun a -> Metadata.Table.TryParseAssembly(builder, a))
                 |> Metadata.Table.Union
             Logger = logger
             SourceFiles = sourceFiles.SourceFiles
@@ -162,13 +175,13 @@ module TypeScriptCompiler =
         interface AppDomains.ITransform<Config,Result> with
             member tr.Do(cfg: Config) =
                 let logger = Logger(cfg.Verbosity)
+                let builder = Names.NameBuilder.Create()
                 let assem =
                     Run logger cfg.Verbosity <| fun () ->
-                        let refs =
-                            [| for r in cfg.References -> r.Load() |]
+                        let refs = LoadAndInstallReferences cfg.References
                         let bytes =
-                            GetSourceFileSet logger cfg
-                            |> AnalyzeSourceFiles refs logger
+                            GetSourceFileSet builder logger cfg
+                            |> AnalyzeSourceFiles builder refs logger
                             |> MangleNames
                             |> EmitAssembly cfg
                         CompiledAssembly(cfg, bytes)

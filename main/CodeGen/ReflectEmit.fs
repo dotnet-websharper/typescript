@@ -710,9 +710,10 @@ module internal ReflectEmit =
             Pass2.Do st
             Pass3.Do st
             let meta = Pass4.Do st
-            use s = new MemoryStream(meta.Serialize())
-            mB.DefineManifestResource(Metadata.ResourceName, s, ResourceAttributes.Public)
-            aB.Save(fN)
+            do  let bytes = meta.Serialize()
+                use s = new MemoryStream(bytes, writable = false)
+                mB.DefineManifestResource(Metadata.ResourceName, s, ResourceAttributes.Public)
+                aB.Save(fN)
             WebSharperCompiler.CompileAssemblyWithWebSharper fP
             File.ReadAllBytes(fP)
         finally

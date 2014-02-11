@@ -97,6 +97,7 @@ module SourceFileDependencies =
     type Config =
         {
             Logger : Logger
+            NameBuilder : Names.NameBuilder
             Resolver : Resolver
             StartFiles : seq<FilePath>
         }
@@ -111,9 +112,10 @@ module SourceFileDependencies =
     type Result(sf: SourceFile[]) =
         member r.SourceFiles = sf :> seq<_>
 
-    let Configure logger paths =
+    let Configure nb logger paths =
         {
             Logger = logger
+            NameBuilder = nb
             Resolver = Resolver.InFolder(".")
             StartFiles = Seq.toArray paths :> seq<_>
         }
@@ -126,9 +128,9 @@ module SourceFileDependencies =
             ToResolve : Set<E.TopLevelName>
         }
 
-    let init () =
+    let init nameBuilder =
         {
-            NameBuilder = Names.NameBuilder.Create()
+            NameBuilder = nameBuilder
             Parsed = Map.empty
             ToConsider = Map.empty
             ToResolve = Set.empty
@@ -205,8 +207,8 @@ module SourceFileDependencies =
                         |> withRefComments dir comments
                         |> withExternImports dir dsf
 
-        member this.Resolve(cfg) =
-            let state = { init () with ToConsider = Map [for f in cfg.StartFiles -> (f, None)] }
+        member this.Resolve(cfg: Config) =
+            let state = { init cfg.NameBuilder with ToConsider = Map [for f in cfg.StartFiles -> (f, None)] }
             let rec loop state =
                 if state.ToConsider.IsEmpty && state.ToResolve.IsEmpty then state else
                     let state =

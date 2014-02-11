@@ -59,7 +59,8 @@ module AppDomains =
         interface ITransformer with
             member x.Do(input: byte[]) : byte[] =
                 let tr = Activator.CreateInstance(typeof<'T>) :?> ITransform<'T1,'T2>
-                Pickler.Unpickle tr.T1 input
+                input
+                |> Pickler.Unpickle tr.T1
                 |> tr.Do
                 |> Pickler.Pickle tr.T2
 
@@ -77,49 +78,42 @@ module AppDomains =
             else
                 null)
 
-    /// Used to communicate between master FsiWrapper domain and the slave fsiAnyCpu domain.
-    [<Sealed>]
-    type AppDomainBridge() =
-        inherit MarshalByRefObject()
-
-        member bridge.SetupRedirects() =
-            SetupRedirects ()
-
-        member bridge.Transform(jobBytes) =
-            OpaqueTransform jobBytes
-
-        static member GetProxy(slaveDomain: AppDomain) =
-            let handle =
-                Activator.CreateInstanceFrom(slaveDomain,
-                    typeof<AppDomainBridge>.Assembly.Location,
-                    typeof<AppDomainBridge>.FullName)
-            handle.Unwrap() :?> AppDomainBridge
-
     let CreateAppDomain () =
         let setup = AppDomainSetup()
         setup.ApplicationBase <-
             Assembly.GetExecutingAssembly().Location
             |> Path.GetDirectoryName
-        AppDomain.CreateDomain("Slave", null, setup)
+        let id = "Slave" + Guid.NewGuid().ToString().GetHashCode().ToString("x")
+        AppDomain.CreateDomain(id, null, setup)
+
+    [<Literal>]
+    let Input = "Input"
+
+    [<Literal>]
+    let Output = "Output"
+
+    let ShieldedLogic () =
+        SetupRedirects ()
+        let jobBytes = AppDomain.CurrentDomain.GetData(Input) :?> byte []
+        let output = OpaqueTransform jobBytes
+        AppDomain.CurrentDomain.SetData(Output, output)
 
     let TransformWithAppDomain<'A,'B,'T when 'T :> ITransform<'A,'B>
                                          and 'T : (new : unit -> 'T)>
         (marker: TypeMarker<'T>) (input: 'A) : 'B =
             let dom = CreateAppDomain ()
             try
-                let bridge = AppDomainBridge.GetProxy(dom)
-                bridge.SetupRedirects()
                 let inst = new 'T() :> ITransform<'A,'B>
-                let bytes = Pickler.Pickle inst.T1 input
-                let job =
-                    {
+                let jobBytes =
+                    Pickler.Pickle OpaqueJobPickler {
                         Input = Pickler.Pickle inst.T1 input
                         T = typeof<'T>
                         T1 = typeof<'A>
                         T2 = typeof<'B>
                     }
-                Pickler.Pickle OpaqueJobPickler job
-                |> bridge.Transform
+                dom.SetData(Input, jobBytes)
+                dom.DoCallBack(fun () -> ShieldedLogic ())
+                dom.GetData(Output) :?> byte []
                 |> Pickler.Unpickle inst.T2
             finally
                 AppDomain.Unload(dom)
