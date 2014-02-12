@@ -40,17 +40,17 @@ module Metadata =
     let Types t =
         seq { for KeyValue (k, v) in t.T -> (k, v) }
 
-    let InstallIntoModule (m: Sc.Module) key ty =
-        m.ExportedContracts.Add(key, Sc.Foreign ty)
+    let InstallIntoScope (sc: Sc.Scope) key ty =
+        sc.BindContract(key, Sc.Foreign ty)
 
-    let Install t (sc: Sc.Root) glob =
+    let Install t (sc: Sc.Root) (glob: Sc.Scope) =
         for (name, ty) in Types t do
             match name with
             | NamePath.NP1 id ->
-                InstallIntoModule glob id ty
+                InstallIntoScope glob id ty
             | NamePath.NP2 (mn, id) ->
-                let m = sc.GetOrCreateModule(mn)
-                InstallIntoModule m id ty
+                let m = sc.GetOrCreateScope(mn)
+                InstallIntoScope m id ty
 
     let Union ts =
         let d = Dictionary()
