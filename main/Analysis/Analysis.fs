@@ -423,7 +423,7 @@ module internal Analysis =
         let globalModule = Sc.Module(st.Contracts, None)
         let globalRoot = globalModule.InternalRoot
         let globalScope = Sc.Scope()
-        metaTable.Install(globalRoot, globalModule)
+        metaTable.Install(globalRoot, globalScope)
         {
             CurrentModule = globalModule
             ExportedRoot = globalRoot

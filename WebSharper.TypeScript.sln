@@ -31,6 +31,14 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WebSharper.TSC", "exe\WebSh
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.MSBuild", "msbuild-tasks\IntelliFactory.WebSharper.TypeScript.MSBuild.fsproj", "{D936C3E8-6F01-468B-BE56-8981F32FE860}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{50449B79-CA5E-45BD-9E25-7322FC7EC6BB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ts-library", "ts-library", "{463082D8-0AA7-4D6E-B854-679738850130}"
+	ProjectSection(SolutionItems) = preProject
+		templates\ts-library\Main.d.ts = templates\ts-library\Main.d.ts
+		templates\ts-library\TypeScriptLibrary.fsproj = templates\ts-library\TypeScriptLibrary.fsproj
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,5 +64,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{463082D8-0AA7-4D6E-B854-679738850130} = {50449B79-CA5E-45BD-9E25-7322FC7EC6BB}
 	EndGlobalSection
 EndGlobal

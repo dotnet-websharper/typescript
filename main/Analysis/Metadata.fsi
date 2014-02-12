@@ -32,8 +32,8 @@ module internal Metadata =
     [<Sealed>]
     type Table =
 
-        /// Adds bindings from the table to the global root and module.
-        member Install : globalScope: Scopes.Root * globalModule: Scopes.Module -> unit
+        /// Adds bindings from the table to the global root and scope.
+        member Install : globalScope: Scopes.Root * globalScope: Scopes.Scope -> unit
 
         /// Serializes to a byte array.
         member Serialize : unit -> byte []
