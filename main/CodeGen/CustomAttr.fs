@@ -46,7 +46,7 @@ module CustomAttr =
         W.ExpressionToString P.Compact e
 
     let Inline (e: S.Expression) =
-        let s = ExprToString
+        let s = ExprToString e
         CustomAttributeBuilder(InlineCtor, [| s |])
 
     let Str x =
