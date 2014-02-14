@@ -11,4 +11,8 @@
 ^build/
 ^contrib/
 user$
-^examples/
+^examples/packages/
+Content/WebSharper
+Scripts/WebSharper
+^examples/.*/bin
+^examples/.*/obj
