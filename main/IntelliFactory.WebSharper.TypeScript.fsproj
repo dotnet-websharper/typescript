@@ -46,11 +46,14 @@
     <Compile Include="Analysis/Metadata.fs" />
     <Compile Include="Analysis/Analysis.fsi" />
     <Compile Include="Analysis/Analysis.fs" />
-    <Compile Include="WebSharper.fs" />
     <Compile Include="CodeGen/Ident.fsi" />
     <Compile Include="CodeGen/Ident.fs" />
     <Compile Include="CodeGen/Naming.fsi" />
     <Compile Include="CodeGen/Naming.fs" />
+    <Compile Include="CodeGen/Macros.fsi" />
+    <Compile Include="CodeGen/Macros.fs" />
+    <Compile Include="CodeGen/CustomAttr.fsi" />
+    <Compile Include="CodeGen/CustomAttr.fs" />
     <Compile Include="CodeGen/ReflectEmit.fsi" />
     <Compile Include="CodeGen/ReflectEmit.fs" />
     <Content Include="VS/VisualStudio.fsx" />
