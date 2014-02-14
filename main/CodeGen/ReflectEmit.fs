@@ -21,9 +21,6 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-open System.Reflection
-open System.Reflection.Emit
-
 module N = Naming
 module S = Shapes
 
@@ -271,7 +268,7 @@ module internal ReflectEmit =
     let NotImplementedConstructor =
         typeof<NotImplementedException>.GetConstructor(Array.empty)
 
-    type MethodBuilder with
+    type System.Reflection.Emit.MethodBuilder with
 
         member this.NotImplemented() =
             let gen = this.GetILGenerator()
@@ -339,55 +336,12 @@ module internal ReflectEmit =
 
     let objT = typeof<obj>
     let boolT = typeof<bool>
-    let numberT = typeof<int> // TODO: WebSharper.Number?
+    let numberT = typeof<double>
     let stringT = typeof<string>
     let funTD = typedefof<_->_>
     let unitT = typeof<unit>
     let voidT = typeof<Void>
 
-    module CustomAttr =
-        module A = IntelliFactory.WebSharper.Core.Attributes
-        module Macro =
-            module M = IntelliFactory.TypeScript.WebSharper.Macros
-
-            let private Make =
-                let ctor = typeof<A.MacroAttribute>.GetConstructor([| typeof<Type> |])
-                fun (t: System.Type) -> CustomAttributeBuilder(ctor, [| t |])
-
-            let Call = Make typeof<M.CallMacro>
-            let New = Make typeof<M.NewMacro>
-            let Item = Make typeof<M.ItemMacro>
-
-        let private paramArrayCtor = typeof<ParamArrayAttribute>.GetConstructor([||])
-        let ParamArray = CustomAttributeBuilder(paramArrayCtor, [||])
-
-        let private inlineCtor = typeof<A.InlineAttribute>.GetConstructor([|stringT|])
-        let private Inline (s: string) =
-            CustomAttributeBuilder(inlineCtor, [|s|])
-
-        let InlineMethod (name: string) (numArgs: int) =
-            let args =
-                Array.init numArgs (fun i -> "$" + string (i + 1))
-                |> String.concat ","
-            Inline <| sprintf "$0.%s(%s)" name args
-
-        let MethodWithParamArray (name: string) (numArgs: int) =
-            let normalArgs =
-                Array.init (numArgs - 1) (fun i -> "$" + string (i + 1))
-                |> String.concat ","
-            Inline <| sprintf "$0.%s.apply($0, [%s].concat(%s))" name normalArgs ("$" + string (numArgs))
-
-        let PropertyGet (name: string) =
-            Inline <| "$0." + name
-
-        let PropertySet (name: string) =
-            Inline <| "void($0." + name + "=$value)"
-
-        let StaticPropertyGet (name: string) =
-            Inline name
-
-        let StaticPropertySet (name: string) =
-            Inline <| "void(window." + name + "=$value)"
 
     type Context =
         {
@@ -405,12 +359,12 @@ module internal ReflectEmit =
         | CallMethod
         | InterfaceMethod
         | NewMethod
-        | StaticMethod
+        | StaticMethod of NamePath
 
     let methodAttributes k =
         match k with
         | CallMethod | InterfaceMethod | NewMethod -> Attr.InterfaceMethod
-        | StaticMethod -> Attr.StaticMethod
+        | StaticMethod _ -> Attr.StaticMethod
 
     type PropertyKind =
         | InterfaceProperty
@@ -486,7 +440,7 @@ module internal ReflectEmit =
             sM.DefineParameter(2, ParameterAttributes.None, "value") |> ignore
             pD.SetGetMethod(gM)
             pD.SetSetMethod(sM)
-            pD.SetCustomAttribute(CustomAttr.Macro.Item)
+            pD.SetCustomAttribute(CustomAttr.Item)
 
         member b.Property(pK, ctx, tB: TypeBuilder, name: N.Id, jname: Names.NamePath, ty: N.Type) =
             let pA = PropertyAttributes.None
@@ -496,7 +450,7 @@ module internal ReflectEmit =
                 MethodAttributes.SpecialName |||
                 match pK with
                 | InterfaceProperty -> methodAttributes InterfaceMethod
-                | StaticProperty -> methodAttributes StaticMethod
+                | StaticProperty -> methodAttributes (StaticMethod jname)
             let gM = tB.DefineMethod("get_" + name.Text, mA, pT, Array.empty)
             let sM = tB.DefineMethod("set_" + name.Text, mA, voidT, [| pT |])
             sM.DefineParameter(1, ParameterAttributes.None, "value") |> ignore
@@ -509,9 +463,8 @@ module internal ReflectEmit =
             | StaticProperty ->
                 gM.NotImplemented()
                 sM.NotImplemented()
-                let fullName = jname.ToString()
-                gM.SetCustomAttribute(CustomAttr.StaticPropertyGet fullName)
-                sM.SetCustomAttribute(CustomAttr.StaticPropertySet fullName)
+                gM.SetCustomAttribute(CustomAttr.StaticPropertyGet jname)
+                sM.SetCustomAttribute(CustomAttr.StaticPropertySet jname)
 
         /// An arbitrary object computed for comparing signatures for
         /// identity in compiled code, to signatures CLR sees as duplicate.
@@ -573,13 +526,18 @@ module internal ReflectEmit =
                 if s.RestParameter.IsSome then
                     mB.SetCustomAttribute(CustomAttr.MethodWithParamArray jname paramTypes.Length)
                 else
-                    mB.SetCustomAttribute(CustomAttr.InlineMethod jname paramTypes.Length)
+                    mB.SetCustomAttribute(CustomAttr.Method jname paramTypes.Length)
             | CallMethod ->
-                mB.SetCustomAttribute(CustomAttr.Macro.Call)
+                mB.SetCustomAttribute(CustomAttr.Call)
             | NewMethod ->
-                mB.SetCustomAttribute(CustomAttr.Macro.New)
-            | StaticMethod ->
-                // TODO: SetCustomAttribute
+                mB.SetCustomAttribute(CustomAttr.New)
+            | StaticMethod jname ->
+                let arity = paramTypes.Length
+                if s.RestParameter.IsSome then
+                    CustomAttr.StaticMethodWithParamArray jname arity
+                else
+                    CustomAttr.StaticMethod jname arity
+                |> mB.SetCustomAttribute
                 mB.NotImplemented()
 
         member b.Signatures(mK, ctx, tB, methodName: N.Id, jname, ss) =
@@ -625,7 +583,7 @@ module internal ReflectEmit =
 
         member b.Value(tB, v: N.Value) =
             match TryGetMethodView None v.Type with
-            | Some ss -> b.Signatures(StaticMethod, DefaultContext, tB, v.Id, v.NamePath.Name.Text, ss)
+            | Some ss -> b.Signatures(StaticMethod v.NamePath, DefaultContext, tB, v.Id, v.NamePath.Name.Text, ss)
             | None -> b.Property(StaticProperty, DefaultContext, tB, v.Id, v.NamePath, v.Type)
 
         static member Do(st: State) =

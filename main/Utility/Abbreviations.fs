@@ -23,6 +23,7 @@ namespace IntelliFactory.WebSharper.TypeScript
 
 open System
 open System.Collections
+open System.Reflection
 open System.Text
 
 [<AutoOpen>]
@@ -33,12 +34,14 @@ module internal Abbreviations =
     type AppDomainSetup = System.AppDomainSetup
     type Array = System.Array
     type Assembly = Reflection.Assembly
+    type AssemblyBuilderAccess = Emit.AssemblyBuilderAccess
     type AssemblyName = Reflection.AssemblyName
     type BinaryReader = IO.BinaryReader
     type BinaryWriter = IO.BinaryWriter
     type BindingFlags = Reflection.BindingFlags
     type Char = System.Char
     type ConcurrentDictionary<'T1,'T2> = Concurrent.ConcurrentDictionary<'T1,'T2>
+    type CustomAttributeBuilder = Emit.CustomAttributeBuilder
     type DateTime = System.DateTime
     type Dictionary<'T1,'T2> = Generic.Dictionary<'T1,'T2>
     type Directory = IO.Directory
@@ -60,12 +63,19 @@ module internal Abbreviations =
     type MarshalByRefObject = System.MarshalByRefObject
     type Math = System.Math
     type MemoryStream = IO.MemoryStream
+    type MethodAttributes = Reflection.MethodAttributes
+    type MethodBuilder = Emit.MethodBuilder
+    type ModuleBuilder = Emit.ModuleBuilder
     type NotImplementedException = System.NotImplementedException
     type Object = System.Object
+    type OpCodes = Emit.OpCodes
     type Path = IO.Path
     type ParamArrayAttribute = System.ParamArrayAttribute
+    type ParameterAttributes = Reflection.ParameterAttributes
+    type PropertyAttributes = Reflection.PropertyAttributes
     type PropertyInfo = Reflection.PropertyInfo
     type Regex = RegularExpressions.Regex
+    type ResourceAttributes = Reflection.ResourceAttributes
     type SortedSet<'T> = Generic.SortedSet<'T>
     type Stream = IO.Stream
     type String = System.String
@@ -73,6 +83,8 @@ module internal Abbreviations =
     type StringWriter = IO.StringWriter
     type TextWriter = IO.TextWriter
     type Type = System.Type
+    type TypeAttributes = Reflection.TypeAttributes
+    type TypeBuilder = Emit.TypeBuilder
     type UnicodeCategory = Globalization.UnicodeCategory
     type UTF8Encoding = Text.UTF8Encoding
     type Void = System.Void
