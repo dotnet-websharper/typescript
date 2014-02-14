@@ -28,6 +28,7 @@ module TestRunner =
     let internal AllTests =
         testList "WebSharper.TypeScript" [
             GraphColoringTests.AllTests
+            ParserTests.AllTests
         ]
 
     let RunAllTests args =

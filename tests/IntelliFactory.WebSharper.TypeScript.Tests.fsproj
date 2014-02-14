@@ -18,6 +18,7 @@
     <Compile Include="ClientTests.fs" />
     <Compile Include="TestUtility.fs" />
     <Compile Include="GraphColoringTests.fs" />
+    <Compile Include="ParserTests.fs" />
     <Compile Include="TestRunner.fs" />
     <Compile Include="Main.fs" />
     <Content Include="Main.html" />

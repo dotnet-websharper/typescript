@@ -119,6 +119,7 @@ let tests main =
                 r.Assembly("FSharp.Data.TypeProviders")
                 r.Project(main)
                 r.File(Path.GetFullPath("build/Tests.dll"))
+                r.NuGet("FParsec").Reference()
                 // r.Project(typeProvider)
                 r.NuGet("Fuchu").Reference()
             ])

@@ -355,22 +355,27 @@ module Parser =
 
     let defAmbientClassDeclaration g : P<S.AmbientClassDeclaration> =
         let ctor =
-            Lexer.Constructor >>. g.Params .>> gSemi
+            gAccess >>. Lexer.Constructor >>. g.Params .>> gSemi
             |>> ACBE.ClassConstructor
         let mem =
-            pipe4
-                gAccess
-                gMemberScope
-                gPropertyName
-                (gChoice2 g.CallSignature g.TypeAnnot)
-                (fun acc sc name body ->
-                    match body with
-                    | Choice2Of2 ty ->
-                        ACBE.ClassProperty (acc, sc, name, ty)
-                    | Choice1Of2 cs ->
-                        ACBE.ClassMethod (acc, sc, name, cs))
-            .>> gSemi
-            |> fun mem -> mem <?> "member"
+            (
+                attempt ctor <|>
+                (
+                    pipe4
+                        gAccess
+                        gMemberScope
+                        gPropertyName
+                        (gChoice2 g.CallSignature g.TypeAnnot)
+                        (fun acc sc name body ->
+                            match body with
+                            | Choice2Of2 ty ->
+                                ACBE.ClassProperty (acc, sc, name, ty)
+                            | Choice1Of2 cs ->
+                                ACBE.ClassMethod (acc, sc, name, cs))
+                    .>> gSemi
+                )
+            )
+            <?> "member"
         let heritage =
             fun x y -> (x, y)
             |> pipe2
