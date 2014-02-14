@@ -32,20 +32,20 @@ module ClientTests =
 
         Test "Test0001" {
             let x = Tests.Test0001.x
-            x.a <- 12
-            x.a =? 12
+            x.a <- 12.
+            x.a =? 12.
             x.b =? "a"
             box x.c =? box 0
             x.d =? [||]
             x.e =? true
-            x.incr(1, "A") =? 2
-            x.withRest(1, true, "A", "B") =? "A,B,1,true"
+            x.incr(1., "A") =? 2.
+            x.withRest(1., true, "A", "B") =? "A,B,1,true"
         }
 
         Test "Test0002" {
             let w = Tests.window
-            (w.outerHeight > 0) =? true
+            (w.outerHeight > 0.) =? true
             w.location.href.Contains("://") =? true
-//            Tests.isNaN(1) =? false
-//            Tests.isNaN(As nan) =? true
+            Tests.isNaN(1.) =? false
+            Tests.isNaN(nan) =? true
         }
