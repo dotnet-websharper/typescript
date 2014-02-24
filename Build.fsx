@@ -21,7 +21,9 @@ module Config =
     let Tags = ["Web"; "JavaScript"; "F#"; "TypeScript"]
     let Website = "http://bitbucket.org/IntelliFactory/websharper.typescript"
 
-let bt = BuildTool().PackageId(Config.PackageId, "2.5-alpha")
+let bt =
+    BuildTool().PackageId(Config.PackageId, "2.5-alpha")
+    |> fun bt -> bt.WithFramework(bt.Framework.Net40)
 
 let downloadContrib () =
     let url = "http://github.com/borisyankov/DefinitelyTyped/archive/master.zip"
@@ -34,13 +36,13 @@ let downloadContrib () =
 
 let wsPaths () =
     [
-        "tools/net45/Mono.Cecil.dll"
-        "tools/net45/Mono.Cecil.Mdb.dll"
-        "tools/net45/Mono.Cecil.Pdb.dll"
-        "tools/net45/IntelliFactory.Core.dll"
-        "tools/net45/IntelliFactory.JavaScript.dll"
-        "tools/net45/IntelliFactory.WebSharper.Core.dll"
-        "tools/net45/IntelliFactory.WebSharper.Compiler.dll"
+        "tools/net40/Mono.Cecil.dll"
+        "tools/net40/Mono.Cecil.Mdb.dll"
+        "tools/net40/Mono.Cecil.Pdb.dll"
+        "tools/net40/IntelliFactory.Core.dll"
+        "tools/net40/IntelliFactory.JavaScript.dll"
+        "tools/net40/IntelliFactory.WebSharper.Core.dll"
+        "tools/net40/IntelliFactory.WebSharper.Compiler.dll"
     ]
 
 let main () =
@@ -97,7 +99,7 @@ let exe msb main =
 let prepareTests () =
     let fparsec = bt.Reference.NuGet("FParsec").Reference()
     let refs =
-        bt.ResolveReferences bt.Framework.Net45 [
+        bt.ResolveReferences bt.Framework.Net40 [
             fparsec
             bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
         ]
@@ -105,7 +107,7 @@ let prepareTests () =
 
 let runTests () =
     let refs =
-        bt.ResolveReferences bt.Framework.Net45 [
+        bt.ResolveReferences bt.Framework.Net40 [
             bt.Reference.NuGet("Fuchu").Reference()
         ]
     bt.FSharp.ExecuteScript("scripts/runTests.fsx", refs)
@@ -165,7 +167,7 @@ let libPkg libPath =
                 Seq.singleton {
                     new INuGetFile with
                         member x.Read() = File.OpenRead(libPath) :> _
-                        member x.TargetPath = "/lib/net45/" + Path.GetFileName(libPath)
+                        member x.TargetPath = "/lib/net40/" + Path.GetFileName(libPath)
                 }
     }
 
@@ -190,12 +192,12 @@ let mainPkg main libPkg msb =
                     yield {
                         new INuGetFile with
                             member x.Read() = File.OpenRead(typedefof<list<_>>.Assembly.Location) :> _
-                            member x.TargetPath = "/tools/net45/FSharp.Core.dll"
+                            member x.TargetPath = "/tools/net40/FSharp.Core.dll"
                     }
                     yield {
                         new INuGetFile with
                             member x.Read() = File.OpenRead("exe/App.config") :> _
-                            member x.TargetPath = "/tools/net45/WebSharper.TSC.exe.config"
+                            member x.TargetPath = "/tools/net40/WebSharper.TSC.exe.config"
                     }
                 }
     }
@@ -207,7 +209,7 @@ let buildVsix nuPkg libPkg =
 let buildLib () =
     let fparsec = bt.Reference.NuGet("FParsec").Reference()
     let refs =
-        bt.ResolveReferences bt.Framework.Net45 [
+        bt.ResolveReferences bt.Framework.Net40 [
             fparsec
             bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
         ]
@@ -223,7 +225,7 @@ let build () =
     bt.Solution [ tests ] |> bt.Dispatch
     runTests ()
     buildLib ()
-    let libPkg = libPkg "build/net45/IntelliFactory.WebSharper.TypeScript.Lib.dll"
+    let libPkg = libPkg "build/net40/IntelliFactory.WebSharper.TypeScript.Lib.dll"
     let mainPkg = mainPkg main libPkg msb
     bt.Solution [ libPkg; mainPkg ] |> bt.Dispatch
     buildVsix mainPkg libPkg

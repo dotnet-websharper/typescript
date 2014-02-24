@@ -27,6 +27,17 @@ module S = Shapes
 /// Implements assembly generation via System.Reflection.Emit.
 module internal ReflectEmit =
 
+    type System.Reflection.Emit.TypeBuilder with
+
+        member self.GenericTypeParameters =
+            if self.ContainsGenericParameters then
+                self.GetGenericArguments()
+            else
+                Array.empty
+
+        member self.ImplementedInterfaces =
+            self.GetInterfaces()
+
     type Config =
         {
             AssemblyName : string

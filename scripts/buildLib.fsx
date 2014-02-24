@@ -2,7 +2,7 @@
 /// `lib.d.ts` to `IntelliFactory.WebSharper.TypeScript.Lib.dll`.
 
 #load "../build/buildLib.includes.fsx"
-#r "../build/net45/IntelliFactory.WebSharper.TypeScript.dll"
+#r "../build/net40/IntelliFactory.WebSharper.TypeScript.dll"
 
 open System
 open System.IO
@@ -34,7 +34,7 @@ let main () =
     | None -> failwith "Failed to compile Lib.d.ts"
     | Some assem ->
         let bytes = assem.GetBytes()
-        let path = p [".."; "build"; "net45"; name + ".dll"]
+        let path = p [".."; "build"; "net40"; name + ".dll"]
         File.WriteAllBytes(path, bytes)
         stdout.WriteLine("Written: {0}", path)
 

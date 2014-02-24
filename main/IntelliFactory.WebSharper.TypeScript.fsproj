@@ -4,11 +4,11 @@
     <OutputType>Library</OutputType>
     <Name>IntelliFactory.WebSharper.TypeScript</Name>
     <ProjectGuid>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</ProjectGuid>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile />
-    <OutputPath>../build/net45</OutputPath>
+    <OutputPath>../build/net40</OutputPath>
   </PropertyGroup>
-  <Import Project="../build/net45/$(Name).proj" />
+  <Import Project="../build/net40/$(Name).proj" />
   <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
   <ItemGroup>
     <Compile Include="Properties/AssemblyInfo.fs" />
