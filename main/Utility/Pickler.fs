@@ -91,11 +91,11 @@ module Pickler =
             (fun d -> d.ToBinary())
 
     let ReadFromStream p s =
-        use r = new BinaryReader(s, encoding = Encoding.Default, leaveOpen = true)
+        use r = new BinaryReader(s, encoding = Encoding.Default)
         p.Unpickle { BinaryReader = r }
 
     let WriteToStream p s v =
-        use w = new BinaryWriter(s, encoding = Encoding.Default, leaveOpen = true)
+        use w = new BinaryWriter(s, encoding = Encoding.Default)
         p.Pickle { BinaryWriter = w } v
 
     let Unpickle p bytes =
