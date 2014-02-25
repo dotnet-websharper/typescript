@@ -28,9 +28,7 @@ module Client =
                 "editor" => "/themes/editor/epic-dark.css"
             ]
 
-        // NOTE: the way static and instance members are named for a class here,
-        // it works but looks ugly (EpicEditor1).
-        let ed = Epic.EpicEditor1.New(opts)
+        let ed = Epic.EpicEditor.Create(opts)
 
         ed.load()
         |> ignore

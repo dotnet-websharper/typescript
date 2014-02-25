@@ -209,12 +209,12 @@ module Naming =
                 | Names.NP2 (path, _) -> getContainer.[path].ContractList
             contracts.Add(cB.Contract(c))
         for v in out.Values do
-            let (values, name) =
-                match v.NamePath with
+            let (values, hintName) =
+                match v.HintPath with
                 | Names.NP1 name -> (topContainer.ValueList, name)
                 | Names.NP2 (path, name) -> (getContainer.[path].ValueList, name)
             values.Add {
-                Id = idB.Id(name.Text)
+                Id = idB.Id(hintName.Text)
                 NamePath = v.NamePath
                 Type = cB.Type(v.Type)
             }

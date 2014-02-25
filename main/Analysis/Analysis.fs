@@ -31,16 +31,18 @@ module E = ExternalModuleNames
 /// and construct scope structure for later name resolution.
 module internal Analysis =
 
-    [<NoComparison>]
-    [<ReferenceEquality>]
-    type Value =
-        {
-            ValuePath : NamePath
-            ValueType : C.Type
-        }
+    [<Sealed>]
+    type Value private (hintPath: NamePath, namePath: NamePath, ty: C.Type) =
 
-        member v.NamePath = v.ValuePath
-        member v.Type = v.ValueType
+        static member Create(namePath, ty, hintPath) =
+            Value(hintPath, namePath, ty)
+
+        static member Create(namePath, ty) =
+            Value(namePath, namePath, ty)
+
+        member v.HintPath = hintPath
+        member v.NamePath = namePath
+        member v.Type = ty
 
     type ValueBuilder =
         {
@@ -48,7 +50,12 @@ module internal Analysis =
         }
 
         member vb.Value(path, ty) =
-            let v = { ValuePath = path; ValueType = ty }
+            let v = Value.Create(path, ty)
+            vb.AllValues.Add(v)
+            v
+
+        member vb.Value(path, ty, hintPath) =
+            let v = Value.Create(path, ty, hintPath)
             vb.AllValues.Add(v)
             v
 
@@ -60,18 +67,31 @@ module internal Analysis =
                 AllValues = ResizeArray()
             }
 
+    type SharedNames =
+        {
+            TName : Name
+            CName : Name
+        }
+
     type State =
         {
             Contracts : C.Contracts
             Logger : Logger
+            NameBuilder : Names.NameBuilder
+            SharedNames : SharedNames
             ValueBuilder : ValueBuilder
-
         }
 
-        static member Create(logger) =
+        static member Create(logger, names) =
             {
                 Contracts = C.Contracts()
                 Logger = logger
+                NameBuilder = names
+                SharedNames =
+                    {
+                        TName = names.CreateName("T")
+                        CName = names.CreateName("Create")
+                    }
                 ValueBuilder = ValueBuilder.Create()
             }
 
@@ -187,8 +207,8 @@ module internal Analysis =
             | S.Ps3 (ps, opts, rest) -> makeSigs ps opts (Some (convP rest))
 
         member this.Class(c: S.AmbientClassDeclaration) =
-            this.Interface(S.Export, this.ClassToInterface(c))
-            this.Var(S.Export, c.ClassName, this.ClassToStatics(c))
+            this.Interface(S.Export, this.ClassToInterface(c), tSuffix = true)
+            this.Module(S.Export, this.ClassToStatics(c))
 
         member this.ClassToInterface(c: S.AmbientClassDeclaration) : S.InterfaceDeclaration =
             {
@@ -215,33 +235,51 @@ module internal Analysis =
                     ]
             }
 
-        member this.ClassToStatics(s: S.AmbientClassDeclaration) : S.Type =
+        member this.ClassToStatics(s: S.AmbientClassDeclaration) : S.AmbientModuleDeclaration =
             let selfTP = s.ClassTypeParameters
             let mkT (t: S.TypeParameter) =
                 match t with
                 | S.TP1 n
                 | S.TP2 (n, _) -> S.TReference (S.TRef (S.TN1 n, []))
             let selfType = S.TReference (S.TRef (S.TN1 s.ClassName, List.map mkT selfTP))
-            S.TObject [
-                for m in s.ClassBody do
-                    match m with
-                    | S.ClassConstructor ps ->
-                        yield S.TM3 (S.CS (selfTP, ps, selfType))
-                    | S.ClassIndex iS -> ()
-                    | S.ClassMethod (acc, sc, name, sign) ->
-                        match acc, sc with
-                        | S.Public, S.Static ->
-                            yield S.TM1 (S.Prop (name, S.TObject [S.TM2 sign]))
-                        | _ -> ()
-                    | S.ClassProperty (acc, sc, name, ty) ->
-                        match acc, sc with
-                        | S.Public, S.Static ->
-                            yield S.TM1 (S.Prop (name, ty))
-                        | _ -> ()
-            ]
+            do
+                let ctors =
+                    [
+                        for m in s.ClassBody do
+                            match m with
+                            | S.ClassConstructor ps -> yield ps
+                            | _ -> ()
+                    ]
+                match ctors with
+                | [] -> ()
+                | _ ->
+                    let contract =
+                        S.TObject [
+                            for ps in ctors ->
+                                S.TM3 (S.CS (selfTP, ps, selfType))
+                        ]
+                    this.Var(S.Export, s.ClassName, contract, ctorSuffix = true)
+            let elements : list<S.AmbientModuleElement> =
+                [
+                    for m in s.ClassBody do
+                        match m with
+                        | S.ClassConstructor _ -> ()
+                        | S.ClassIndex _ -> ()
+                        | S.ClassMethod (acc, sc, name, sign) ->
+                            match acc, sc with
+                            | S.Public, S.Static ->
+                                yield S.AME2 (S.AFD (name, sign))
+                            | _ -> ()
+                        | S.ClassProperty (acc, sc, name, ty) ->
+                            match acc, sc with
+                            | S.Public, S.Static ->
+                                yield S.AME1 (S.AVD (name, ty))
+                            | _ -> ()
+                ]
+            S.AMD (s.ClassName, elements)
 
         member this.Enum(e: S.AmbientEnumDeclaration) =
-            this.Interface(S.Export, this.EnumToInterface(e))
+            let c = this.Interface(S.Export, this.EnumToInterface(e))
             this.Var(S.Export, e.EnumName, this.EnumToStatics(e))
 
         member this.EnumToInterface(e: S.AmbientEnumDeclaration) : S.InterfaceDeclaration =
@@ -282,14 +320,18 @@ module internal Analysis =
             | S.Export -> ctx.ExportedScope.Link(id, name)
             | S.NoExport -> ()
 
-        member this.Interface(exp, i: S.InterfaceDeclaration) =
+        member this.Interface(exp, i: S.InterfaceDeclaration, tSuffix: bool) =
             let (root, path) =
                 match exp with
-                | S.Export -> (ctx.ExportedRoot, ctx.SubPath i.InterfaceName)
-                | S.NoExport -> (ctx.LocalRoot, Names.NP1 i.InterfaceName)
+                | S.Export ->
+                    (ctx.ExportedRoot, ctx.SubPath i.InterfaceName)
+                | S.NoExport ->
+                    (ctx.LocalRoot, Names.NP1 i.InterfaceName)
             let c = root.GetOrCreateNamedContract(path)
             match c with
             | Sc.Local c ->
+                if tSuffix then
+                    c.HintPath <- NamePath.NP2(c.HintPath, st.SharedNames.TName)
                 let vis =
                     match i.InterfaceTypeParameters with
                     | [] -> this
@@ -304,6 +346,9 @@ module internal Analysis =
                 this.ExportContract(exp, i.InterfaceName, c)
             | _ ->
                 st.Logger.Exception (Failure "Conflict between local and foreign contract")
+
+        member this.Interface(exp, i) =
+            this.Interface(exp, i, false)
 
         member this.Module(exp, (S.AMD (id, body) as mdecl)) =
             let (root, path) =
@@ -400,7 +445,7 @@ module internal Analysis =
         member this.TypeRef(S.TRef (tN, args)) =
             ctx.ScopeChain.ResolveType(tN, List.map this.Type args)
 
-        member this.Var(exp, id, ty) =
+        member this.Var(exp, id, ty, ctorSuffix: bool) =
             /// TODO: merging anon types on duplicate `function` decls.
             match exp with
             | S.Export ->
@@ -409,7 +454,11 @@ module internal Analysis =
                     let ty = this.Type(ty)
                     vs.[id] <- ty
                     if ctx.ExportedRoot.IsGlobal then // TODO: account for external modules
-                        st.ValueBuilder.Value(ctx.SubPath(id), ty) |> ignore
+                        let p = ctx.SubPath(id)
+                        if ctorSuffix then
+                            st.ValueBuilder.Value(p, ty, NamePath.NP2 (p, st.SharedNames.CName)) |> ignore
+                        else
+                            st.ValueBuilder.Value(p, ty) |> ignore
                 match ctx.CurrentModule.ExportedValues.TryGetValue(id) with
                 | true, C.TNamed (c, _) ->
                     match ty with
@@ -418,6 +467,9 @@ module internal Analysis =
                 | _ -> def ()
             | _ -> ()
             // TODO: record more information so that type-queries may work.
+
+        member this.Var(exp, id, ty) =
+            this.Var(exp, id, ty, false)
 
     let createGlobalContext (metaTable: Metadata.Table) st =
         let globalModule = Sc.Module(st.Contracts, None)
@@ -440,6 +492,7 @@ module internal Analysis =
         {
             Logger : Logger
             MetadataTable : Metadata.Table
+            NameBuilder : Names.NameBuilder
             SourceFiles : seq<D.SourceFile>
         }
 
@@ -450,7 +503,7 @@ module internal Analysis =
         }
 
     let Analyze input =
-        let st = State.Create(input.Logger)
+        let st = State.Create(input.Logger, input.NameBuilder)
         let ctx = createGlobalContext input.MetadataTable st
         let vis = Visit(st, ctx)
         for sF in input.SourceFiles do
