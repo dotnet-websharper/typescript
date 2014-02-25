@@ -24,13 +24,12 @@ module Client =
                 basePath =  "/EpicEditor-v0.2.2"
             )
 
-        // NOTE: binding taken from DefinitelyTyped is outdated wrt to EpicEditor binding.
-        opts?theme <-
-            New [
-                "base" => "/themes/base/epiceditor.css"
-                "preview" => "/themes/preview/preview-dark.css"
-                "editor" => "/themes/editor/epic-dark.css"
-            ]
+        opts.theme <-
+            let theme = New [] |> As<Epic.Anon1>
+            theme._base <- "/themes/base/epiceditor.css"
+            theme.preview <- "/themes/preview/preview-dark.css"
+            theme.editor <- "/themes/editor/epic-dark.css"
+            theme
 
         let ed = Epic.EpicEditor.Create(opts)
 
