@@ -34,6 +34,7 @@ module internal CustomAttr =
     val ParamArray : CustomAttributeBuilder
     val PropertyGet : string -> CustomAttributeBuilder
     val PropertySet : string -> CustomAttributeBuilder
+    val Constructor : NamePath -> arity: int -> CustomAttributeBuilder
     val StaticMethod : NamePath -> arity: int -> CustomAttributeBuilder
     val StaticMethodWithParamArray : NamePath -> arity: int -> CustomAttributeBuilder
     val StaticPropertyGet : NamePath -> CustomAttributeBuilder

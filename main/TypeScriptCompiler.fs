@@ -81,6 +81,7 @@ module TypeScriptCompiler =
                 |> Seq.distinct
                 |> Seq.choose (fun a -> Metadata.Table.TryParseAssembly(builder, a))
                 |> Metadata.Table.Union
+            NameBuilder = builder
             Logger = logger
             SourceFiles = sourceFiles.SourceFiles
         }

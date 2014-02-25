@@ -29,22 +29,34 @@ module D = SourceFileDependencies
 /// defined contracts and values.
 module internal Analysis =
 
+    /// Represents a statically accessible value.
     [<Sealed>]
     type Value =
+
+        /// Suggested access path on the CLR.
+        member HintPath : NamePath
+
+        /// The original access path in TypeScript.
         member NamePath : NamePath
+
+        /// The type of the value.
         member Type : C.Type
 
+    /// Inputs for the analysis.
     type Input =
         {
             Logger : Logger
             MetadataTable : Metadata.Table
+            NameBuilder : Names.NameBuilder
             SourceFiles : seq<D.SourceFile>
         }
 
+    /// Discovered contracts and values.
     type Output =
         {
             Contracts : seq<C.Contract>
             Values : seq<Value>
         }
 
+    /// Performs the analysis path.
     val Analyze : Input -> Output

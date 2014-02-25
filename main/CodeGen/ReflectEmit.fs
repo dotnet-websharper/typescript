@@ -46,8 +46,13 @@ module internal ReflectEmit =
             TopModule : N.TopModule
         }
 
+    type MethodView =
+        | IsConstructor of seq<N.Signature>
+        | IsMethod of seq<N.Signature>
+        | IsNormal
+
     /// A test for properites that may compile to CLR methods.
-    let TryGetMethodView (declaring: option<N.Contract>) (t: N.Type) : option<seq<N.Signature>> =
+    let GetMethodView (declaring: option<N.Contract>) (t: N.Type) : MethodView =
         let genericArity =
             match declaring with
             | None -> 0
@@ -59,18 +64,30 @@ module internal ReflectEmit =
                 | N.TGeneric j :: gs when i = j -> proper (i + 1) gs
                 | _ -> false
             proper 0 gs
-        let isMethod (c: N.Contract) (gs: list<N.Type>) =
+        let isProper (c: N.Contract) (gs: list<N.Type>) =
             c.IsAnonymous
             && properGenerics gs
             && Seq.length c.Generics = genericArity
             && c.ByNumber.IsNone
             && c.ByString.IsNone
             && Seq.isEmpty c.Extends
-            && Seq.isEmpty c.New
             && Seq.isEmpty c.Properties
+        let isMethod (c: N.Contract) (gs: list<N.Type>) =
+            Seq.isEmpty c.New
+            && not (Seq.isEmpty c.Call)
+        let isConstructor (c: N.Contract) (gs: list<N.Type>) =
+            Seq.isEmpty c.Call
+            && not (Seq.isEmpty c.New)
         match t with
-        | N.TNamed (c, gs) when isMethod c gs -> Some c.Call
-        | _ -> None
+        | N.TNamed (c, gs) when isProper c gs ->
+            if isMethod c gs then
+                IsMethod c.Call
+            elif isConstructor c gs then
+                IsConstructor c.New
+            else
+                IsNormal
+        | _ ->
+            IsNormal
 
     type FuncView =
         {
@@ -174,9 +191,9 @@ module internal ReflectEmit =
             | _ -> ()
 
         member private p.Property(c: N.Contract, prop: N.Property) =
-            match TryGetMethodView (Some c) prop.Type with
-            | Some ss -> Seq.iter p.Signature ss
-            | None -> p.Type prop.Type
+            match GetMethodView (Some c) prop.Type with
+            | IsMethod ss -> Seq.iter p.Signature ss
+            | _ -> p.Type prop.Type
 
         member private p.Signature(s: N.Signature) =
             List.iter p.Parameter s.Parameters
@@ -198,9 +215,9 @@ module internal ReflectEmit =
                     List.iter p.Type ts
 
         member private p.Value(v: N.Value) =
-            match TryGetMethodView None v.Type with
-            | None -> p.Type v.Type
-            | Some ss -> Seq.iter p.Signature ss
+            match GetMethodView None v.Type with
+            | IsNormal -> p.Type v.Type
+            | IsMethod ss | IsConstructor ss -> Seq.iter p.Signature ss
 
         static member Do(cfg) : (N.Contract -> bool) =
             let p = Pass0()
@@ -368,18 +385,19 @@ module internal ReflectEmit =
 
     type MethodKind =
         | CallMethod
-        | InterfaceMethod
+        | Constructor of NamePath // JavaScript name
+        | InterfaceMethod of Name // JavaScript name
         | NewMethod
-        | StaticMethod of NamePath
+        | StaticMethod of NamePath // JavaScript name
 
     let methodAttributes k =
         match k with
-        | CallMethod | InterfaceMethod | NewMethod -> Attr.InterfaceMethod
-        | StaticMethod _ -> Attr.StaticMethod
+        | CallMethod | InterfaceMethod _ | NewMethod -> Attr.InterfaceMethod
+        | Constructor _ | StaticMethod _ -> Attr.StaticMethod
 
     type PropertyKind =
-        | InterfaceProperty
-        | StaticProperty
+        | InterfaceProperty of Name // JavaScript name
+        | StaticProperty of NamePath // JavaScript name
 
     [<Sealed>]
     type Pass2(st: State) =
@@ -429,14 +447,14 @@ module internal ReflectEmit =
                 | None -> ()
                 | Some i -> b.Indexer(ctx, tB, i.IndexerName, stringT, i.IndexerType)
                 if Seq.isEmpty c.Call |> not then
-                    b.Signatures(CallMethod, ctx, tB, N.Id.Call, "Call", c.Call)
+                    b.Signatures(CallMethod, ctx, tB, N.Id.Call, c.Call)
                 if Seq.isEmpty c.New |> not then
-                    b.Signatures(NewMethod, ctx, tB, N.Id.New, "New", c.New)
+                    b.Signatures(NewMethod, ctx, tB, N.Id.New, c.New)
                 let declaring = Some c
                 for prop in c.Properties do
-                    match TryGetMethodView declaring prop.Type with
-                    | Some ss -> b.Signatures(InterfaceMethod, ctx, tB, prop.Id, prop.Name.Text, ss)
-                    | None -> b.Property(InterfaceProperty, ctx, tB, prop.Id, Names.NP1 prop.Name, prop.Type)
+                    match GetMethodView declaring prop.Type with
+                    | IsMethod ss -> b.Signatures(InterfaceMethod prop.Name, ctx, tB, prop.Id, ss)
+                    | _ -> b.Property(InterfaceProperty prop.Name, ctx, tB, prop.Id, prop.Type)
 
         member b.Indexer(ctx, tB: TypeBuilder, paramName: N.Id, paramType, retType) =
             let pA = PropertyAttributes.None
@@ -453,25 +471,25 @@ module internal ReflectEmit =
             pD.SetSetMethod(sM)
             pD.SetCustomAttribute(CustomAttr.Item)
 
-        member b.Property(pK, ctx, tB: TypeBuilder, name: N.Id, jname: Names.NamePath, ty: N.Type) =
+        member b.Property(pK: PropertyKind, ctx, tB: TypeBuilder, name: N.Id, ty: N.Type) =
             let pA = PropertyAttributes.None
             let pT = b.Type(ctx, ty)
             let pB = tB.DefineProperty(name.Text, pA, pT, Array.empty)
             let mA =
                 MethodAttributes.SpecialName |||
                 match pK with
-                | InterfaceProperty -> methodAttributes InterfaceMethod
-                | StaticProperty -> methodAttributes (StaticMethod jname)
+                | InterfaceProperty jname -> methodAttributes (InterfaceMethod jname)
+                | StaticProperty jname -> methodAttributes (StaticMethod jname)
             let gM = tB.DefineMethod("get_" + name.Text, mA, pT, Array.empty)
             let sM = tB.DefineMethod("set_" + name.Text, mA, voidT, [| pT |])
             sM.DefineParameter(1, ParameterAttributes.None, "value") |> ignore
             pB.SetGetMethod(gM)
             pB.SetSetMethod(sM)
             match pK with
-            | InterfaceProperty ->
-                gM.SetCustomAttribute(CustomAttr.PropertyGet jname.Name.Text)
-                sM.SetCustomAttribute(CustomAttr.PropertySet jname.Name.Text)
-            | StaticProperty ->
+            | InterfaceProperty jname ->
+                gM.SetCustomAttribute(CustomAttr.PropertyGet jname.Text)
+                sM.SetCustomAttribute(CustomAttr.PropertySet jname.Text)
+            | StaticProperty jname ->
                 gM.NotImplemented()
                 sM.NotImplemented()
                 gM.SetCustomAttribute(CustomAttr.StaticPropertyGet jname)
@@ -490,7 +508,7 @@ module internal ReflectEmit =
                 | N.Parameter.Param (_, ty) -> b.Type(context, ty) |> Some
                 | _ -> None)
 
-        member b.Signature(mK, ctx0, tB: TypeBuilder, methodName: N.Id, jname: string, s: N.Signature) =
+        member b.Signature(mK, ctx0, tB: TypeBuilder, methodName: N.Id, s: N.Signature) =
             let mA = methodAttributes mK
             let mB = tB.DefineMethod(methodName.Text, mA)
             let gs =
@@ -533,15 +551,19 @@ module internal ReflectEmit =
                     .SetCustomAttribute(CustomAttr.ParamArray)
             | _ -> ()
             match mK with
-            | InterfaceMethod ->
+            | InterfaceMethod jname ->
                 if s.RestParameter.IsSome then
-                    mB.SetCustomAttribute(CustomAttr.MethodWithParamArray jname paramTypes.Length)
+                    mB.SetCustomAttribute(CustomAttr.MethodWithParamArray jname.Text paramTypes.Length)
                 else
-                    mB.SetCustomAttribute(CustomAttr.Method jname paramTypes.Length)
+                    mB.SetCustomAttribute(CustomAttr.Method jname.Text paramTypes.Length)
             | CallMethod ->
                 mB.SetCustomAttribute(CustomAttr.Call)
             | NewMethod ->
                 mB.SetCustomAttribute(CustomAttr.New)
+            | Constructor jname ->
+                CustomAttr.Constructor jname paramTypes.Length
+                |> mB.SetCustomAttribute
+                mB.NotImplemented()
             | StaticMethod jname ->
                 let arity = paramTypes.Length
                 if s.RestParameter.IsSome then
@@ -551,13 +573,13 @@ module internal ReflectEmit =
                 |> mB.SetCustomAttribute
                 mB.NotImplemented()
 
-        member b.Signatures(mK, ctx, tB, methodName: N.Id, jname, ss) =
+        member b.Signatures(mK, ctx, tB, methodName: N.Id, ss) =
             let ss =
                 ss
                 |> Seq.distinctBy (fun s -> b.SignatureIdentity(ctx, s))
                 |> Seq.toArray
             for s in ss do
-                b.Signature(mK, ctx, tB, methodName, jname, s)
+                b.Signature(mK, ctx, tB, methodName, s)
 
         member b.Type(ctx, ty) : Type =
             match ty with
@@ -593,9 +615,10 @@ module internal ReflectEmit =
             | N.TString -> stringT
 
         member b.Value(tB, v: N.Value) =
-            match TryGetMethodView None v.Type with
-            | Some ss -> b.Signatures(StaticMethod v.NamePath, DefaultContext, tB, v.Id, v.NamePath.Name.Text, ss)
-            | None -> b.Property(StaticProperty, DefaultContext, tB, v.Id, v.NamePath, v.Type)
+            match GetMethodView None v.Type with
+            | IsConstructor ss -> b.Signatures(Constructor v.NamePath, DefaultContext, tB, v.Id, ss)
+            | IsMethod ss -> b.Signatures(StaticMethod v.NamePath, DefaultContext, tB, v.Id, ss)
+            | IsNormal -> b.Property(StaticProperty v.NamePath, DefaultContext, tB, v.Id, v.Type)
 
         static member Do(st: State) =
             Pass2(st).Container(st.Config.TopModule)

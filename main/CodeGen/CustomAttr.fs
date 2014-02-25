@@ -91,3 +91,7 @@ module CustomAttr =
         let normalArgs = List.init (numArgs - 1) (fun i -> V i)
         let args = S.NewArray(List.map Some normalArgs).[Str "concat"].[[V (numArgs - 1)]]
         Inline <| (Addr name).[Str "apply"].[[!~ S.Null; args]]
+
+    let Constructor name numArgs =
+        let args = List.init numArgs V
+        Inline <| S.New (Addr name, args)
