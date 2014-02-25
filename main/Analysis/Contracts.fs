@@ -33,6 +33,11 @@ module Contracts =
         | OptProp of 'T
         | Prop of 'T
 
+        member p.IsOptional =
+            match p with
+            | OptProp _ -> true
+            | _ -> false
+
         member p.Value =
             match p with
             | OptProp v | Prop v -> v

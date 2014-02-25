@@ -46,6 +46,21 @@ module internal ReflectEmit =
             TopModule : N.TopModule
         }
 
+    type TypeView =
+        | IsConfigObject
+        | IsNormalType
+
+    let GetTypeView (c: N.Contract) : TypeView =
+        let isOptional (p: N.Property) = p.Optional
+        let isConfigObject =
+            c.ByNumber.IsNone
+            && c.ByString.IsNone
+            && Seq.isEmpty c.Call
+            && Seq.isEmpty c.New
+            && Seq.isEmpty c.Extends
+            && c.Properties |> Seq.forall isOptional
+        if isConfigObject then IsConfigObject else IsNormalType
+
     type MethodView =
         | IsConstructor of seq<N.Signature>
         | IsMethod of seq<N.Signature>
@@ -258,6 +273,11 @@ module internal ReflectEmit =
             ||| MethodAttributes.SpecialName
             ||| MethodAttributes.RTSpecialName
 
+        let DefaultPublicCtor =
+            MethodAttributes.Public
+            ||| MethodAttributes.SpecialName
+            ||| MethodAttributes.RTSpecialName
+
         let Indexer =
             MethodAttributes.Abstract
             ||| MethodAttributes.HideBySig
@@ -265,6 +285,16 @@ module internal ReflectEmit =
             ||| MethodAttributes.Public
             ||| MethodAttributes.SpecialName
             ||| MethodAttributes.Virtual
+
+        let ConfigObject =
+            TypeAttributes.Class
+            ||| TypeAttributes.NestedPublic
+            ||| TypeAttributes.Sealed
+
+        let ConfigObjectMethod =
+            MethodAttributes.HideBySig
+            ||| MethodAttributes.PrivateScope
+            ||| MethodAttributes.Public
 
         let Interface =
             TypeAttributes.Abstract
@@ -303,19 +333,31 @@ module internal ReflectEmit =
             gen.Emit(OpCodes.Newobj, NotImplementedConstructor)
             gen.Emit(OpCodes.Throw)
 
+    let AddConfigObjectConstructor (tB: TypeBuilder) =
+        let ctor = tB.DefineDefaultConstructor(Attr.DefaultPublicCtor)
+        ctor.SetCustomAttribute(CustomAttr.ConfigObjectCtor)
+
     [<Sealed>]
     type Pass1(st) =
 
         member p.Contract(parent: TypeBuilder, c: N.Contract) =
             if st.IsReified c then
                 let name = c.Name
-                let tB = parent.DefineNestedType(name.Text, Attr.Interface)
+                let view = GetTypeView c
+                let attr =
+                    match view with
+                    | IsConfigObject -> Attr.ConfigObject
+                    | IsNormalType -> Attr.Interface
+                let tB = parent.DefineNestedType(name.Text, attr)
                 st.ContractTable.Add(c, tB)
                 st.CreatedTypes.Add(tB)
                 let gs = [| for n in c.Generics -> n.Text |]
                 if gs.Length > 0 then
                     tB.DefineGenericParameters(gs)
                     |> ignore
+                match view with
+                | IsConfigObject -> AddConfigObjectConstructor tB
+                | IsNormalType -> ()
 
         member p.Module<'T>(tB, m: N.Module<'T>) =
             p.NoConstructor(tB)
@@ -370,7 +412,6 @@ module internal ReflectEmit =
     let unitT = typeof<unit>
     let voidT = typeof<Void>
 
-
     type Context =
         {
             Generics : Type []
@@ -390,12 +431,8 @@ module internal ReflectEmit =
         | NewMethod
         | StaticMethod of NamePath // JavaScript name
 
-    let methodAttributes k =
-        match k with
-        | CallMethod | InterfaceMethod _ | NewMethod -> Attr.InterfaceMethod
-        | Constructor _ | StaticMethod _ -> Attr.StaticMethod
-
     type PropertyKind =
+        | ConfigObjectProperty of Name // JavaScript name
         | InterfaceProperty of Name // JavaScript name
         | StaticProperty of NamePath // JavaScript name
 
@@ -436,25 +473,30 @@ module internal ReflectEmit =
             if st.IsReified c then
                 let tB = st.ContractTable.[c]
                 let ctx = { DefaultContext with Generics = tB.GenericTypeParameters }
-                for ty in c.Extends do
-                    let t = b.Type(ctx, ty)
-                    if t.IsInterface then // can be `obj` concealing a failure
-                        tB.AddInterfaceImplementation(t)
-                match c.ByNumber with
-                | None -> ()
-                | Some i -> b.Indexer(ctx, tB, i.IndexerName, numberT, i.IndexerType)
-                match c.ByString with
-                | None -> ()
-                | Some i -> b.Indexer(ctx, tB, i.IndexerName, stringT, i.IndexerType)
-                if Seq.isEmpty c.Call |> not then
-                    b.Signatures(CallMethod, ctx, tB, N.Id.Call, c.Call)
-                if Seq.isEmpty c.New |> not then
-                    b.Signatures(NewMethod, ctx, tB, N.Id.New, c.New)
-                let declaring = Some c
-                for prop in c.Properties do
-                    match GetMethodView declaring prop.Type with
-                    | IsMethod ss -> b.Signatures(InterfaceMethod prop.Name, ctx, tB, prop.Id, ss)
-                    | _ -> b.Property(InterfaceProperty prop.Name, ctx, tB, prop.Id, prop.Type)
+                match GetTypeView c with
+                | IsConfigObject ->
+                    for prop in c.Properties do
+                        b.Property(ConfigObjectProperty prop.Name, ctx, tB, prop.Id, prop.Type)
+                | IsNormalType ->
+                    for ty in c.Extends do
+                        let t = b.Type(ctx, ty)
+                        if t.IsInterface then // can be `obj` concealing a failure
+                            tB.AddInterfaceImplementation(t)
+                    match c.ByNumber with
+                    | None -> ()
+                    | Some i -> b.Indexer(ctx, tB, i.IndexerName, numberT, i.IndexerType)
+                    match c.ByString with
+                    | None -> ()
+                    | Some i -> b.Indexer(ctx, tB, i.IndexerName, stringT, i.IndexerType)
+                    if Seq.isEmpty c.Call |> not then
+                        b.Signatures(CallMethod, ctx, tB, N.Id.Call, c.Call)
+                    if Seq.isEmpty c.New |> not then
+                        b.Signatures(NewMethod, ctx, tB, N.Id.New, c.New)
+                    let declaring = Some c
+                    for prop in c.Properties do
+                        match GetMethodView declaring prop.Type with
+                        | IsMethod ss -> b.Signatures(InterfaceMethod prop.Name, ctx, tB, prop.Id, ss)
+                        | _ -> b.Property(InterfaceProperty prop.Name, ctx, tB, prop.Id, prop.Type)
 
         member b.Indexer(ctx, tB: TypeBuilder, paramName: N.Id, paramType, retType) =
             let pA = PropertyAttributes.None
@@ -478,14 +520,20 @@ module internal ReflectEmit =
             let mA =
                 MethodAttributes.SpecialName |||
                 match pK with
-                | InterfaceProperty jname -> methodAttributes (InterfaceMethod jname)
-                | StaticProperty jname -> methodAttributes (StaticMethod jname)
+                | InterfaceProperty jname -> Attr.InterfaceMethod
+                | ConfigObjectProperty jname -> Attr.ConfigObjectMethod
+                | StaticProperty jname -> Attr.StaticMethod
             let gM = tB.DefineMethod("get_" + name.Text, mA, pT, Array.empty)
             let sM = tB.DefineMethod("set_" + name.Text, mA, voidT, [| pT |])
             sM.DefineParameter(1, ParameterAttributes.None, "value") |> ignore
             pB.SetGetMethod(gM)
             pB.SetSetMethod(sM)
             match pK with
+            | ConfigObjectProperty jname ->
+                gM.NotImplemented()
+                sM.NotImplemented()
+                gM.SetCustomAttribute(CustomAttr.PropertyGet jname.Text)
+                sM.SetCustomAttribute(CustomAttr.PropertySet jname.Text)
             | InterfaceProperty jname ->
                 gM.SetCustomAttribute(CustomAttr.PropertyGet jname.Text)
                 sM.SetCustomAttribute(CustomAttr.PropertySet jname.Text)
@@ -509,7 +557,13 @@ module internal ReflectEmit =
                 | _ -> None)
 
         member b.Signature(mK, ctx0, tB: TypeBuilder, methodName: N.Id, s: N.Signature) =
-            let mA = methodAttributes mK
+            let mA =
+                match mK with
+                | CallMethod -> Attr.InterfaceMethod
+                | Constructor _ -> Attr.StaticMethod
+                | InterfaceMethod _ -> Attr.InterfaceMethod
+                | NewMethod -> Attr.InterfaceMethod
+                | StaticMethod _ -> Attr.StaticMethod
             let mB = tB.DefineMethod(methodName.Text, mA)
             let gs =
                 let names =

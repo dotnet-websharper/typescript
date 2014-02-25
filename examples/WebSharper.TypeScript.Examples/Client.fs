@@ -9,16 +9,20 @@ module Client =
 
     let AddEditor (el: Html.Element) =
 
-        // NOTE: need to allow constructing types with all-optional properties.
-        let opts = New [] |> As<Epic.EpicEditorOptions>
-        opts.container <- el.Dom
-        opts.file <-
-            let file = New [] |> As<Epic.Anon>
-            file.name <- "My Document"
-            file.defaultContent <- "# My Document"
-            file.autoSave <- 100
-            file
-        opts.basePath <- "/EpicEditor-v0.2.2"
+        let opts =
+            Epic.EpicEditorOptions(
+                container = el.Dom,
+                file =
+                    (
+                        /// NOTE: still no type-safe constructors for record-like objects.
+                        let file = New [] |> As<Epic.Anon>
+                        file.name <- "My Document"
+                        file.defaultContent <- "# My Document"
+                        file.autoSave <- 100
+                        file
+                    ),
+                basePath =  "/EpicEditor-v0.2.2"
+            )
 
         // NOTE: binding taken from DefinitelyTyped is outdated wrt to EpicEditor binding.
         opts?theme <-

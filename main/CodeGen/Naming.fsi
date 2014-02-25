@@ -40,6 +40,7 @@ module internal Naming =
         {
             Id : Id
             Name : Name
+            Optional : bool
             Type : 'T
         }
 

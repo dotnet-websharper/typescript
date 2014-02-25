@@ -61,6 +61,10 @@ module Macros =
                 J.New (t target, List.map t args)
             | _ ->
                 failwith "Invalid application of the NewMacro"
+//
+//    let NewConfigObject =
+//        Def <| fun t e ->
+//           J.NewObject []
 
     [<Sealed>]
     type CallMacro() =
@@ -76,3 +80,8 @@ module Macros =
     type NewMacro() =
         interface M.IMacroDefinition with
             member this.Macro = New
+//
+//    [<Sealed>]
+//    type NewConfigObjectMacro() =
+//        interface M.IMacroDefinition with
+//            member this.Macro = NewConfigObject
