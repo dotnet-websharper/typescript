@@ -44,6 +44,7 @@ module Naming =
         {
             Id : Id
             Name : Name
+            Optional : bool
             Type : 'T
         }
 
@@ -136,6 +137,7 @@ module Naming =
             {
                 Id = idB.Id(name.Text)
                 Name = name
+                Optional = prop.IsOptional
                 Type = p.Type(prop.Value)
             }
 

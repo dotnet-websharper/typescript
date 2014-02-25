@@ -34,6 +34,7 @@ module internal Contracts =
         | OptProp of 'T
         | Prop of 'T
 
+        member IsOptional : bool
         member Value : 'T
 
     [<Sealed>]

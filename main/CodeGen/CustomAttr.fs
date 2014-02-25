@@ -49,6 +49,10 @@ module CustomAttr =
         let s = ExprToString e
         CustomAttributeBuilder(InlineCtor, [| s |])
 
+    let ConfigObjectCtor =
+        // Macro typeof<Macros.NewConfigObjectMacro>
+        Inline (S.NewObject [])
+
     let Str x =
         S.Constant (S.String x)
 
