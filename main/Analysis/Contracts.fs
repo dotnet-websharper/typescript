@@ -48,12 +48,8 @@ module Contracts =
             IndexerType = t
         }
 
-    let defaultHintPath =
-        Names.NameBuilder.Create().CreateName("Anon")
-        |> Names.NP1
-
     [<Sealed>]
-    type Contract<'T>(isAnon) =
+    type Contract<'T>(isAnon, hintPath: NamePath) =
         let mutable byNumber : option<Indexer<'T>> = None
         let mutable byString : option<Indexer<'T>> = None
         let props = MultiDict<Name,Property<'T>>()
@@ -75,7 +71,7 @@ module Contracts =
         member c.Call = call :> seq<_>
         member c.Extends = extends :> seq<_>
         member c.Generics = generics
-        member val HintPath = defaultHintPath with get, set
+        member c.HintPath = hintPath //defaultHintPath with get, set
         member c.IsAnonymous = isAnon
         member c.New = ctors :> seq<_>
         member c.Props = props
@@ -84,13 +80,13 @@ module Contracts =
     and [<Sealed>] Contracts<'T>() =
         let contracts = ResizeArray<Contract<'T>>()
 
-        member x.AnonymousContract() =
-            let c = Contract(isAnon = true)
+        member x.AnonymousContract(hintPath) =
+            let c = Contract(isAnon = true, hintPath = hintPath)
             contracts.Add(c)
             c
 
-        member x.NamedContract() =
-            let c = Contract(isAnon = false)
+        member x.NamedContract(hintPath) =
+            let c = Contract(isAnon = false, hintPath = hintPath)
             contracts.Add(c)
             c
 

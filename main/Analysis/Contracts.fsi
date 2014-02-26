@@ -52,7 +52,7 @@ module internal Contracts =
         member Call : seq<Signature<'T>>
         member Extends : seq<'T>
         member Generics : list<Name>
-        member HintPath : NamePath with get, set
+        member HintPath : NamePath // with get, set
 
         /// The contract describes a syntactic entity found in 
         /// an anonymous position (not a named position such as an
@@ -64,8 +64,8 @@ module internal Contracts =
 
     and [<Sealed>] Contracts<'T> =
         new : unit -> Contracts<'T>
-        member AnonymousContract: unit -> Contract<'T>
-        member NamedContract : unit -> Contract<'T>
+        member AnonymousContract : hintPath: NamePath -> Contract<'T>
+        member NamedContract  : hintPath: NamePath -> Contract<'T>
         member All : seq<Contract<'T>>
 
     type Type =

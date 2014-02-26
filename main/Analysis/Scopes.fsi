@@ -42,7 +42,7 @@ module internal Scopes =
 
     and [<Sealed>] Root =
         member GetOrCreateModule : NamePath -> Module
-        member GetOrCreateNamedContract : NamePath -> Contract
+        member GetOrCreateNamedContract : NamePath * ?suffix: Name -> Contract
         member GetOrCreateScope : NamePath -> Scope
         member IsGlobal : bool
 

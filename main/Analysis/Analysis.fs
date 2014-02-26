@@ -69,8 +69,9 @@ module internal Analysis =
 
     type SharedNames =
         {
-            TName : Name
             CName : Name
+            MiscName : Name
+            TName : Name
         }
 
     type State =
@@ -89,20 +90,22 @@ module internal Analysis =
                 NameBuilder = names
                 SharedNames =
                     {
-                        TName = names.CreateName("T")
                         CName = names.CreateName("Create")
+                        MiscName = names.CreateName("Misc")
+                        TName = names.CreateName("T")
                     }
                 ValueBuilder = ValueBuilder.Create()
             }
 
-        member st.AnonymousContract() =
-            st.Contracts.AnonymousContract()
+        member st.AnonymousContract(hintPath) =
+            st.Contracts.AnonymousContract(hintPath)
 
-        member st.NamedContract() =
-            st.Contracts.NamedContract()
+        member st.NamedContract(hintPath) =
+            st.Contracts.NamedContract(hintPath)
 
     type Context =
         {
+            AnonNameHint : option<Name>
             CurrentModule : Sc.Module
             ExportedRoot : Sc.Root
             ExportedScope : Sc.Scope
@@ -122,17 +125,22 @@ module internal Analysis =
     [<Sealed>]
     type Visit(st: State, ctx: Context) =
 
-        member this.AnonContract() =
-            let c = st.AnonymousContract()
-            match ctx.Path with
-            | None -> ()
-            | Some p -> c.HintPath <- Names.NP2 (p, c.HintPath.Name (* Anon *))
-            c
+        member this.AnonContract(hintName) =
+            let parent =
+                match ctx.Path with
+                | None -> Names.NP1 st.SharedNames.MiscName
+                | Some p -> Names.NP2 (p, st.SharedNames.MiscName)
+            let hintPath = Names.NP2 (parent, hintName)
+            st.AnonymousContract(hintPath)
 
-        member this0.AnonType(ms) =
+        member this.AnonType(ms) =
             let gs = Array.append ctx.Generics ctx.GenericsM
             let self = Visit(st, { ctx with Generics = gs; GenericsM = Array.empty })
-            let c = self.AnonContract()
+            let nameHint =
+                match ctx.AnonNameHint with
+                | None -> st.SharedNames.TName
+                | Some hint -> hint
+            let c = self.AnonContract(nameHint)
             if gs.Length > 0 then
                 c.SetGenerics(List.ofArray gs)
             self.BuildContract(c, ms)
@@ -157,11 +165,12 @@ module internal Analysis =
                 | S.TM4 (S.ByNumber (id, ty)) -> c.AddByNumber(id, this.Type(ty))
                 | S.TM4 (S.ByString (id, ty)) -> c.AddByString(id, this.Type(ty))
 
-        member this.BuildProperty(c: C.Contract, prop) =
+        member this.BuildProperty(c: C.Contract, prop: S.PropertySignature) =
             let (name, ty, isOpt) =
                 match prop with
                 | S.Prop (name, ty) -> (name, ty, false)
                 | S.OptProp (name, ty) -> (name, ty, true)
+            let this = Visit(st, { ctx with AnonNameHint = Some name })
             let def () =
                 let ty = this.Type(ty)
                 if isOpt
@@ -327,11 +336,9 @@ module internal Analysis =
                     (ctx.ExportedRoot, ctx.SubPath i.InterfaceName)
                 | S.NoExport ->
                     (ctx.LocalRoot, Names.NP1 i.InterfaceName)
-            let c = root.GetOrCreateNamedContract(path)
+            let c = root.GetOrCreateNamedContract(path, ?suffix = if tSuffix then Some st.SharedNames.TName else None)
             match c with
             | Sc.Local c ->
-                if tSuffix then
-                    c.HintPath <- NamePath.NP2(c.HintPath, st.SharedNames.TName)
                 let vis =
                     match i.InterfaceTypeParameters with
                     | [] -> this
@@ -362,6 +369,7 @@ module internal Analysis =
             let expScope = root.GetOrCreateScope(path)
             let subContext =
                 {
+                    AnonNameHint = None
                     CurrentModule = mo
                     Generics = ctx.Generics
                     GenericsM = ctx.GenericsM
@@ -477,6 +485,7 @@ module internal Analysis =
         let globalScope = Sc.Scope()
         metaTable.Install(globalRoot, globalScope)
         {
+            AnonNameHint = None
             CurrentModule = globalModule
             ExportedRoot = globalRoot
             ExportedScope = globalScope
