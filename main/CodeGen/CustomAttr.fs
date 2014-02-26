@@ -49,10 +49,6 @@ module CustomAttr =
         let s = ExprToString e
         CustomAttributeBuilder(InlineCtor, [| s |])
 
-    let ConfigObjectCtor =
-        // Macro typeof<Macros.NewConfigObjectMacro>
-        Inline (S.NewObject [])
-
     let Str x =
         S.Constant (S.String x)
 
@@ -99,3 +95,9 @@ module CustomAttr =
     let Constructor name numArgs =
         let args = List.init numArgs V
         Inline <| S.New (Addr name, args)
+
+    let RecordConstructor names =
+        List.ofSeq names
+        |> List.mapi (fun i n -> (n, V i))
+        |> S.NewObject
+        |> Inline

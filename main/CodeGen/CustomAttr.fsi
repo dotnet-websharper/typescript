@@ -27,7 +27,7 @@ module internal CustomAttr =
     open System
 
     val Call : CustomAttributeBuilder
-    val ConfigObjectCtor : CustomAttributeBuilder
+    val Constructor : NamePath -> arity: int -> CustomAttributeBuilder
     val Item : CustomAttributeBuilder
     val Method : string -> arity: int -> CustomAttributeBuilder
     val MethodWithParamArray : string -> arity: int -> CustomAttributeBuilder
@@ -35,7 +35,7 @@ module internal CustomAttr =
     val ParamArray : CustomAttributeBuilder
     val PropertyGet : string -> CustomAttributeBuilder
     val PropertySet : string -> CustomAttributeBuilder
-    val Constructor : NamePath -> arity: int -> CustomAttributeBuilder
+    val RecordConstructor : seq<string> -> CustomAttributeBuilder
     val StaticMethod : NamePath -> arity: int -> CustomAttributeBuilder
     val StaticMethodWithParamArray : NamePath -> arity: int -> CustomAttributeBuilder
     val StaticPropertyGet : NamePath -> CustomAttributeBuilder
