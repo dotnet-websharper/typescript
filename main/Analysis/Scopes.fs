@@ -103,11 +103,13 @@ module Scopes =
 
     type Root with
 
-        member root.GetOrCreateNamedContract(path) =
+        member root.GetOrCreateNamedContract(path, ?suffix) =
             getOrCreate root.ContractRegistry path (fun () ->
-                let c = root.Contracts.NamedContract()
-                c.HintPath <- SubPath root path
-                Local c)
+                match suffix with
+                | None -> SubPath root path
+                | Some s -> Names.NP2 (SubPath root path, s)
+                |> root.Contracts.NamedContract
+                |> Local)
 
         member root.GetOrCreateModule(path) =
             getOrCreate root.ModuleRegistry path (fun () ->

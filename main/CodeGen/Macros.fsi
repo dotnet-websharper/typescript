@@ -40,8 +40,3 @@ module internal Macros =
     type NewMacro =
         new : unit -> NewMacro
         interface M.IMacroDefinition
-
-//    [<Sealed>]
-//    type NewConfigObjectMacro =
-//        new : unit -> NewConfigObjectMacro
-//        interface M.IMacroDefinition
