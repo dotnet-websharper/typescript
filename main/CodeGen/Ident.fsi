@@ -41,6 +41,9 @@ module internal Ident =
         /// The name of the New method.
         static member New : Id
 
+    /// Clears a string to be a valid identifier.
+    val MakeValidIdentifier : string -> string
+
     /// Constructs identifiers.
     [<Sealed>]
     type Builder =

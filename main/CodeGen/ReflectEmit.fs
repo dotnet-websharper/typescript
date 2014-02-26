@@ -46,21 +46,6 @@ module internal ReflectEmit =
             TopModule : N.TopModule
         }
 
-    type TypeView =
-        | IsConfigObject
-        | IsNormalType
-
-    let GetTypeView (c: N.Contract) : TypeView =
-        let isOptional (p: N.Property) = p.Optional
-        let isConfigObject =
-            c.ByNumber.IsNone
-            && c.ByString.IsNone
-            && Seq.isEmpty c.Call
-            && Seq.isEmpty c.New
-            && Seq.isEmpty c.Extends
-            && c.Properties |> Seq.forall isOptional
-        if isConfigObject then IsConfigObject else IsNormalType
-
     type MethodView =
         | IsConstructor of seq<N.Signature>
         | IsMethod of seq<N.Signature>
@@ -166,6 +151,58 @@ module internal ReflectEmit =
                 | _ -> None
             else None
          | _ -> None
+
+    type RecordInfo =
+        {
+            OptionalProperties : seq<N.Property>
+            RequiredProperties : seq<N.Property>
+        }
+
+    type TypeView =
+        | IsGeneralType
+        | IsRecord of RecordInfo
+
+    let IsPropertyOfSimpleType (c: N.Contract) (p: N.Property) =
+        let t = p.Type
+        match t with
+        | N.TAny
+        | N.TArray _
+        | N.TBoolean
+        | N.TCompiled _
+        | N.TGeneric _
+        | N.TGenericM _
+        | N.TNumber
+        | N.TString -> true
+        | N.TNamed _ ->
+            match t with
+            | FuncType _ when p.Optional -> true
+            | _ ->
+                match GetMethodView (Some c) t with
+                | IsNormal -> true
+                | IsConstructor _ | IsMethod _ -> false
+
+    let GetTypeView (c: N.Contract) : TypeView =
+        let isRecord =
+            c.ByNumber.IsNone
+            && c.ByString.IsNone
+            && Seq.isEmpty c.Call
+            && Seq.isEmpty c.New
+            && Seq.isEmpty c.Extends
+            && Seq.forall (IsPropertyOfSimpleType c) c.Properties
+        if isRecord then
+            let optP = ResizeArray()
+            let reqP = ResizeArray()
+            for p in c.Properties do
+                if p.Optional then
+                    optP.Add(p)
+                else
+                    reqP.Add(p)
+            IsRecord {
+                OptionalProperties = optP.ToArray() :> seq<_>
+                RequiredProperties = reqP.ToArray() :> seq<_>
+            }
+        else
+            IsGeneralType
 
     /// For starters, we try to traverse all contracts to decide which ones
     /// are `reified`, that is, need a CLR representation.
@@ -286,7 +323,7 @@ module internal ReflectEmit =
             ||| MethodAttributes.SpecialName
             ||| MethodAttributes.Virtual
 
-        let ConfigObject =
+        let SealedClass =
             TypeAttributes.Class
             ||| TypeAttributes.NestedPublic
             ||| TypeAttributes.Sealed
@@ -313,6 +350,12 @@ module internal ReflectEmit =
             ||| TypeAttributes.NestedPublic
             ||| TypeAttributes.Sealed
 
+        let RecordConstructor =
+            MethodAttributes.PrivateScope
+            ||| MethodAttributes.Public
+            ||| MethodAttributes.SpecialName
+            ||| MethodAttributes.RTSpecialName
+
         let StaticMethod =
             MethodAttributes.PrivateScope
             ||| MethodAttributes.Public
@@ -326,16 +369,19 @@ module internal ReflectEmit =
     let NotImplementedConstructor =
         typeof<NotImplementedException>.GetConstructor(Array.empty)
 
-    type System.Reflection.Emit.MethodBuilder with
+    type System.Reflection.Emit.ConstructorBuilder with
 
         member this.NotImplemented() =
             let gen = this.GetILGenerator()
             gen.Emit(OpCodes.Newobj, NotImplementedConstructor)
             gen.Emit(OpCodes.Throw)
 
-    let AddConfigObjectConstructor (tB: TypeBuilder) =
-        let ctor = tB.DefineDefaultConstructor(Attr.DefaultPublicCtor)
-        ctor.SetCustomAttribute(CustomAttr.ConfigObjectCtor)
+    type System.Reflection.Emit.MethodBuilder with
+
+        member this.NotImplemented() =
+            let gen = this.GetILGenerator()
+            gen.Emit(OpCodes.Newobj, NotImplementedConstructor)
+            gen.Emit(OpCodes.Throw)
 
     [<Sealed>]
     type Pass1(st) =
@@ -346,8 +392,8 @@ module internal ReflectEmit =
                 let view = GetTypeView c
                 let attr =
                     match view with
-                    | IsConfigObject -> Attr.ConfigObject
-                    | IsNormalType -> Attr.Interface
+                    | IsRecord _ -> Attr.SealedClass
+                    | IsGeneralType -> Attr.Interface
                 let tB = parent.DefineNestedType(name.Text, attr)
                 st.ContractTable.Add(c, tB)
                 st.CreatedTypes.Add(tB)
@@ -355,9 +401,6 @@ module internal ReflectEmit =
                 if gs.Length > 0 then
                     tB.DefineGenericParameters(gs)
                     |> ignore
-                match view with
-                | IsConfigObject -> AddConfigObjectConstructor tB
-                | IsNormalType -> ()
 
         member p.Module<'T>(tB, m: N.Module<'T>) =
             p.NoConstructor(tB)
@@ -432,8 +475,8 @@ module internal ReflectEmit =
         | StaticMethod of NamePath // JavaScript name
 
     type PropertyKind =
-        | ConfigObjectProperty of Name // JavaScript name
         | InterfaceProperty of Name // JavaScript name
+        | RecordProperty of Name // JavaScript name
         | StaticProperty of NamePath // JavaScript name
 
     [<Sealed>]
@@ -474,10 +517,11 @@ module internal ReflectEmit =
                 let tB = st.ContractTable.[c]
                 let ctx = { DefaultContext with Generics = tB.GenericTypeParameters }
                 match GetTypeView c with
-                | IsConfigObject ->
-                    for prop in c.Properties do
-                        b.Property(ConfigObjectProperty prop.Name, ctx, tB, prop.Id, prop.Type)
-                | IsNormalType ->
+                | IsRecord recInfo ->
+                    b.RecordConstructor(ctx, tB, recInfo)
+                    for prop in Seq.append recInfo.RequiredProperties recInfo.OptionalProperties do
+                        b.Property(RecordProperty prop.Name, ctx, tB, prop.Id, prop.Type)
+                | IsGeneralType ->
                     for ty in c.Extends do
                         let t = b.Type(ctx, ty)
                         if t.IsInterface then // can be `obj` concealing a failure
@@ -521,7 +565,7 @@ module internal ReflectEmit =
                 MethodAttributes.SpecialName |||
                 match pK with
                 | InterfaceProperty jname -> Attr.InterfaceMethod
-                | ConfigObjectProperty jname -> Attr.ConfigObjectMethod
+                | RecordProperty jname -> Attr.ConfigObjectMethod
                 | StaticProperty jname -> Attr.StaticMethod
             let gM = tB.DefineMethod("get_" + name.Text, mA, pT, Array.empty)
             let sM = tB.DefineMethod("set_" + name.Text, mA, voidT, [| pT |])
@@ -529,7 +573,7 @@ module internal ReflectEmit =
             pB.SetGetMethod(gM)
             pB.SetSetMethod(sM)
             match pK with
-            | ConfigObjectProperty jname ->
+            | RecordProperty jname ->
                 gM.NotImplemented()
                 sM.NotImplemented()
                 gM.SetCustomAttribute(CustomAttr.PropertyGet jname.Text)
@@ -542,6 +586,27 @@ module internal ReflectEmit =
                 sM.NotImplemented()
                 gM.SetCustomAttribute(CustomAttr.StaticPropertyGet jname)
                 sM.SetCustomAttribute(CustomAttr.StaticPropertySet jname)
+
+        member b.RecordConstructor(ctx, tB: TypeBuilder, rI: RecordInfo) =
+            let ps : Type [] =
+                [|
+                    for p in rI.RequiredProperties ->
+                        b.Type(ctx, p.Type)
+                |]
+            let ctor =
+                tB.DefineConstructor(Attr.RecordConstructor,
+                    CallingConventions.Standard ||| CallingConventions.HasThis,
+                    ps)
+            let psNames = ResizeArray()
+            do
+                let mutable i = 0
+                for prop in rI.RequiredProperties do
+                    let name = prop.Id.Text
+                    i <- i + 1
+                    psNames.Add(prop.Name.Text)
+                    ctor.DefineParameter(i, ParameterAttributes.None, name) |> ignore
+            ctor.NotImplemented()
+            ctor.SetCustomAttribute(CustomAttr.RecordConstructor psNames)
 
         /// An arbitrary object computed for comparing signatures for
         /// identity in compiled code, to signatures CLR sees as duplicate.
