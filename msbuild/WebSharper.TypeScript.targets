@@ -22,7 +22,7 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TaskAssemblyFile>$(MSBuildThisFileDirectory)\..\tools\net45\IntelliFactory.WebSharper.TypeScript.MSBuild.dll</TaskAssemblyFile>
+    <TaskAssemblyFile>$(MSBuildThisFileDirectory)\..\tools\net40\IntelliFactory.WebSharper.TypeScript.MSBuild.dll</TaskAssemblyFile>
   </PropertyGroup>
   <UsingTask AssemblyFile="$(TaskAssemblyFile)" TaskName="BuildTypeScriptDefinitions" />
   <Import Project="$(MSBuildBinPath)\Microsoft.Common.targets" />
