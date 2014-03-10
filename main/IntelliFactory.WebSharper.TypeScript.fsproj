@@ -38,6 +38,8 @@
     <Compile Include="Shared/Shapes.fs" />
     <Compile Include="Analysis/SourceFileDependencies.fsi" />
     <Compile Include="Analysis/SourceFileDependencies.fs" />
+    <Compile Include="Analysis/Model.fs" />
+    <Compile Include="Analysis/Resolution.fs" />
     <Compile Include="Analysis/Contracts.fsi" />
     <Compile Include="Analysis/Contracts.fs" />
     <Compile Include="Analysis/Scopes.fsi" />
@@ -69,5 +71,7 @@
     <Content Include="VS/VisualStudioTools.Utils.fs" />
     <Compile Include="TypeScriptCompiler.fsi" />
     <Compile Include="TypeScriptCompiler.fs" />
+    <None Include="ModelTest.fsx" />
+    <None Include="test.d.ts" />
   </ItemGroup>
 </Project>

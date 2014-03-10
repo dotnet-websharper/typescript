@@ -39,7 +39,7 @@ module Logging =
 
     /// Internal logging utility.
     [<Sealed>]
-    type internal Logger =
+    type (* internal *) Logger =
 
         /// Constructs a new filtering logger for a given level.
         new : Level -> Logger
@@ -65,5 +65,5 @@ module Logging =
         /// All collected messages.
         member All : seq<Message>
 
-type internal Logger = Logging.Logger
+type (* internal *) Logger = Logging.Logger
 

@@ -96,4 +96,4 @@ module Logging =
         member l.All =
             msgs :> seq<_>
 
-type internal Logger = Logging.Logger
+type Logger = Logging.Logger

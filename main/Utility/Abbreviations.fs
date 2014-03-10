@@ -24,6 +24,7 @@ namespace IntelliFactory.WebSharper.TypeScript
 open System
 open System.Collections
 open System.Reflection
+open System.Runtime
 open System.Text
 
 [<AutoOpen>]
@@ -76,6 +77,7 @@ module internal Abbreviations =
     type PropertyInfo = Reflection.PropertyInfo
     type Regex = RegularExpressions.Regex
     type ResourceAttributes = Reflection.ResourceAttributes
+    type RuntimeHelpers = CompilerServices.RuntimeHelpers
     type SortedSet<'T> = Generic.SortedSet<'T>
     type Stream = IO.Stream
     type String = System.String

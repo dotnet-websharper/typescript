@@ -22,7 +22,7 @@
 namespace IntelliFactory.WebSharper.TypeScript
 
 /// Implements identifiers and qualified names.
-module internal Names =
+module (* internal *) Names =
 
     /// Represents a name with fast equality and comparison.
     [<Sealed>]
@@ -59,7 +59,7 @@ module internal Names =
         /// Creates a new name builder.
         static member Create : unit -> NameBuilder
 
-type internal Name = Names.Name
-type internal NamePath = Names.NamePath<Name>
-type internal NamePath<'T> = Names.NamePath<'T>
-type internal NameTable<'T> = Dictionary<Name,'T>
+type (* internal *) Name = Names.Name
+type (* internal *) NamePath = Names.NamePath<Name>
+type (* internal *) NamePath<'T> = Names.NamePath<'T>
+type (* internal *) NameTable<'T> = Dictionary<Name,'T>
