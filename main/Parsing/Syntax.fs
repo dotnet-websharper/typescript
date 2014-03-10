@@ -121,14 +121,16 @@ module Syntax =
 
     type Type =
         | TAny
-        | TNumber
+        | TArray of Type
         | TBoolean
+        | TGeneric of int
+        | TGenericM of int
+        | TNumber
+        | TObject of list<TypeMember<Type>>
+        | TQuery of TypeQuery
+        | TReference of TypeReference<Type>
         | TString
         | TVoid
-        | TReference of TypeReference<Type>
-        | TQuery of TypeQuery
-        | TArray of Type
-        | TObject of list<TypeMember<Type>>
 
     type CallSignature = CallSignature<Type>
     type IndexSignature = IndexSignature<Type>
@@ -219,7 +221,7 @@ module Syntax =
         | AME6 of AmbientModuleDeclaration
         | AME7 of ExportModifier * ImportDeclaration
 
-    and AmbientModuleDeclaration =
+    and [<NoComparison; ReferenceEquality>] AmbientModuleDeclaration =
         | AMD of Identifier * list<AmbientModuleElement>
 
         static member Create(ids, body) =

@@ -22,7 +22,7 @@
 namespace IntelliFactory.WebSharper.TypeScript
 
 /// Implements section 11.2.1 of of TypeScript manual 0.9.5.
-module internal ExternalModuleNames =
+module (* internal *) ExternalModuleNames =
 
     /// Represents a relative external module name.
     [<Sealed>]

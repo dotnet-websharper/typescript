@@ -26,7 +26,7 @@ module S = Syntax
 
 /// Implements source file dependency resolution
 /// according to section 11.1.1 of TypeScript manual 0.9.5.
-module internal SourceFileDependencies =
+module (* internal *) SourceFileDependencies =
 
     /// Resolves external module names to paths.
     [<Sealed>]
