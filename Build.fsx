@@ -54,7 +54,7 @@ let main () =
                 r.NuGet("FParsec").Reference()
                 bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
             ])
-    |> BuildConfig.KeyFile.Custom None
+    // |> BuildConfig.KeyFile.Custom None
 
 let msbuildTasks main =
     (bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript.MSBuild")
@@ -69,7 +69,7 @@ let msbuildTasks main =
                 r.Assembly "Microsoft.Build.Tasks.v4.0"
                 r.Assembly "Microsoft.Build.Utilities.v4.0"
             ])
-    |> BuildConfig.KeyFile.Custom None
+    // |> BuildConfig.KeyFile.Custom None
 
 let exe msb main =
     (bt.FSharp.ConsoleExecutable("WebSharper.TSC")
@@ -82,9 +82,7 @@ let exe msb main =
                 r.NuGet("FParsec").Reference()
                 bt.Reference.NuGet("WebSharper").At(wsPaths()).Reference()
             ])
-    |> BuildConfig.KeyFile.Custom None
-
-
+    // |> BuildConfig.KeyFile.Custom None
 
 //let typeProvider () =
 //    (bt.FSharp.Library("IntelliFactory.WebSharper.TypeScript.TypeProvider")
@@ -125,7 +123,7 @@ let tests main =
                 // r.Project(typeProvider)
                 r.NuGet("Fuchu").Reference()
             ])
-    |> BuildConfig.KeyFile.Custom None
+    // |> BuildConfig.KeyFile.Custom None
 
 let configureVSI (mainPkg: NuGetPackageBuilder) (libPkg: NuGetPackageBuilder) : VSI.Config =
     let root = __SOURCE_DIRECTORY__
@@ -223,7 +221,7 @@ let build () =
     prepareTests ()
     let tests = tests main
     bt.Solution [ tests ] |> bt.Dispatch
-    runTests ()
+    // runTests ()
     buildLib ()
     let libPkg = libPkg "build/net40/IntelliFactory.WebSharper.TypeScript.Lib.dll"
     let mainPkg = mainPkg main libPkg msb
