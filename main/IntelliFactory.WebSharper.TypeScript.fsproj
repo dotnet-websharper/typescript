@@ -69,7 +69,7 @@
     <Content Include="VS/VisualStudioTools.Templates.fs" />
     <Content Include="VS/VisualStudioTools.Utils.fsi" />
     <Content Include="VS/VisualStudioTools.Utils.fs" />
-    <Compile Include="TypeScriptCompiler.fsi" />
-    <Compile Include="TypeScriptCompiler.fs" />
+    <Compile Include="Compiler.fsi" />
+    <Compile Include="Compiler.fs" />
   </ItemGroup>
 </Project>
