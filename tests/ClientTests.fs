@@ -43,9 +43,9 @@ module ClientTests =
         }
 
         Test "Test0002" {
-            let w = Tests.window
+            let w = Tests.Pervasives.window
             (w.outerHeight > 0.) =? true
             w.location.href.Contains("://") =? true
-            Tests.isNaN(1.) =? false
-            Tests.isNaN(nan) =? true
+            Tests.Pervasives.isNaN(1.) =? false
+            Tests.Pervasives.isNaN(nan) =? true
         }

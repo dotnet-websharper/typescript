@@ -6,9 +6,7 @@
 
 open System
 open System.IO
-open IntelliFactory.WebSharper.TypeScript
-
-module C = TypeScriptCompiler
+module C = IntelliFactory.WebSharper.TypeScript.Compiler
 
 let p xs =
     Path.Combine [|
@@ -22,7 +20,7 @@ let name =
 let main () =
     let result =
         {
-            C.Configure name  [p ["Lib.d.ts"]] with
+            C.Options.Create(name, [p ["Lib.d.ts"]]) with
                 AssemblyName = name
         }
         |> C.Compile

@@ -6,9 +6,7 @@
 
 open System
 open System.IO
-open IntelliFactory.WebSharper.TypeScript
-
-module C = TypeScriptCompiler
+module C = IntelliFactory.WebSharper.TypeScript.Compiler
 
 let p xs =
     Path.Combine [|
@@ -20,7 +18,7 @@ let p xs =
 
 let main () =
     let result =
-        C.Configure "Tests" [p ["Tests.d.ts"]]
+        C.Options.Create("Tests", [p ["Tests.d.ts"]])
         |> C.Compile
 
     for msg in result.Messages do

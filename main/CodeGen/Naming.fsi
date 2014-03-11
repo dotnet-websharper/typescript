@@ -94,4 +94,4 @@ module internal Naming =
     type NestedModule = Module<Id>
     type TopModule = Module<unit>
 
-    val Do : A.Output -> TopModule
+    val Do : Names.NameBuilder -> Renaming -> A.Output -> TopModule

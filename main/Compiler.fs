@@ -73,12 +73,6 @@ module Compiler =
             SourceFiles = sourceFiles.SourceFiles
         }
 
-    let MangleNames (out: Analysis.Output) =
-        Naming.Do out
-
-    let EmitAssembly cfg top =
-        ReflectEmit.ConstructAssembly cfg top
-
     [<Sealed>]
     type Result(msgs: seq<Logging.Message>, ?assem: CompiledAssembly) =
         member r.CompiledAssembly = assem
@@ -119,8 +113,8 @@ module Compiler =
                         let bytes =
                             GetSourceFileSet builder logger cfg
                             |> AnalyzeSourceFiles builder refs logger
-                            |> MangleNames
-                            |> EmitAssembly cfg
+                            |> Naming.Do builder cfg.Renaming
+                            |> ReflectEmit.ConstructAssembly cfg
                         CompiledAssembly(cfg, bytes)
                 Result(logger.All, ?assem = assem)
 
