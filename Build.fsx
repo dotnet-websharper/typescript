@@ -218,11 +218,11 @@ let build () =
     let main = main ()
     let msb = msbuildTasks main
     bt.Solution [ main; msb; exe msb main ] |> bt.Dispatch
+    buildLib ()
     prepareTests ()
     let tests = tests main
     bt.Solution [ tests ] |> bt.Dispatch
     // runTests ()
-    buildLib ()
     let libPkg = libPkg "build/net40/IntelliFactory.WebSharper.TypeScript.Lib.dll"
     let mainPkg = mainPkg main libPkg msb
     bt.Solution [ libPkg; mainPkg ] |> bt.Dispatch

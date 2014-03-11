@@ -40,6 +40,7 @@
     <Compile Include="Shared/WebSharperResource.fs" />
     <Compile Include="Shared/Root.fs" />
     <Compile Include="Shared/ReferenceAssembly.fs" />
+    <Compile Include="Shared/Renaming.fs" />
     <Compile Include="Shared/CompilerOptions.fs" />
     <Compile Include="Analysis/SourceFileDependencies.fsi" />
     <Compile Include="Analysis/SourceFileDependencies.fs" />

@@ -27,6 +27,7 @@ type CompilerOptions =
         AssemblyName : string
         EmbeddedResources : seq<EmbeddedResource>
         References : seq<ReferenceAssembly>
+        Renaming : Renaming
         Root : Root
         TemporaryFolder : string
         TypeScriptDeclarationFiles : seq<FilePath>
@@ -40,6 +41,7 @@ type CompilerOptions =
             AssemblyName = name
             EmbeddedResources = Seq.empty
             References = Seq.empty
+            Renaming = Renaming.None
             Root = Root.Namespace name
             TemporaryFolder = Path.GetTempPath()
             TypeScriptDeclarationFiles = typings
@@ -54,20 +56,22 @@ module internal CompilerOptions =
         f x
 
     let Pickler =
-        Pickler.DefProduct (fun x1 x2 x3 x4 x5 x6 x7 x8 ->
+        Pickler.DefProduct (fun x1 x2 x3 x4 x5 x6 x7 x8 x9 ->
             {
                 AssemblyName = x1
                 EmbeddedResources = x2
                 References = x3
-                Root = x4
-                TemporaryFolder = x5
-                TypeScriptDeclarationFiles = x6
-                Verbosity = x7
-                WebSharperResources = x8
+                Renaming = x4
+                Root = x5
+                TemporaryFolder = x6
+                TypeScriptDeclarationFiles = x7
+                Verbosity = x8
+                WebSharperResources = x9
             })
         ^ Pickler.Field (fun p -> p.AssemblyName) Pickler.String
         ^ Pickler.Field (fun p -> p.EmbeddedResources) (Pickler.Seq EmbeddedResource.Pickler)
         ^ Pickler.Field (fun p -> p.References) (Pickler.Seq ReferenceAssembly.Pickler)
+        ^ Pickler.Field (fun p -> p.Renaming) Renaming.Pickler
         ^ Pickler.Field (fun p -> p.Root) Root.Pickler
         ^ Pickler.Field (fun p -> p.TemporaryFolder) Pickler.String
         ^ Pickler.Field (fun p -> p.TypeScriptDeclarationFiles) (Pickler.Seq Pickler.String)

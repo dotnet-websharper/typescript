@@ -53,14 +53,13 @@ type BuildTypeScriptDefinitions() =
                         yield C.WebSharperResource.Create(name, path)
             |]
         {
-            AssemblyName = assemblyName
-            EmbeddedResources = resources
-            References = refs
-            Root = root
-            TemporaryFolder = tempFolder
-            TypeScriptDeclarationFiles = files
-            Verbosity = C.Level.Verbose
-            WebSharperResources = wsResources
+            C.Options.Create(assemblyName, files) with
+                EmbeddedResources = resources
+                References = refs
+                Root = root
+                TemporaryFolder = tempFolder
+                Verbosity = C.Level.Verbose
+                WebSharperResources = wsResources
         }
 
     member t.Report(msgs: seq<C.Message>) =

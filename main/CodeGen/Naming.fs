@@ -190,7 +190,7 @@ module Naming =
     type NestedModule = Module<Id>
     type TopModule = Module<unit>
 
-    let BuildModule (idB: Ident.Builder) (cB: ContractBuilder) (out: A.Output) =
+    let BuildModule (rename: NamePath -> NamePath) (idB: Ident.Builder) (cB: ContractBuilder) (out: A.Output) =
         let topContainer = TopModule()
         let getContainer =
             MemoRec <| fun getContainer path ->
@@ -206,13 +206,13 @@ module Naming =
                     m
         for c in out.Contracts do
             let contracts =
-                match c.HintPath with
+                match rename c.HintPath with
                 | Names.NP1 _ -> topContainer.ContractList
                 | Names.NP2 (path, _) -> getContainer.[path].ContractList
             contracts.Add(cB.Contract(c))
         for v in out.Values do
             let (values, hintName) =
-                match v.HintPath with
+                match rename v.HintPath with
                 | Names.NP1 name -> (topContainer.ValueList, name)
                 | Names.NP2 (path, name) -> (getContainer.[path].ValueList, name)
             values.Add {
@@ -235,10 +235,11 @@ module Naming =
         for sM in m.Modules do
             LinkNames idB (sM.Id :: path) sM
 
-    let Do (out: A.Output) =
+    let Do nB (rename: Renaming) (out: A.Output) =
+        let rename = Renaming.Prepare nB rename
         let idB = Ident.Builder.Create()
         let cB = ContractBuilder.Create(idB, out.Contracts)
-        let m = BuildModule idB cB out
+        let m = BuildModule rename idB cB out
         LinkNames idB [] m
         idB.Disambiguate()
         m
