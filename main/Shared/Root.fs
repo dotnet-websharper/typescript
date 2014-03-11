@@ -1,4 +1,4 @@
-﻿// $begin{copyright}
+// $begin{copyright}
 //
 // This file is part of WebSharper
 //
@@ -21,9 +21,31 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-/// Implements assembly generation via `System.Reflection.Emit`.
-module internal ReflectEmit =
-    module N = Naming
+/// Configures where generated code is placed:
+/// under a given top-level class or namespace.
+type Root =
+    internal
+    | ClassRoot of string
+    | NamespaceRoot of string
 
-    /// Generates an assembly.
-    val ConstructAssembly : CompilerOptions -> topModule: N.TopModule -> byte []
+    /// Indicates a top-level clas.
+    static member Class(name) =
+        ClassRoot name
+
+    /// Indicates a top-level namespace.
+    static member Namespace(name) =
+        NamespaceRoot name
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module internal Root =
+
+    let inline private ( ^ ) f x =
+        f x
+
+    let Pickler =
+        Pickler.DefSum (fun x k1 k2 ->
+            match x with
+            | ClassRoot f -> k1 f
+            | NamespaceRoot b -> k2 b)
+        ^ Pickler.Case ClassRoot Pickler.String
+        ^ Pickler.LastCase NamespaceRoot Pickler.String

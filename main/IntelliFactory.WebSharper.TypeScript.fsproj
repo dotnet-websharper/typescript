@@ -15,6 +15,8 @@
     <Compile Include="Utility/Abbreviations.fs" />
     <Compile Include="Utility/GraphColoring.fsi" />
     <Compile Include="Utility/GraphColoring.fs" />
+    <Compile Include="Utility/Pickler.fsi" />
+    <Compile Include="Utility/Pickler.fs" />
     <Compile Include="Utility/Logging.fsi" />
     <Compile Include="Utility/Logging.fs" />
     <Compile Include="Utility/Names.fsi" />
@@ -23,8 +25,6 @@
     <Compile Include="Utility/Memoization.fs" />
     <Compile Include="Utility/TopSort.fsi" />
     <Compile Include="Utility/TopSort.fs" />
-    <Compile Include="Utility/Pickler.fsi" />
-    <Compile Include="Utility/Pickler.fs" />
     <Compile Include="Utility/AppDomains.fsi" />
     <Compile Include="Utility/AppDomains.fs" />
     <Compile Include="Parsing/ExternalModuleNames.fsi" />
@@ -38,6 +38,9 @@
     <Compile Include="Shared/Shapes.fs" />
     <Compile Include="Shared/EmbeddedResource.fs" />
     <Compile Include="Shared/WebSharperResource.fs" />
+    <Compile Include="Shared/Root.fs" />
+    <Compile Include="Shared/ReferenceAssembly.fs" />
+    <Compile Include="Shared/CompilerOptions.fs" />
     <Compile Include="Analysis/SourceFileDependencies.fsi" />
     <Compile Include="Analysis/SourceFileDependencies.fs" />
     <Compile Include="Analysis/Contracts.fsi" />

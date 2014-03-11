@@ -30,12 +30,15 @@ module Logging =
         | Error
         | Critical
 
+        static member internal Pickler : Pickler.T<Level>
+
     [<Sealed>]
     type Message =
         member Level : Level
         member Text : string
 
         static member internal Create : Level * string -> Message
+        static member internal Pickler : Pickler.T<Message>
 
     /// Internal logging utility.
     [<Sealed>]

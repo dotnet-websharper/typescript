@@ -27,45 +27,10 @@ module Compiler =
     type EmbeddedResource = global.IntelliFactory.WebSharper.TypeScript.EmbeddedResource
     type Level = global.IntelliFactory.WebSharper.TypeScript.Logging.Level
     type Message = global.IntelliFactory.WebSharper.TypeScript.Logging.Message
+    type Options = global.IntelliFactory.WebSharper.TypeScript.CompilerOptions
+    type ReferenceAssembly = global.IntelliFactory.WebSharper.TypeScript.ReferenceAssembly
+    type Root = global.IntelliFactory.WebSharper.TypeScript.Root
     type WebSharperResource = global.IntelliFactory.WebSharper.TypeScript.WebSharperResource
-
-    /// Represents a reference assembly.
-    [<Sealed>]
-    type ReferenceAssembly =
-
-        /// An assembly file located at a given path.
-        static member File : path: string -> ReferenceAssembly
-
-        /// In-memory assembly represented by raw bytes.
-        static member Raw : bytes: byte [] -> ReferenceAssembly
-
-    /// Configures the TypeScript cross-compilation process.
-    type Config =
-        {
-            /// The name of the generated assembly.
-            AssemblyName : string
-
-            /// Embedded resources.
-            EmbeddedResources : seq<EmbeddedResource>
-
-            /// References used by the compilation process.
-            References : seq<ReferenceAssembly>
-
-            /// Temporary folder to use.
-            TemporaryFolder : string
-
-            /// The class name under which all generated code is nested.
-            TopLevelClassName : string
-
-            /// TypeScript declaration files to process.
-            TypeScriptDeclarationFiles : seq<FilePath>
-
-            /// Verbosity of the logging output.
-            Verbosity : Level
-
-            /// WebSharper resources defined a the assembly level.
-            WebSharperResources : seq<WebSharperResource>
-        }
 
     /// Represents a compiled assembly.
     [<Sealed>]
@@ -77,8 +42,8 @@ module Compiler =
         /// Returns the contents as raw bytes.
         member GetBytes : unit -> byte []
 
-        /// The class name under which all generated code is nested.
-        member TopLevelClassName : string
+        /// The class or namespace name under which all generated code is nested.
+        member Root : Root
 
     /// Represents the compilation result.
     [<Sealed>]
@@ -91,9 +56,6 @@ module Compiler =
         member Messages : seq<Message>
 
     /// Compiles a given configuration.
-    val Compile : Config -> Result
-
-    /// Configures the compilation process.
-    val Configure : topLevelClassName: string -> paths: seq<FilePath> -> Config
+    val Compile : Options -> Result
 
 

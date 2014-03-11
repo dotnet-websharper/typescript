@@ -149,7 +149,7 @@ module internal Main =
                 if not st.Errors.IsEmpty then PrintUsage st; None else
                     let cfg =
                         {
-                            C.Configure st.TopLevelClassName.Value st.FilePaths with
+                            C.Options.Create(st.TopLevelClassName.Value, st.FilePaths) with
                                 References = st.References
                                 Verbosity = st.Verbosity
                         }
