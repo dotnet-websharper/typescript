@@ -35,11 +35,24 @@ module TypeScriptCompiler =
         /// In-memory assembly represented by raw bytes.
         static member Raw : bytes: byte [] -> ReferenceAssembly
 
+    /// Represents an embedded resource.
+    [<Sealed>]
+    type EmbeddedResource =
+
+        /// Creates an embedded resource.
+        static member Create : name: string * content: byte[] -> EmbeddedResource
+
+        /// Creates an embedded resource from a given file.
+        static member FromFile : path: string -> EmbeddedResource
+
     /// Configures the TypeScript cross-compilation process.
     type Config =
         {
             /// The name of the generated assembly.
             AssemblyName : string
+
+            /// Embedded resources.
+            EmbeddedResources : seq<EmbeddedResource>
 
             /// References used by the compilation process.
             References : seq<ReferenceAssembly>

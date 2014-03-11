@@ -38,9 +38,25 @@ module internal ReflectEmit =
         member self.ImplementedInterfaces =
             self.GetInterfaces()
 
+    [<Sealed>]
+    type EmbeddedResource(name: string, bytes: byte[]) =
+
+        member r.OpenStream() =
+            new MemoryStream(bytes, false) :> Stream
+
+        member r.Name = name
+
+        static member Create(name: string, bytes: byte[]) =
+            EmbeddedResource(name, bytes)
+
+    let AddEmbeddedResources (builder: System.Reflection.Emit.ModuleBuilder) (resources: seq<EmbeddedResource>) =
+        for res in resources do
+            builder.DefineManifestResource(res.Name, res.OpenStream(), ResourceAttributes.Public)
+
     type Config =
         {
             AssemblyName : string
+            EmbeddedResources : seq<EmbeddedResource>
             TemporaryFolder : string
             TopLevelClassName : string
             TopModule : N.TopModule
@@ -824,6 +840,7 @@ module internal ReflectEmit =
             do  let bytes = meta.Serialize()
                 use s = new MemoryStream(bytes, writable = false)
                 mB.DefineManifestResource(Metadata.ResourceName, s, ResourceAttributes.Public)
+                AddEmbeddedResources mB cfg.EmbeddedResources
                 aB.Save(fN)
             WebSharperCompiler.CompileAssemblyWithWebSharper fP
             File.ReadAllBytes(fP)

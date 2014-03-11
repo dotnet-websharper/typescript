@@ -36,8 +36,14 @@ type BuildTypeScriptDefinitions() =
                 for f in t.Compile ->
                     f.ItemSpec
             |]
+        let resources =
+            [|
+                for x in t.EmbeddedResources ->
+                    C.EmbeddedResource.FromFile(x.ItemSpec)
+            |]
         {
             AssemblyName = assemblyName
+            EmbeddedResources = resources
             References = refs
             TemporaryFolder = tempFolder
             TopLevelClassName = topLevelClassName
@@ -81,6 +87,8 @@ type BuildTypeScriptDefinitions() =
     member val AssemblyName : string = null with get, set
 
     member val Compile : ITaskItem [] = Array.empty with get, set
+
+    member val EmbeddedResources : ITaskItem [] = Array.empty with get, set
 
     [<Required>]
     member val IntermediateAssembly : ITaskItem [] = Array.empty with get, set

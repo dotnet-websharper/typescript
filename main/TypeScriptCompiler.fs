@@ -25,6 +25,28 @@ module SFD = SourceFileDependencies
 
 module TypeScriptCompiler =
 
+    type EmbeddedResource =
+        {
+            ERBytes : byte[]
+            ERName : string
+        }
+
+        member r.Convert() =
+            ReflectEmit.EmbeddedResource.Create(r.ERName, r.ERBytes)
+
+        member r.Name = r.ERName
+
+        static member Create(name, content) =
+            {
+                ERBytes = content
+                ERName = name
+            }
+
+        static member FromFile(path) =
+            let name = Path.GetFileName(path)
+            let content = File.ReadAllBytes(path)
+            EmbeddedResource.Create(name, content)
+
     type ReferenceAssembly =
         | AFile of string
         | ARaw of byte []
@@ -52,6 +74,7 @@ module TypeScriptCompiler =
     type Config =
         {
             AssemblyName : string
+            EmbeddedResources : seq<EmbeddedResource>
             References : seq<ReferenceAssembly>
             TemporaryFolder : string
             TopLevelClassName : string
@@ -92,6 +115,7 @@ module TypeScriptCompiler =
     let EmitAssembly cfg top =
         ReflectEmit.ConstructAssembly {
             AssemblyName = cfg.AssemblyName
+            EmbeddedResources = [| for r in cfg.EmbeddedResources -> r.Convert() |]
             TemporaryFolder = cfg.TemporaryFolder
             TopLevelClassName = cfg.TopLevelClassName
             TopModule = top
@@ -135,17 +159,25 @@ module TypeScriptCompiler =
             ^ Pickler.Case AFile Pickler.String
             ^ Pickler.LastCase ARaw Pickler.Bytes
 
+        let EmbeddedResourcePickler =
+            Pickler.DefProduct (fun x y -> EmbeddedResource.Create(x, y))
+            ^ Pickler.Field (fun p -> p.ERName) Pickler.String
+            ^ Pickler.Field (fun p -> p.ERBytes) Pickler.Bytes
+            ^ Pickler.EndProduct()
+
         let ConfigPickler =
-            Pickler.DefProduct (fun x1 x2 x3 x4 x5 x6 ->
+            Pickler.DefProduct (fun x1 x2 x3 x4 x5 x6 x7 ->
                 {
                     AssemblyName = x1
-                    References = x2
-                    TemporaryFolder = x3
-                    TopLevelClassName = x4
-                    TypeScriptDeclarationFiles = x5
-                    Verbosity = x6
+                    EmbeddedResources = x2
+                    References = x3
+                    TemporaryFolder = x4
+                    TopLevelClassName = x5
+                    TypeScriptDeclarationFiles = x6
+                    Verbosity = x7
                 })
             ^ Pickler.Field (fun p -> p.AssemblyName) Pickler.String
+            ^ Pickler.Field (fun p -> p.EmbeddedResources) (Pickler.Seq EmbeddedResourcePickler)
             ^ Pickler.Field (fun p -> p.References) (Pickler.Seq ReferenceAssemblyPickler)
             ^ Pickler.Field (fun p -> p.TemporaryFolder) Pickler.String
             ^ Pickler.Field (fun p -> p.TopLevelClassName) Pickler.String
@@ -204,6 +236,7 @@ module TypeScriptCompiler =
     let Configure (topLevelClassName: string) (paths: seq<FilePath>) =
         {
             AssemblyName = GuessAssemblyName topLevelClassName
+            EmbeddedResources = Seq.empty
             References = Seq.empty
             TemporaryFolder = Path.GetTempPath()
             TopLevelClassName = topLevelClassName
