@@ -28,10 +28,6 @@ open IntelliFactory.WebSharper
 /// Implements assembly generation via `System.Reflection.Emit`.
 module internal ReflectEmit =
 
-    [<Sealed>]
-    type EmbeddedResource =
-        static member Create : name: string * content: byte[] -> EmbeddedResource
-
     /// Configures assembly generation.
     type Config =
         {
@@ -40,6 +36,7 @@ module internal ReflectEmit =
             TemporaryFolder : string
             TopLevelClassName : string
             TopModule : N.TopModule
+            WebSharperResources : seq<WebSharperResource>
         }
 
     /// Generates an assembly.

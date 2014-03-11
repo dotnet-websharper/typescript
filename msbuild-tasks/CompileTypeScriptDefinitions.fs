@@ -39,7 +39,16 @@ type BuildTypeScriptDefinitions() =
         let resources =
             [|
                 for x in t.EmbeddedResources ->
-                    C.EmbeddedResource.FromFile(x.ItemSpec)
+                    EmbeddedResource.FromFile(x.ItemSpec)
+            |]
+        let wsResources =
+            [|
+                for x in t.EmbeddedResources do
+                    match x.GetMetadata("ClassName") with
+                    | null | "" -> ()
+                    | name ->
+                        let path = Path.GetFileName(x.ItemSpec)
+                        yield WebSharperResource.Create(name, path)
             |]
         {
             AssemblyName = assemblyName
@@ -49,6 +58,7 @@ type BuildTypeScriptDefinitions() =
             TopLevelClassName = topLevelClassName
             TypeScriptDeclarationFiles = files
             Verbosity = Logging.Verbose
+            WebSharperResources = wsResources
         }
 
     member t.Report(msgs: seq<Logging.Message>) =

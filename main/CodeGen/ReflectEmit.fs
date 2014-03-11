@@ -38,18 +38,7 @@ module internal ReflectEmit =
         member self.ImplementedInterfaces =
             self.GetInterfaces()
 
-    [<Sealed>]
-    type EmbeddedResource(name: string, bytes: byte[]) =
-
-        member r.OpenStream() =
-            new MemoryStream(bytes, false) :> Stream
-
-        member r.Name = name
-
-        static member Create(name: string, bytes: byte[]) =
-            EmbeddedResource(name, bytes)
-
-    let AddEmbeddedResources (builder: System.Reflection.Emit.ModuleBuilder) (resources: seq<EmbeddedResource>) =
+    let AddEmbeddedResources (builder: ModuleBuilder) (resources: seq<EmbeddedResource>) =
         for res in resources do
             builder.DefineManifestResource(res.Name, res.OpenStream(), ResourceAttributes.Public)
 
@@ -60,6 +49,7 @@ module internal ReflectEmit =
             TemporaryFolder : string
             TopLevelClassName : string
             TopModule : N.TopModule
+            WebSharperResources : seq<WebSharperResource>
         }
 
     type MethodView =
@@ -434,6 +424,7 @@ module internal ReflectEmit =
         member p.TopModule(c: N.TopModule) =
             let tB = st.ModuleBuilder.DefineType(st.Config.TopLevelClassName, Attr.TopLevelModule)
             p.Module(tB, c)
+            tB
 
         member p.NoConstructor(tB: TypeBuilder) =
             tB.DefineDefaultConstructor(Attr.DefaultCtor) |> ignore
@@ -820,6 +811,44 @@ module internal ReflectEmit =
                 failwith "Could not compile the assembly with WebSharper"
             assem.Write None fileName
 
+    let AddWebSharperResources (assem: AssemblyBuilder) (parent: TypeBuilder) (resources: seq<WebSharperResource>) =
+        let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
+        let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
+        let baseResource = typeof<BaseResource>
+        let requireCtor = getCtor typeof<IntelliFactory.WebSharper.Core.Attributes.RequireAttribute> [typeof<Type>]
+        let s = typeof<string>
+        let ctor1 = getCtor baseResource [s]
+        let ctor2 = getCtor baseResource [s; s; typeof<string[]>]
+        for r in resources do
+            let c = parent.DefineNestedType(r.Name, Attr.SealedClass, baseResource)
+            let ctor = c.DefineConstructor(Attr.DefaultPublicCtor, CallingConventions.Standard, [||])
+            let gen = ctor.GetILGenerator()
+            match Seq.toList r.Args with
+            | [arg] ->
+                gen.Emit(OpCodes.Ldarg_0)
+                gen.Emit(OpCodes.Ldstr, arg)
+                gen.Emit(OpCodes.Callvirt, ctor1)
+                gen.Emit(OpCodes.Ret)
+            | a1 :: a2 :: args ->
+                gen.Emit(OpCodes.Ldarg_0)
+                gen.Emit(OpCodes.Ldstr, a1)
+                gen.Emit(OpCodes.Ldstr, a2)
+                gen.Emit(OpCodes.Ldc_I4, args.Length)
+                gen.Emit(OpCodes.Newarr, typeof<string>)
+                args
+                |> List.iteri (fun i arg ->
+                    gen.Emit(OpCodes.Dup)
+                    gen.Emit(OpCodes.Ldstr, arg)
+                    gen.Emit(OpCodes.Ldc_I4, i)
+                    gen.Emit(OpCodes.Stelem, typeof<string>))
+                gen.Emit(OpCodes.Callvirt, ctor2)
+                gen.Emit(OpCodes.Ret)
+            | _ ->
+                failwith "Impossible"
+            let ty = c.CreateType()
+            let attr = CustomAttributeBuilder(requireCtor, [| ty |])
+            assem.SetCustomAttribute(attr)
+
     // TODO: does DefineDynamicAssembly leak any resources similar to Assembly.Load?
     let ConstructAssembly cfg =
         let name = AssemblyName(cfg.AssemblyName)
@@ -833,7 +862,7 @@ module internal ReflectEmit =
             let aB = dom.DefineDynamicAssembly(name, AssemblyBuilderAccess.Save, folder)
             let mB = aB.DefineDynamicModule(name = n, fileName = fN, emitSymbolInfo = false)
             let st = State.Create(cfg, mB)
-            Pass1.Do st
+            let top = Pass1.Do st
             Pass2.Do st
             Pass3.Do st
             let meta = Pass4.Do st
@@ -841,6 +870,7 @@ module internal ReflectEmit =
                 use s = new MemoryStream(bytes, writable = false)
                 mB.DefineManifestResource(Metadata.ResourceName, s, ResourceAttributes.Public)
                 AddEmbeddedResources mB cfg.EmbeddedResources
+                AddWebSharperResources aB top cfg.WebSharperResources
                 aB.Save(fN)
             WebSharperCompiler.CompileAssemblyWithWebSharper fP
             File.ReadAllBytes(fP)
