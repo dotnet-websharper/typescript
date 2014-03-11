@@ -6,8 +6,7 @@ open System.Reflection
 open Microsoft.Build
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
-open IntelliFactory.WebSharper.TypeScript
-module C = IntelliFactory.WebSharper.TypeScript.TypeScriptCompiler
+module C = IntelliFactory.WebSharper.TypeScript.Compiler
 
 [<Sealed>]
 type BuildTypeScriptDefinitions() =
@@ -39,7 +38,7 @@ type BuildTypeScriptDefinitions() =
         let resources =
             [|
                 for x in t.EmbeddedResources ->
-                    EmbeddedResource.FromFile(x.ItemSpec)
+                    C.EmbeddedResource.FromFile(x.ItemSpec)
             |]
         let wsResources =
             [|
@@ -48,7 +47,7 @@ type BuildTypeScriptDefinitions() =
                     | null | "" -> ()
                     | name ->
                         let path = Path.GetFileName(x.ItemSpec)
-                        yield WebSharperResource.Create(name, path)
+                        yield C.WebSharperResource.Create(name, path)
             |]
         {
             AssemblyName = assemblyName
@@ -57,20 +56,20 @@ type BuildTypeScriptDefinitions() =
             TemporaryFolder = tempFolder
             TopLevelClassName = topLevelClassName
             TypeScriptDeclarationFiles = files
-            Verbosity = Logging.Verbose
+            Verbosity = C.Level.Verbose
             WebSharperResources = wsResources
         }
 
-    member t.Report(msgs: seq<Logging.Message>) =
+    member t.Report(msgs: seq<C.Message>) =
         for m in msgs do
             match m.Level with
-            | Logging.Critical | Logging.Error ->
+            | C.Level.Critical | C.Level.Error ->
                 t.Log.LogError(m.Text)
-            | Logging.Warn ->
+            | C.Level.Warn ->
                 t.Log.LogWarning(m.Text)
-            | Logging.Level.Info ->
+            | C.Level.Info ->
                 t.Log.LogMessage(MessageImportance.Normal, m.Text)
-            | Logging.Level.Verbose ->
+            | C.Level.Verbose ->
                 t.Log.LogMessage(MessageImportance.Low, m.Text)
 
     member t.Write(r: C.CompiledAssembly) =

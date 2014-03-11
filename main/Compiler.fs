@@ -23,7 +23,11 @@ namespace IntelliFactory.WebSharper.TypeScript
 
 module SFD = SourceFileDependencies
 
-module TypeScriptCompiler =
+module Compiler =
+    type EmbeddedResource = global.IntelliFactory.WebSharper.TypeScript.EmbeddedResource
+    type Level = global.IntelliFactory.WebSharper.TypeScript.Logging.Level
+    type Message = global.IntelliFactory.WebSharper.TypeScript.Logging.Message
+    type WebSharperResource = global.IntelliFactory.WebSharper.TypeScript.WebSharperResource
 
     type ReferenceAssembly =
         | AFile of string

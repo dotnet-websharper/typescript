@@ -26,8 +26,7 @@ open System.IO
 open System.Reflection
 open System.Text
 open System.Text.RegularExpressions
-open IntelliFactory.WebSharper.TypeScript
-module C = TypeScriptCompiler
+module C = IntelliFactory.WebSharper.TypeScript.Compiler
 
 module internal Main =
 
@@ -40,7 +39,7 @@ module internal Main =
             TempDir : option<string>
             TopLevelClassName : option<string>
             OutputPath : option<string>
-            Verbosity : Logging.Level
+            Verbosity : C.Level
         }
 
     let InitialState =
@@ -52,7 +51,7 @@ module internal Main =
             TempDir = None
             TopLevelClassName = None
             OutputPath = None
-            Verbosity = Logging.Warn
+            Verbosity = C.Level.Warn
         }
 
     let Error st fmt =
@@ -100,11 +99,11 @@ module internal Main =
             | "-log" :: l :: rest ->
                 let level =
                     match l with
-                    | "critical" -> Some Logging.Critical
-                    | "error" -> Some Logging.Error
-                    | "info" -> Some Logging.Info
-                    | "verbose" -> Some Logging.Verbose
-                    | "warn" -> Some Logging.Warn
+                    | "critical" -> Some C.Level.Critical
+                    | "error" -> Some C.Level.Error
+                    | "info" -> Some C.Level.Info
+                    | "verbose" -> Some C.Level.Verbose
+                    | "warn" -> Some C.Level.Warn
                     | _ -> None
                 let st =
                     match level with

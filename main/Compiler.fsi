@@ -23,7 +23,11 @@ namespace IntelliFactory.WebSharper.TypeScript
 
 /// Provides the main functionality: cross-compiling TypeScript
 /// definitions for use in WebSharper.
-module TypeScriptCompiler =
+module Compiler =
+    type EmbeddedResource = global.IntelliFactory.WebSharper.TypeScript.EmbeddedResource
+    type Level = global.IntelliFactory.WebSharper.TypeScript.Logging.Level
+    type Message = global.IntelliFactory.WebSharper.TypeScript.Logging.Message
+    type WebSharperResource = global.IntelliFactory.WebSharper.TypeScript.WebSharperResource
 
     /// Represents a reference assembly.
     [<Sealed>]
@@ -57,7 +61,7 @@ module TypeScriptCompiler =
             TypeScriptDeclarationFiles : seq<FilePath>
 
             /// Verbosity of the logging output.
-            Verbosity : Logging.Level
+            Verbosity : Level
 
             /// WebSharper resources defined a the assembly level.
             WebSharperResources : seq<WebSharperResource>
@@ -84,11 +88,12 @@ module TypeScriptCompiler =
         member CompiledAssembly : option<CompiledAssembly>
 
         /// Messages from the compiler.
-        member Messages : seq<Logging.Message>
+        member Messages : seq<Message>
 
     /// Compiles a given configuration.
     val Compile : Config -> Result
 
     /// Configures the compilation process.
     val Configure : topLevelClassName: string -> paths: seq<FilePath> -> Config
+
 
