@@ -25,6 +25,7 @@ open System
 open System.Collections
 open System.Reflection
 open System.Text
+module CRes = IntelliFactory.WebSharper.Core.Resources
 
 [<AutoOpen>]
 module internal Abbreviations =
@@ -34,8 +35,10 @@ module internal Abbreviations =
     type AppDomainSetup = System.AppDomainSetup
     type Array = System.Array
     type Assembly = Reflection.Assembly
+    type AssemblyBuilder = Emit.AssemblyBuilder
     type AssemblyBuilderAccess = Emit.AssemblyBuilderAccess
     type AssemblyName = Reflection.AssemblyName
+    type BaseResource = CRes.BaseResource
     type BinaryReader = IO.BinaryReader
     type BinaryWriter = IO.BinaryWriter
     type BindingFlags = Reflection.BindingFlags

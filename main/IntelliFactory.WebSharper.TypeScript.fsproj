@@ -36,6 +36,8 @@
     <Compile Include="Parsing/Parser.fsi" />
     <Compile Include="Parsing/Parser.fs" />
     <Compile Include="Shared/Shapes.fs" />
+    <Compile Include="Shared/EmbeddedResource.fs" />
+    <Compile Include="Shared/WebSharperResource.fs" />
     <Compile Include="Analysis/SourceFileDependencies.fsi" />
     <Compile Include="Analysis/SourceFileDependencies.fs" />
     <Compile Include="Analysis/Contracts.fsi" />

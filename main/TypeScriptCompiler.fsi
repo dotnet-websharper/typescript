@@ -35,16 +35,6 @@ module TypeScriptCompiler =
         /// In-memory assembly represented by raw bytes.
         static member Raw : bytes: byte [] -> ReferenceAssembly
 
-    /// Represents an embedded resource.
-    [<Sealed>]
-    type EmbeddedResource =
-
-        /// Creates an embedded resource.
-        static member Create : name: string * content: byte[] -> EmbeddedResource
-
-        /// Creates an embedded resource from a given file.
-        static member FromFile : path: string -> EmbeddedResource
-
     /// Configures the TypeScript cross-compilation process.
     type Config =
         {
@@ -68,6 +58,9 @@ module TypeScriptCompiler =
 
             /// Verbosity of the logging output.
             Verbosity : Logging.Level
+
+            /// WebSharper resources defined a the assembly level.
+            WebSharperResources : seq<WebSharperResource>
         }
 
     /// Represents a compiled assembly.
