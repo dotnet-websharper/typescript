@@ -21,11 +21,9 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
-module N = Naming
-module S = Shapes
-
-/// Implements assembly generation via System.Reflection.Emit.
 module internal ReflectEmit =
+    module N = Naming
+    module S = Shapes
 
     type System.Reflection.Emit.TypeBuilder with
 
@@ -41,16 +39,6 @@ module internal ReflectEmit =
     let AddEmbeddedResources (builder: ModuleBuilder) (resources: seq<EmbeddedResource>) =
         for res in resources do
             builder.DefineManifestResource(res.Name, res.OpenStream(), ResourceAttributes.Public)
-
-    type Config =
-        {
-            AssemblyName : string
-            EmbeddedResources : seq<EmbeddedResource>
-            TemporaryFolder : string
-            TopLevelClassName : string
-            TopModule : N.TopModule
-            WebSharperResources : seq<WebSharperResource>
-        }
 
     type MethodView =
         | IsConstructor of seq<N.Signature>
@@ -277,9 +265,9 @@ module internal ReflectEmit =
             | IsNormal -> p.Type v.Type
             | IsMethod ss | IsConstructor ss -> Seq.iter p.Signature ss
 
-        static member Do(cfg) : (N.Contract -> bool) =
+        static member Do(topModule) : (N.Contract -> bool) =
             let p = Pass0()
-            p.Module(cfg.TopModule)
+            p.Module(topModule)
             p.IsReified
 
     [<Sealed>]
@@ -287,26 +275,32 @@ module internal ReflectEmit =
         let d = Dictionary<obj,'T>()
 
         member mt.Add(m: N.Module<'X>, v: 'T) = d.Add(m, v)
-        member mt.Get<'X>(key: N.Module<'X>) = d.[key]
+
+        member mt.Get<'X>(key: N.Module<'X>) =
+            let mutable res = Unchecked.defaultof<_>
+            if d.TryGetValue(key, &res) then res else
+                failwithf "Failed to lookup module: [%O]" (box key.Id)
 
     type State =
         {
-            Config : Config
             ContainerTable : ModuleTable<TypeBuilder>
             ContractTable : Dictionary<N.Contract,TypeBuilder>
             CreatedTypes : ResizeArray<TypeBuilder>
             IsReified : N.Contract -> bool
             ModuleBuilder : ModuleBuilder
+            Options : CompilerOptions
+            TopModule : N.TopModule
         }
 
-        static member Create(cfg, mB) =
+        static member Create(opts, topModule, mB) =
             {
-                Config = cfg
                 ContainerTable = ModuleTable()
                 ContractTable = Dictionary()
                 CreatedTypes = ResizeArray()
-                IsReified = Pass0.Do cfg
+                IsReified = Pass0.Do topModule
                 ModuleBuilder = mB
+                Options = opts
+                TopModule = topModule
             }
 
     module Attr =
@@ -334,6 +328,11 @@ module internal ReflectEmit =
             ||| TypeAttributes.NestedPublic
             ||| TypeAttributes.Sealed
 
+        let TopLevelSealedClass =
+            TypeAttributes.Class
+            ||| TypeAttributes.Public
+            ||| TypeAttributes.Sealed
+
         let ConfigObjectMethod =
             MethodAttributes.HideBySig
             ||| MethodAttributes.PrivateScope
@@ -343,6 +342,11 @@ module internal ReflectEmit =
             TypeAttributes.Abstract
             ||| TypeAttributes.Interface
             ||| TypeAttributes.NestedPublic
+
+        let TopLevelInterface =
+            TypeAttributes.Abstract
+            ||| TypeAttributes.Interface
+            ||| TypeAttributes.Public
 
         let InterfaceMethod =
             MethodAttributes.Abstract
@@ -389,18 +393,31 @@ module internal ReflectEmit =
             gen.Emit(OpCodes.Newobj, NotImplementedConstructor)
             gen.Emit(OpCodes.Throw)
 
+    type ParentContext =
+        | ParentNamespace of string
+        | ParentType of TypeBuilder
+
     [<Sealed>]
     type Pass1(st) =
 
-        member p.Contract(parent: TypeBuilder, c: N.Contract) =
+        member p.Contract(parent: ParentContext, c: N.Contract) =
             if st.IsReified c then
                 let name = c.Name
                 let view = GetTypeView c
-                let attr =
-                    match view with
-                    | IsRecord _ -> Attr.SealedClass
-                    | IsGeneralType -> Attr.Interface
-                let tB = parent.DefineNestedType(name.Text, attr)
+                let tB =
+                    match parent with
+                    | ParentNamespace ns ->
+                        let attr =
+                            match view with
+                            | IsRecord _ -> Attr.TopLevelSealedClass
+                            | IsGeneralType -> Attr.TopLevelInterface
+                        p.DefineType(ns, name.Text, attr)
+                    | ParentType parent ->
+                        let attr =
+                            match view with
+                            | IsRecord _ -> Attr.SealedClass
+                            | IsGeneralType -> Attr.Interface
+                        parent.DefineNestedType(name.Text, attr)
                 st.ContractTable.Add(c, tB)
                 st.CreatedTypes.Add(tB)
                 let gs = [| for n in c.Generics -> n.Text |]
@@ -408,29 +425,56 @@ module internal ReflectEmit =
                     tB.DefineGenericParameters(gs)
                     |> ignore
 
-        member p.Module<'T>(tB, m: N.Module<'T>) =
+        member p.DefineType(ns: string, name: string, attr) =
+            let fullName = String.Format("{0}.{1}", ns, name)
+            st.ModuleBuilder.DefineType(fullName, attr)
+
+        member p.Module(tB: TypeBuilder) =
             p.NoConstructor(tB)
-            st.ContainerTable.Add(m, tB)
             st.CreatedTypes.Add(tB)
+
+        member p.Module<'T>(tB: TypeBuilder, m: N.Module<'T>) =
+            p.Module(tB)
+            st.ContainerTable.Add(m, tB)
+            let ctx = ParentType tB
             for m in m.Modules do
-                p.NestedModule(tB, m)
+                p.Module(ctx, m)
             for c in m.Contracts do
-                p.Contract(tB, c)
+                p.Contract(ctx, c)
 
-        member p.NestedModule(parent: TypeBuilder, m: N.NestedModule) =
-            let tB = parent.DefineNestedType(m.Id.Text, Attr.Module)
-            p.Module(tB, m)
+        member p.Module(parent: ParentContext, m: N.NestedModule) =
+            match parent with
+            | ParentType parent ->
+                let tB = parent.DefineNestedType(m.Id.Text, Attr.Module)
+                p.Module(tB, m)
+            | ParentNamespace ns ->
+                let mT = p.DefineType(ns, m.Id.Text, Attr.TopLevelModule)
+                p.Module(mT, m)
 
-        member p.TopModule(c: N.TopModule) =
-            let tB = st.ModuleBuilder.DefineType(st.Config.TopLevelClassName, Attr.TopLevelModule)
-            p.Module(tB, c)
-            tB
+        member p.TopModule(c: N.TopModule) : ParentContext =
+            match st.Options.Root with
+            | ClassRoot cl ->
+                let tB = st.ModuleBuilder.DefineType(cl, Attr.TopLevelModule)
+                p.Module(tB, c)
+                ParentType tB
+            | NamespaceRoot ns ->
+                let ctx = ParentNamespace ns
+                for m in c.Modules do
+                    p.Module(ctx, m)
+                for c in c.Contracts do
+                    p.Contract(ctx, c)
+                let values = c.Values
+                if not (Seq.isEmpty values) then
+                    let gM = p.DefineType(ns, "Pervasives", Attr.TopLevelModule)
+                    st.ContainerTable.Add(c, gM)
+                    p.Module(gM)
+                ParentNamespace ns
 
         member p.NoConstructor(tB: TypeBuilder) =
             tB.DefineDefaultConstructor(Attr.DefaultCtor) |> ignore
 
-        static member Do(st) =
-            Pass1(st).TopModule(st.Config.TopModule)
+        static member Do(st: State) =
+            Pass1(st).TopModule(st.TopModule)
 
     [<Sealed>] type Z = class end
     [<Sealed>] type S0<'T> = class end
@@ -511,13 +555,14 @@ module internal ReflectEmit =
             main.MakeGenericType(args)
 
         member b.Container<'T>(m: N.Module<'T>) : unit =
-            let tB = st.ContainerTable.Get(m)
             for mo in m.Modules do
                 b.Container<N.Id>(mo)
             for c in m.Contracts do
                 b.Contract(c)
-            for v in m.Values do
-                b.Value(tB, v)
+            if not (Seq.isEmpty m.Values) then
+                let tB = st.ContainerTable.Get(m)
+                for v in m.Values do
+                    b.Value(tB, v)
 
         member b.Contract(c: N.Contract) =
             if st.IsReified c then
@@ -747,7 +792,7 @@ module internal ReflectEmit =
             | IsNormal -> b.Property(StaticProperty v.NamePath, DefaultContext, tB, v.Id, v.Type)
 
         static member Do(st: State) =
-            Pass2(st).Container(st.Config.TopModule)
+            Pass2(st).Container(st.TopModule)
 
     module Pass3 =
 
@@ -792,7 +837,7 @@ module internal ReflectEmit =
             | _ -> None
 
         static member Do(st: State) =
-            Pass4(st).Container(st.Config.TopModule)
+            Pass4(st).Container(st.TopModule)
             |> Metadata.Table.Create
 
     module WebSharperCompiler =
@@ -811,7 +856,7 @@ module internal ReflectEmit =
                 failwith "Could not compile the assembly with WebSharper"
             assem.Write None fileName
 
-    let AddWebSharperResources (assem: AssemblyBuilder) (parent: TypeBuilder) (resources: seq<WebSharperResource>) =
+    let AddWebSharperResources (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
         let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
         let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
         let baseResource = typeof<BaseResource>
@@ -820,7 +865,13 @@ module internal ReflectEmit =
         let ctor1 = getCtor baseResource [s]
         let ctor2 = getCtor baseResource [s; s; typeof<string[]>]
         for r in resources do
-            let c = parent.DefineNestedType(r.Name, Attr.SealedClass, baseResource)
+            let c =
+                match parent with
+                | ParentType parent ->
+                    parent.DefineNestedType(r.Name, Attr.SealedClass, baseResource)
+                | ParentNamespace ns ->
+                    let full = String.Format("{0}.Resources.{1}", ns, r.Name)
+                    mB.DefineType(full, Attr.TopLevelSealedClass, baseResource)
             let ctor = c.DefineConstructor(Attr.DefaultPublicCtor, CallingConventions.Standard, [||])
             let gen = ctor.GetILGenerator()
             match Seq.toList r.Args with
@@ -850,27 +901,27 @@ module internal ReflectEmit =
             assem.SetCustomAttribute(attr)
 
     // TODO: does DefineDynamicAssembly leak any resources similar to Assembly.Load?
-    let ConstructAssembly cfg =
-        let name = AssemblyName(cfg.AssemblyName)
+    let ConstructAssembly opts topModule =
+        let name = AssemblyName(opts.AssemblyName)
         let n = name.Name
         let fN = n + ".dll"
         let dom = AppDomain.CurrentDomain
-        let folder = Path.Combine(cfg.TemporaryFolder, Path.GetRandomFileName())
+        let folder = Path.Combine(opts.TemporaryFolder, Path.GetRandomFileName())
         let fP = Path.Combine(folder, fN)
         Directory.CreateDirectory(folder) |> ignore
         try
             let aB = dom.DefineDynamicAssembly(name, AssemblyBuilderAccess.Save, folder)
             let mB = aB.DefineDynamicModule(name = n, fileName = fN, emitSymbolInfo = false)
-            let st = State.Create(cfg, mB)
-            let top = Pass1.Do st
+            let st = State.Create(opts, topModule, mB)
+            let pC = Pass1.Do st
             Pass2.Do st
             Pass3.Do st
             let meta = Pass4.Do st
             do  let bytes = meta.Serialize()
                 use s = new MemoryStream(bytes, writable = false)
                 mB.DefineManifestResource(Metadata.ResourceName, s, ResourceAttributes.Public)
-                AddEmbeddedResources mB cfg.EmbeddedResources
-                AddWebSharperResources aB top cfg.WebSharperResources
+                AddEmbeddedResources mB opts.EmbeddedResources
+                AddWebSharperResources aB mB pC opts.WebSharperResources
                 aB.Save(fN)
             WebSharperCompiler.CompileAssemblyWithWebSharper fP
             File.ReadAllBytes(fP)

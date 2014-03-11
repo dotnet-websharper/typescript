@@ -96,4 +96,32 @@ module Logging =
         member l.All =
             msgs :> seq<_>
 
+    let inline ( ^ ) f x = f x
+
+    let LoggingLevelPickler =
+        Pickler.DefSum (fun x k1 k2 k3 k4 k5 ->
+            match x with
+            | Verbose -> k1 ()
+            | Info -> k2 ()
+            | Warn -> k3 ()
+            | Error -> k4 ()
+            | Critical -> k5 ())
+        ^ Pickler.Variant Verbose
+        ^ Pickler.Variant Info
+        ^ Pickler.Variant Warn
+        ^ Pickler.Variant Error
+        ^ Pickler.LastVariant Critical
+
+    type Level with
+        static member Pickler = LoggingLevelPickler
+
+    let MessagePickler =
+        Pickler.DefProduct (fun l t -> Message.Create(l, t))
+        ^ Pickler.Field (fun (m: Message) -> m.Level) LoggingLevelPickler
+        ^ Pickler.Field (fun (m: Message) -> m.Text) Pickler.String
+        ^ Pickler.EndProduct()
+
+    type Message with
+        static member Pickler = MessagePickler
+
 type internal Logger = Logging.Logger

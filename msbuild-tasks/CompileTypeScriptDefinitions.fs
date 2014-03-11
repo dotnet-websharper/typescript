@@ -12,7 +12,7 @@ module C = IntelliFactory.WebSharper.TypeScript.Compiler
 type BuildTypeScriptDefinitions() =
     inherit Task()
 
-    member t.Configure() : C.Config =
+    member t.Configure() : C.Options =
         let assemblyName =
             match t.AssemblyName with
             | null | "" -> "Assembly"
@@ -26,10 +26,13 @@ type BuildTypeScriptDefinitions() =
             match t.TempDirectory with
             | null | "" -> Path.GetTempPath()
             | t -> t
-        let topLevelClassName =
+        let root =
             match t.TopLevelClassName with
-            | null | "" -> assemblyName
-            | n -> n
+            | null | "" ->
+                match t.TopLevelNamespace with
+                | null | "" -> C.Root.Namespace assemblyName
+                | ns -> C.Root.Namespace ns
+            | n -> C.Root.Class n
         let files =
             [|
                 for f in t.Compile ->
@@ -53,8 +56,8 @@ type BuildTypeScriptDefinitions() =
             AssemblyName = assemblyName
             EmbeddedResources = resources
             References = refs
+            Root = root
             TemporaryFolder = tempFolder
-            TopLevelClassName = topLevelClassName
             TypeScriptDeclarationFiles = files
             Verbosity = C.Level.Verbose
             WebSharperResources = wsResources
@@ -96,7 +99,6 @@ type BuildTypeScriptDefinitions() =
     member val AssemblyName : string = null with get, set
 
     member val Compile : ITaskItem [] = Array.empty with get, set
-
     member val EmbeddedResources : ITaskItem [] = Array.empty with get, set
 
     [<Required>]
@@ -106,7 +108,6 @@ type BuildTypeScriptDefinitions() =
     member val MSBuildProjectDirectory : string = null with get, set
 
     member val ReferencePaths : ITaskItem [] = Array.empty with get, set
-
     member val TempDirectory : string = null with get, set
-
     member val TopLevelClassName : string = null with get, set
+    member val TopLevelNamespace : string = null with get, set
