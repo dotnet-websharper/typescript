@@ -29,6 +29,7 @@ module Compiler =
     type Message = global.IntelliFactory.WebSharper.TypeScript.Logging.Message
     type Options = global.IntelliFactory.WebSharper.TypeScript.CompilerOptions
     type ReferenceAssembly = global.IntelliFactory.WebSharper.TypeScript.ReferenceAssembly
+    type Renaming = global.IntelliFactory.WebSharper.TypeScript.Renaming
     type Root = global.IntelliFactory.WebSharper.TypeScript.Root
     type WebSharperResource = global.IntelliFactory.WebSharper.TypeScript.WebSharperResource
 
@@ -101,6 +102,13 @@ module Compiler =
             ^ Pickler.Field (fun r -> r.CompiledAssembly) (Pickler.Option CompiledAssemblyPickler)
             ^ Pickler.EndProduct()
 
+    let Emit opts refs top =
+        ReflectEmit.ConstructAssembly {
+            CompilerOptions = opts
+            References = refs
+            TopModule = top
+        }
+
     [<Sealed>]
     type CompileTransform() =
         interface AppDomains.ITransform<Options,Result> with
@@ -114,7 +122,7 @@ module Compiler =
                             GetSourceFileSet builder logger cfg
                             |> AnalyzeSourceFiles builder refs logger
                             |> Naming.Do builder cfg.Renaming
-                            |> ReflectEmit.ConstructAssembly cfg
+                            |> Emit cfg refs
                         CompiledAssembly(cfg, bytes)
                 Result(logger.All, ?assem = assem)
 

@@ -29,6 +29,7 @@ module Compiler =
     type Message = global.IntelliFactory.WebSharper.TypeScript.Logging.Message
     type Options = global.IntelliFactory.WebSharper.TypeScript.CompilerOptions
     type ReferenceAssembly = global.IntelliFactory.WebSharper.TypeScript.ReferenceAssembly
+    type Renaming = global.IntelliFactory.WebSharper.TypeScript.Renaming
     type Root = global.IntelliFactory.WebSharper.TypeScript.Root
     type WebSharperResource = global.IntelliFactory.WebSharper.TypeScript.WebSharperResource
 

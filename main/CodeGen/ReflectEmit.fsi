@@ -25,5 +25,12 @@ namespace IntelliFactory.WebSharper.TypeScript
 module internal ReflectEmit =
     module N = Naming
 
+    type Config =
+        {
+            CompilerOptions : CompilerOptions
+            References : seq<Assembly>
+            TopModule : N.TopModule
+        }
+
     /// Generates an assembly.
-    val ConstructAssembly : CompilerOptions -> topModule: N.TopModule -> byte []
+    val ConstructAssembly : Config -> byte []

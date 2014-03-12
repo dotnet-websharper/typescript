@@ -25,6 +25,13 @@ module internal ReflectEmit =
     module N = Naming
     module S = Shapes
 
+    type Config =
+        {
+            CompilerOptions : CompilerOptions
+            References : seq<Assembly>
+            TopModule : N.TopModule
+        }
+
     type System.Reflection.Emit.TypeBuilder with
 
         member self.GenericTypeParameters =
@@ -289,10 +296,11 @@ module internal ReflectEmit =
             IsReified : N.Contract -> bool
             ModuleBuilder : ModuleBuilder
             Options : CompilerOptions
+            References : seq<Assembly>
             TopModule : N.TopModule
         }
 
-        static member Create(opts, topModule, mB) =
+        static member Create(opts, topModule, mB, refs) =
             {
                 ContainerTable = ModuleTable()
                 ContractTable = Dictionary()
@@ -300,6 +308,7 @@ module internal ReflectEmit =
                 IsReified = Pass0.Do topModule
                 ModuleBuilder = mB
                 Options = opts
+                References = refs
                 TopModule = topModule
             }
 
@@ -498,14 +507,6 @@ module internal ReflectEmit =
     let memo f =
         Memoization.Memoize Memoization.Options.Default f
 
-    let objT = typeof<obj>
-    let boolT = typeof<bool>
-    let numberT = typeof<double>
-    let stringT = typeof<string>
-    let funTD = typedefof<_->_>
-    let unitT = typeof<unit>
-    let voidT = typeof<Void>
-
     type Context =
         {
             Generics : Type []
@@ -530,8 +531,28 @@ module internal ReflectEmit =
         | RecordProperty of Name // JavaScript name
         | StaticProperty of NamePath // JavaScript name
 
+    let GetReflectionOnlyAssembly (a: Assembly) =
+        if a.ReflectionOnly then a else
+            Assembly.ReflectionOnlyLoadFrom(a.Location)
+
+    let objT = typeof<obj>
+    let boolT = typeof<bool>
+    let numberT = typeof<double>
+    let stringT = typeof<string>
+    let voidT = typeof<Void>
+
     [<Sealed>]
     type Pass2(st: State) =
+
+        let fsCore =
+            st.References
+            |> Seq.tryFind (fun r -> r.GetName().Name = "FSharp.Core")
+            |> function
+                None -> typedefof<list<_>>.Assembly |> GetReflectionOnlyAssembly
+                | Some r -> r
+
+        let funTD = fsCore.GetType(typedefof<_->_>.FullName)
+        let unitT = fsCore.GetType(typedefof<unit>.FullName)
 
         let typeGenDummy = memo typeDigit
         let methodGenDummy = memo (fun n -> mT.MakeGenericType(typeDigit n))
@@ -856,11 +877,18 @@ module internal ReflectEmit =
                 failwith "Could not compile the assembly with WebSharper"
             assem.Write None fileName
 
+    let T<'T> =
+        let t = typeof<'T>
+        let asm =
+            t.Assembly
+            |> GetReflectionOnlyAssembly
+        asm.GetType(t.FullName)
+
     let AddWebSharperResources (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
         let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
         let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
-        let baseResource = typeof<BaseResource>
-        let requireCtor = getCtor typeof<IntelliFactory.WebSharper.Core.Attributes.RequireAttribute> [typeof<Type>]
+        let baseResource = T<BaseResource>
+        let requireCtor = getCtor T<IntelliFactory.WebSharper.Core.Attributes.RequireAttribute> [typeof<Type>]
         let s = typeof<string>
         let ctor1 = getCtor baseResource [s]
         let ctor2 = getCtor baseResource [s; s; typeof<string[]>]
@@ -901,7 +929,9 @@ module internal ReflectEmit =
             assem.SetCustomAttribute(attr)
 
     // TODO: does DefineDynamicAssembly leak any resources similar to Assembly.Load?
-    let ConstructAssembly (opts: CompilerOptions) topModule =
+    let ConstructAssembly cfg =
+        let opts = cfg.CompilerOptions
+        let topModule = cfg.TopModule
         let name = opts.BuildAssemblyName()
         let n = name.Name
         let fN = n + ".dll"
@@ -910,9 +940,9 @@ module internal ReflectEmit =
         let fP = Path.Combine(folder, fN)
         Directory.CreateDirectory(folder) |> ignore
         try
-            let aB = dom.DefineDynamicAssembly(name, AssemblyBuilderAccess.Save, folder)
+            let aB = dom.DefineDynamicAssembly(name, AssemblyBuilderAccess.Save ||| AssemblyBuilderAccess.ReflectionOnly, folder)
             let mB = aB.DefineDynamicModule(name = n, fileName = fN, emitSymbolInfo = false)
-            let st = State.Create(opts, topModule, mB)
+            let st = State.Create(opts, topModule, mB, cfg.References)
             let pC = Pass1.Do st
             Pass2.Do st
             Pass3.Do st

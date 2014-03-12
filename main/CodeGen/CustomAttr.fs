@@ -28,19 +28,30 @@ type P = IntelliFactory.JavaScript.Preferences
 
 module CustomAttr =
 
+    let GetReflectionOnlyAssembly (a: Assembly) =
+        if a.ReflectionOnly then a else
+            Assembly.ReflectionOnlyLoadFrom(a.Location)
+
+    let T<'T> =
+        let t = typeof<'T>
+        let asm =
+            t.Assembly
+            |> GetReflectionOnlyAssembly
+        asm.GetType(t.FullName)
+
     let Macro =
-        let ctor = typeof<A.MacroAttribute>.GetConstructor([| typeof<Type> |])
+        let ctor = T<A.MacroAttribute>.GetConstructor([| typeof<Type> |])
         fun (t: Type) -> CustomAttributeBuilder(ctor, [| t |])
 
-    let Call = Macro typeof<Macros.CallMacro>
-    let New = Macro typeof<Macros.NewMacro>
-    let Item = Macro typeof<Macros.ItemMacro>
+    let Call = Macro T<Macros.CallMacro>
+    let New = Macro T<Macros.NewMacro>
+    let Item = Macro T<Macros.ItemMacro>
 
-    let ParamArrayCtor = typeof<ParamArrayAttribute>.GetConstructor([||])
+    let ParamArrayCtor = T<ParamArrayAttribute>.GetConstructor([||])
     let ParamArray = CustomAttributeBuilder(ParamArrayCtor, [||])
 
     let InlineCtor =
-        typeof<A.InlineAttribute>.GetConstructor([|typeof<string>|])
+        T<A.InlineAttribute>.GetConstructor([|typeof<string>|])
 
     let ExprToString e =
         W.ExpressionToString P.Compact e
