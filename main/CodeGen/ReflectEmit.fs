@@ -862,16 +862,22 @@ module internal ReflectEmit =
         module FE = IntelliFactory.WebSharper.Compiler.FrontEnd
 
         (* TODO: propagate error messsages better *)
-
-        let CompileAssemblyWithWebSharper (fileName: string) =
-            let opts = FE.Options.Default
+        let CompileAssemblyWithWebSharper (cfg: CompilerOptions) (fileName: string) =
+            let snk =
+                cfg.StrongNameKeyFile
+                |> Option.map (fun f -> StrongNameKeyPair(File.ReadAllBytes(f)))
+            let opts =
+                {
+                    FE.Options.Default with
+                        KeyPair = snk
+                }
             let compiler = FE.Prepare opts stdout.WriteLine
             let resolver = AssemblyResolution.AssemblyResolver.Create()
             let loader = FE.Loader.Create resolver stdout.WriteLine
             let assem = loader.LoadFile fileName
             if not (compiler.CompileAndModify assem) then
                 failwith "Could not compile the assembly with WebSharper"
-            assem.Write None fileName
+            assem.Write snk fileName
 
     let AddWebSharperResources (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
         let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
@@ -943,7 +949,7 @@ module internal ReflectEmit =
                 AddEmbeddedResources mB opts.EmbeddedResources
                 AddWebSharperResources aB mB pC opts.WebSharperResources
                 aB.Save(fN)
-            WebSharperCompiler.CompileAssemblyWithWebSharper fP
+            WebSharperCompiler.CompileAssemblyWithWebSharper opts fP
             File.ReadAllBytes(fP)
         finally
             Directory.Delete(folder, true)

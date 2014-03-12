@@ -80,13 +80,13 @@ type CompilerOptions =
     /// Utility to add signing to the `AssemblyName`.
     member internal this.BuildAssemblyName() =
         let n = AssemblyName(this.AssemblyName)
-        match this.StrongNameKeyFile with
-        | None -> ()
-        | Some file ->
-            let snk =
-                use fs = File.OpenRead(file)
-                new StrongNameKeyPair(fs)
-            n.KeyPair <- snk
+//        match this.StrongNameKeyFile with
+//        | None -> ()
+//        | Some file ->
+//            let snk =
+//                use fs = File.OpenRead(file)
+//                new StrongNameKeyPair(fs)
+//            n.KeyPair <- snk
         match this.AssemblyVersion with
         | Some v -> n.Version <- v
         | None -> ()
