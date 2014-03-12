@@ -33,19 +33,38 @@ module Compiler =
     type Root = global.IntelliFactory.WebSharper.TypeScript.Root
     type WebSharperResource = global.IntelliFactory.WebSharper.TypeScript.WebSharperResource
 
+    type AssemblyPair =
+        {
+            Executable : Assembly
+            ReflectionOnly : Assembly
+        }
+
+        static member Load(ref) =
+            match ref with
+            | ReferenceAssemblyBytes bytes ->
+                {
+                    Executable = Assembly.Load(bytes)
+                    ReflectionOnly = Assembly.ReflectionOnlyLoad(bytes)
+                }
+            | ReferenceAssemblyFile f ->
+                {
+                    Executable = Assembly.LoadFrom(f)
+                    ReflectionOnly = Assembly.ReflectionOnlyLoadFrom(f)
+                }
+
     let LoadAndInstallReferences (refs: seq<ReferenceAssembly>) =
         // TODO: perhaps complain on duplicate refs.
         let all =
             dict <| seq {
                 for a in refs do
-                    let assem = a.Load()
-                    yield (assem.GetName().Name, assem)
+                    let assem = AssemblyPair.Load(a)
+                    yield (assem.ReflectionOnly.GetName().Name, assem)
             }
         AppDomain.CurrentDomain.add_AssemblyResolve(fun obj ev ->
             let name = AssemblyName(ev.Name).Name
             let mutable res = Unchecked.defaultof<_>
-            if all.TryGetValue(name, &res) then res else null)
-        [| for KeyValue (_, v) in all -> v |]
+            if all.TryGetValue(name, &res) then res.Executable else null)
+        [| for KeyValue (_, v) in all -> v.ReflectionOnly |]
 
     [<Sealed>]
     type CompiledAssembly(cfg: Options, bytes: byte[]) =
