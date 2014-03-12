@@ -84,12 +84,14 @@ module internal Abbreviations =
     type String = System.String
     type StringSplitOptions = System.StringSplitOptions
     type StringWriter = IO.StringWriter
+    type StrongNameKeyPair = Reflection.StrongNameKeyPair
     type TextWriter = IO.TextWriter
     type Type = System.Type
     type TypeAttributes = Reflection.TypeAttributes
     type TypeBuilder = Emit.TypeBuilder
     type UnicodeCategory = Globalization.UnicodeCategory
     type UTF8Encoding = Text.UTF8Encoding
+    type Version = System.Version
     type Void = System.Void
 
     /// Represents a system file path.

@@ -901,8 +901,8 @@ module internal ReflectEmit =
             assem.SetCustomAttribute(attr)
 
     // TODO: does DefineDynamicAssembly leak any resources similar to Assembly.Load?
-    let ConstructAssembly opts topModule =
-        let name = AssemblyName(opts.AssemblyName)
+    let ConstructAssembly (opts: CompilerOptions) topModule =
+        let name = opts.BuildAssemblyName()
         let n = name.Name
         let fN = n + ".dll"
         let dom = AppDomain.CurrentDomain

@@ -278,6 +278,9 @@ module Pickler =
         ^ Variant None
         ^ LastCase Some p
 
+    let Version =
+        Wrap (fun s -> Version(s)) string String
+
     let Fix f =
         let rec read r = res.Unpickle r
         and write w x = res.Pickle w x
