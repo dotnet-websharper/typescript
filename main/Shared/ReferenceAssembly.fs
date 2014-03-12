@@ -27,11 +27,6 @@ type ReferenceAssembly =
     | ReferenceAssemblyBytes of byte []
     | ReferenceAssemblyFile of string
 
-    member internal this.Load() =
-        match this with
-        | ReferenceAssemblyBytes bytes -> Assembly.ReflectionOnlyLoad(bytes)
-        | ReferenceAssemblyFile f -> Assembly.ReflectionOnlyLoadFrom(f)
-
     /// References a given file by its path.
     static member File(path) =
         ReferenceAssemblyFile path

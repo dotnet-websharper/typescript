@@ -37,6 +37,12 @@ module Metadata =
             T : Dictionary<NamePath,Type>
         }
 
+    let ToReflectionOnly x =
+        let r = Dictionary()
+        for KeyValue (k, v) in x.T do
+            r.[k] <- ReflectionUtility.GetReflectionOnlyType(v)
+        { T = r }
+
     let Types t =
         seq { for KeyValue (k, v) in t.T -> (k, v) }
 
@@ -116,9 +122,11 @@ module Metadata =
 
         static member Create(ts) =
             Create ts
+            |> ToReflectionOnly
 
         static member TryParseAssembly(builder, a) =
             TryParseAssembly builder a
+            |> Option.map ToReflectionOnly
 
         static member Union(ts) =
             Union ts

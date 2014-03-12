@@ -490,10 +490,10 @@ module internal ReflectEmit =
     [<Sealed>] type S1<'T> = class end
     [<Sealed>] type M<'T> = class end
 
-    let zT = typeof<Z>
-    let s0T = typedefof<S0<_>>
-    let s1T = typedefof<S1<_>>
-    let mT = typedefof<M<_>>
+    let zT = ReflectionUtility.GetReflectionOnlyType<Z>()
+    let s0T = ReflectionUtility.GetReflectionOnlyType(typedefof<S0<_>>)
+    let s1T = ReflectionUtility.GetReflectionOnlyType(typedefof<S1<_>>)
+    let mT = ReflectionUtility.GetReflectionOnlyType(typedefof<M<_>>)
 
     let rec typeDigit (n: int) =
         match n with
@@ -531,10 +531,6 @@ module internal ReflectEmit =
         | RecordProperty of Name // JavaScript name
         | StaticProperty of NamePath // JavaScript name
 
-    let GetReflectionOnlyAssembly (a: Assembly) =
-        if a.ReflectionOnly then a else
-            Assembly.ReflectionOnlyLoadFrom(a.Location)
-
     let objT = typeof<obj>
     let boolT = typeof<bool>
     let numberT = typeof<double>
@@ -548,7 +544,7 @@ module internal ReflectEmit =
             st.References
             |> Seq.tryFind (fun r -> r.GetName().Name = "FSharp.Core")
             |> function
-                None -> typedefof<list<_>>.Assembly |> GetReflectionOnlyAssembly
+                | None -> ReflectionUtility.GetReflectionOnlyAssembly<list<_>>()
                 | Some r -> r
 
         let funTD = fsCore.GetType(typedefof<_->_>.FullName)
@@ -877,18 +873,12 @@ module internal ReflectEmit =
                 failwith "Could not compile the assembly with WebSharper"
             assem.Write None fileName
 
-    let T<'T> =
-        let t = typeof<'T>
-        let asm =
-            t.Assembly
-            |> GetReflectionOnlyAssembly
-        asm.GetType(t.FullName)
-
     let AddWebSharperResources (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
         let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
         let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
-        let baseResource = T<BaseResource>
-        let requireCtor = getCtor T<IntelliFactory.WebSharper.Core.Attributes.RequireAttribute> [typeof<Type>]
+        let baseResource = ReflectionUtility.GetReflectionOnlyType<BaseResource>()
+        let requireAttr = ReflectionUtility.GetReflectionOnlyType<RequireAttribute>()
+        let requireCtor = getCtor requireAttr [typeof<Type>]
         let s = typeof<string>
         let ctor1 = getCtor baseResource [s]
         let ctor2 = getCtor baseResource [s; s; typeof<string[]>]

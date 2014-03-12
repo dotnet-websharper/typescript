@@ -28,16 +28,8 @@ type P = IntelliFactory.JavaScript.Preferences
 
 module CustomAttr =
 
-    let GetReflectionOnlyAssembly (a: Assembly) =
-        if a.ReflectionOnly then a else
-            Assembly.ReflectionOnlyLoadFrom(a.Location)
-
     let T<'T> =
-        let t = typeof<'T>
-        let asm =
-            t.Assembly
-            |> GetReflectionOnlyAssembly
-        asm.GetType(t.FullName)
+        ReflectionUtility.GetReflectionOnlyType<'T>()
 
     let Macro =
         let ctor = T<A.MacroAttribute>.GetConstructor([| typeof<Type> |])

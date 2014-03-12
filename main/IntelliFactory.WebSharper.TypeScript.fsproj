@@ -27,6 +27,7 @@
     <Compile Include="Utility/TopSort.fs" />
     <Compile Include="Utility/AppDomains.fsi" />
     <Compile Include="Utility/AppDomains.fs" />
+    <Compile Include="Utility/ReflectionUtility.fs" />
     <Compile Include="Parsing/ExternalModuleNames.fsi" />
     <Compile Include="Parsing/ExternalModuleNames.fs" />
     <Compile Include="Parsing/Lexer.fsi" />

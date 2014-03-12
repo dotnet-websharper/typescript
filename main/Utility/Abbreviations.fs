@@ -25,6 +25,7 @@ open System
 open System.Collections
 open System.Reflection
 open System.Text
+module Attr = IntelliFactory.WebSharper.Core.Attributes
 module CRes = IntelliFactory.WebSharper.Core.Resources
 
 [<AutoOpen>]
@@ -78,6 +79,7 @@ module internal Abbreviations =
     type PropertyAttributes = Reflection.PropertyAttributes
     type PropertyInfo = Reflection.PropertyInfo
     type Regex = RegularExpressions.Regex
+    type RequireAttribute = Attr.RequireAttribute
     type ResourceAttributes = Reflection.ResourceAttributes
     type SortedSet<'T> = Generic.SortedSet<'T>
     type Stream = IO.Stream
