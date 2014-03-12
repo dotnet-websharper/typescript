@@ -679,7 +679,7 @@ module internal ReflectEmit =
 
         /// An arbitrary object computed for comparing signatures for
         /// identity in compiled code, to signatures CLR sees as duplicate.
-        member b.SignatureIdentity(ctx, s: N.Signature) =
+        member b.SignatureIdentity(ctx, s: N.Signature) : list<string> =
             let context =
                 let gs =
                     List.toArray s.MethodGenerics
@@ -687,7 +687,7 @@ module internal ReflectEmit =
                 { ctx with GenericsM = gs }
             s.Parameters
             |> List.choose (function
-                | N.Parameter.Param (_, ty) -> b.Type(context, ty) |> Some
+                | N.Parameter.Param (_, ty) -> b.Type(context, ty).ToString() |> Some
                 | _ -> None)
 
         member b.Signature(mK, ctx0, tB: TypeBuilder, methodName: N.Id, s: N.Signature) =
