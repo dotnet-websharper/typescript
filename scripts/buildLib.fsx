@@ -17,11 +17,20 @@ let p xs =
 let name =
     "IntelliFactory.WebSharper.TypeScript.Lib"
 
+let snk =
+    Path.Combine [|
+        Environment.GetEnvironmentVariable("INTELLIFACTORY")
+        "keys"
+        "IntelliFactory.snk"
+    |]
+
 let main () =
     let result =
         {
             C.Options.Create(name, [p ["Lib.d.ts"]]) with
                 AssemblyName = name
+                AssemblyVersion = Some (Version "2.5.0.0")
+                StrongNameKeyFile = Some snk
         }
         |> C.Compile
 
