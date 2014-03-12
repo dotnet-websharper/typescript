@@ -31,6 +31,10 @@ let main () =
                 AssemblyName = name
                 AssemblyVersion = Some (Version "2.5.0.0")
                 StrongNameKeyFile = Some snk
+                References =
+                    [
+                        C.ReferenceAssembly.File @"C:\Program Files (x86)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\4.3.0.0\FSharp.Core.dll"
+                    ]
         }
         |> C.Compile
 
