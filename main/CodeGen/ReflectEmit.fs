@@ -43,9 +43,20 @@ module internal ReflectEmit =
         member self.ImplementedInterfaces =
             self.GetInterfaces()
 
-    let AddEmbeddedResources (builder: ModuleBuilder) (resources: seq<EmbeddedResource>) =
+    let AddWebResourceMarker (assem: AssemblyBuilder) (file: string) (mime: string) = // (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
+        let webResource = ReflectionUtility.GetReflectionOnlyType<System.Web.UI.WebResourceAttribute>()
+        let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
+        let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
+        let ctor = getCtor webResource [typeof<string>; typeof<string>]
+        let attr = CustomAttributeBuilder(ctor, [| file; mime |])
+        assem.SetCustomAttribute(attr)
+
+    let AddEmbeddedResources assem (builder: ModuleBuilder) (resources: seq<EmbeddedResource>) =
         for res in resources do
             builder.DefineManifestResource(res.Name, res.OpenStream(), ResourceAttributes.Public)
+            match res.MimeType with
+            | None -> ()
+            | Some mime -> AddWebResourceMarker assem res.Name mime
 
     type MethodView =
         | IsConstructor of seq<N.Signature>
@@ -946,7 +957,7 @@ module internal ReflectEmit =
             do  let bytes = meta.Serialize()
                 use s = new MemoryStream(bytes, writable = false)
                 mB.DefineManifestResource(Metadata.ResourceName, s, ResourceAttributes.Public)
-                AddEmbeddedResources mB opts.EmbeddedResources
+                AddEmbeddedResources aB mB opts.EmbeddedResources
                 AddWebSharperResources aB mB pC opts.WebSharperResources
                 aB.Save(fN)
             WebSharperCompiler.CompileAssemblyWithWebSharper opts fP
