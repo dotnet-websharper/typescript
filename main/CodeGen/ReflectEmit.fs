@@ -913,8 +913,8 @@ module internal ReflectEmit =
                 args
                 |> List.iteri (fun i arg ->
                     gen.Emit(OpCodes.Dup)
-                    gen.Emit(OpCodes.Ldstr, arg)
                     gen.Emit(OpCodes.Ldc_I4, i)
+                    gen.Emit(OpCodes.Ldstr, arg)
                     gen.Emit(OpCodes.Stelem, typeof<string>))
                 gen.Emit(OpCodes.Callvirt, ctor2)
                 gen.Emit(OpCodes.Ret)
