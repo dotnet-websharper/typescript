@@ -26,7 +26,6 @@ namespace IntelliFactory.WebSharper.TypeScript
 [<ReferenceEquality>]
 type CompilerOptions =
     {
-
         /// The simple name of the assembly to generate, such as My.Assembly.
         AssemblyName : string
 
@@ -34,10 +33,10 @@ type CompilerOptions =
         AssemblyVersion : option<Version>
 
         /// Resources to embed.
-        EmbeddedResources : seq<EmbeddedResource>
+        EmbeddedResources : list<EmbeddedResource>
 
         /// Reference assemblies.
-        References : seq<ReferenceAssembly>
+        References : list<ReferenceAssembly>
 
         /// Renaming to apply (defaults to None).
         Renaming : Renaming
@@ -52,13 +51,13 @@ type CompilerOptions =
         TemporaryFolder : string
 
         /// List of `.d.ts` files to process.
-        TypeScriptDeclarationFiles : seq<FilePath>
+        TypeScriptDeclarationFiles : list<FilePath>
 
         /// Verbosity level.
         Verbosity : Logging.Level
 
         /// WebSharper resource declarations to apply.
-        WebSharperResources : seq<WebSharperResource>
+        WebSharperResources : list<WebSharperResource>
     }
 
     /// Creates default options for a given assembly/namespace name and typings.
@@ -66,15 +65,15 @@ type CompilerOptions =
         {
             AssemblyName = name
             AssemblyVersion = None
-            EmbeddedResources = Seq.empty
-            References = Seq.empty
+            EmbeddedResources = []
+            References = []
             Renaming = Renaming.None
             Root = Root.Namespace name
             StrongNameKeyFile = None
             TemporaryFolder = Path.GetTempPath()
             TypeScriptDeclarationFiles = typings
             Verbosity = Logging.Warn
-            WebSharperResources = Seq.empty
+            WebSharperResources = []
         }
 
     /// Utility to add signing to the `AssemblyName`.
@@ -91,6 +90,19 @@ type CompilerOptions =
         | Some v -> n.Version <- v
         | None -> ()
         n
+
+    /// Embeds a given file into the assembly, and adds an assembly-level
+    /// WebSharper resource declaration to depend on this resource.
+    ///
+    ///     [<assembly: Require(typeof<T>)>]
+    member this.WithEmbeddedJavaScript(path: string, className: string) =
+        let emb = EmbeddedResource.FromFile(path)
+        let res = WebSharperResource.Create(className, Path.GetFileName(path))
+        {
+            this with
+                EmbeddedResources = emb :: this.EmbeddedResources
+                WebSharperResources = res :: this.WebSharperResources
+        }
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module internal CompilerOptions =
@@ -115,13 +127,13 @@ module internal CompilerOptions =
             })
         ^ Pickler.Field (fun p -> p.AssemblyName) Pickler.String
         ^ Pickler.Field (fun p -> p.AssemblyVersion) (Pickler.Option Pickler.Version)
-        ^ Pickler.Field (fun p -> p.EmbeddedResources) (Pickler.Seq EmbeddedResource.Pickler)
-        ^ Pickler.Field (fun p -> p.References) (Pickler.Seq ReferenceAssembly.Pickler)
+        ^ Pickler.Field (fun p -> p.EmbeddedResources) (Pickler.List EmbeddedResource.Pickler)
+        ^ Pickler.Field (fun p -> p.References) (Pickler.List ReferenceAssembly.Pickler)
         ^ Pickler.Field (fun p -> p.Renaming) Renaming.Pickler
         ^ Pickler.Field (fun p -> p.Root) Root.Pickler
         ^ Pickler.Field (fun p -> p.StrongNameKeyFile) (Pickler.Option Pickler.String)
         ^ Pickler.Field (fun p -> p.TemporaryFolder) Pickler.String
-        ^ Pickler.Field (fun p -> p.TypeScriptDeclarationFiles) (Pickler.Seq Pickler.String)
+        ^ Pickler.Field (fun p -> p.TypeScriptDeclarationFiles) (Pickler.List Pickler.String)
         ^ Pickler.Field (fun p -> p.Verbosity) Logging.Level.Pickler
-        ^ Pickler.Field (fun p -> p.WebSharperResources) (Pickler.Seq WebSharperResource.Pickler)
+        ^ Pickler.Field (fun p -> p.WebSharperResources) (Pickler.List WebSharperResource.Pickler)
         ^ Pickler.EndProduct ()

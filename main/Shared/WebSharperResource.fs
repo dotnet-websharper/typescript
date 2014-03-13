@@ -28,7 +28,7 @@ type WebSharperResource private (name: string, args: string[]) =
     static let ( ^. ) f x = f x
 
     static let pickler : Pickler.T<WebSharperResource> =
-        Pickler.DefProduct (fun x y -> WebSharperResource.Create(x, Seq.toArray y))
+        Pickler.DefProduct (fun x y -> WebSharperResource(x, Seq.toArray y))
         ^. Pickler.Field (fun p -> p.Name) Pickler.String
         ^. Pickler.Field (fun p -> p.Args) (Pickler.Seq Pickler.String)
         ^. Pickler.EndProduct()

@@ -23,29 +23,39 @@ namespace IntelliFactory.WebSharper.TypeScript
 
 /// Represents an embedded resource.
 [<Sealed>]
-type EmbeddedResource private (name: string, bytes: byte[]) =
+type EmbeddedResource private (name: string, bytes: byte[], mime: option<string>) =
 
     static let ( ^. ) f x = f x
 
     static let pickler : Pickler.T<EmbeddedResource> =
-        Pickler.DefProduct (fun x y -> EmbeddedResource.Create(x, y))
+        Pickler.DefProduct (fun x y z -> EmbeddedResource(x, y, z))
         ^. Pickler.Field (fun p -> p.Name) Pickler.String
         ^. Pickler.Field (fun p -> p.GetBytes()) Pickler.Bytes
+        ^. Pickler.Field (fun p -> p.MimeType) (Pickler.Option Pickler.String)
         ^. Pickler.EndProduct()
 
     /// Opens the bytes as a stream.
     member internal r.OpenStream() =
         new MemoryStream(bytes, false) :> Stream
 
+    /// Marks this as a WebResource, generating `System.Web.UI.WebResourceAttribute`.
+    /// Requires a MIME type.
+    member r.AsWebResource(mime: string) =
+        EmbeddedResource(name, bytes, Some mime)
+
     /// Retrieves the raw bytes of the resource.
     member r.GetBytes() = Array.copy bytes
+
+    /// Optional MIME type - for web resources marked with
+    /// `System.Web.UI.WebResourceAttribute`.
+    member r.MimeType = mime
 
     /// The name of the resource.
     member r.Name = name
 
     /// Creates an embedded resource.
     static member Create(name: string, bytes: byte[]) =
-        EmbeddedResource(name, bytes)
+        EmbeddedResource(name, bytes, None)
 
     /// Creates an embedded resource from a given file.
     static member FromFile(path) =
