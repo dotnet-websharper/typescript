@@ -153,11 +153,14 @@ let libPkg libPath =
         nuPkg.Configure(fun x ->
             {
                 x with
-                    Description = "WebSharper-compiled TypeScript standard libirary (`lib.d.ts`)"
+                    Description = "WebSharper-compiled TypeScript standard library (`lib.d.ts`)"
                     ProjectUrl = Some Config.Website
                     LicenseUrl = Some Config.LicenseUrl
                     Id = "WebSharper.TypeScript.Lib"
                     OutputPath = x.OutputPath.Replace(Config.PackageId, "WebSharper.TypeScript.Lib")
+                    RequiresLicenseAcceptance = true
+                    Authors = ["IntelliFactory"]
+                    Title = Some "WebSharper.TypeScript.Lib 0.9.7"
             })
     nuPkg.AddNuGetExportingProject {
         new INuGetExportingProject with
