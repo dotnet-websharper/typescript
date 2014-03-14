@@ -13,8 +13,8 @@ module VSI = IntelliFactory.WebSharper.VisualStudioIntegration
 module Config =
     let PackageId = "WebSharper.TypeScript"
     let NumericVersion = Version("2.5.0.0")
-    let VersionSuffix = Some "alpha"
-    let PackageVerion = "2.5"
+    let VersionSuffix = None
+    let PackageVersion = "2.5"
     let Company = "IntelliFactory"
     let Description = "Supports cross-compiling TypeScript definition files to WebSharper libraries"
     let LicenseUrl = "http://websharper.com/licensing"
@@ -22,7 +22,7 @@ module Config =
     let Website = "http://bitbucket.org/IntelliFactory/websharper.typescript"
 
 let bt =
-    BuildTool().PackageId(Config.PackageId, "2.5-alpha")
+    BuildTool().PackageId(Config.PackageId, Config.PackageVersion)
     |> fun bt -> bt.WithFramework(bt.Framework.Net40)
 
 let downloadContrib () =
