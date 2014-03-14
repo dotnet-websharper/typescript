@@ -54,6 +54,9 @@ module internal Contracts =
         member Generics : list<Name>
         member HintPath : NamePath // with get, set
 
+        /// Whether other contracts extend this one.
+        member IsExtended : bool with get, set
+
         /// The contract describes a syntactic entity found in 
         /// an anonymous position (not a named position such as an
         /// (interface, class, module, enum body).

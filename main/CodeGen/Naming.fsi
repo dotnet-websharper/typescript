@@ -54,6 +54,7 @@ module internal Naming =
             mutable Extends : seq<'T>
             mutable Generics : seq<Id>
             IsAnonymous : bool
+            mutable IsExtended : bool
             mutable Name : Id
             mutable New : seq<Signature<'T>>
             mutable Origin : option<NamePath>

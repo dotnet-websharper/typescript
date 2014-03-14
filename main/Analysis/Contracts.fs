@@ -58,12 +58,14 @@ module Contracts =
         let extends = ResizeArray<'T>()
         let mutable generics : list<Name> = []
 
+        member val IsExtended = false with get, set
         member c.AddByNumber(n, t) = byNumber <- Some (indexer n t)
         member c.AddByString(n, t) = byString <- Some (indexer n t)
         member c.AddCall(s) = call.Add(s)
         member c.AddNew(s) = ctors.Add(s)
         member c.AddOptProp(p, t) = props.Add(p, OptProp t)
         member c.AddProp(p, t) = props.Add(p, Prop t)
+
         member c.Extend(i) = extends.Add(i)
         member c.SetGenerics(ns) = generics <- ns
         member c.ByNumber = byNumber

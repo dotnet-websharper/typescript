@@ -195,7 +195,8 @@ module internal ReflectEmit =
 
     let GetTypeView (c: N.Contract) : TypeView =
         let isRecord =
-            c.ByNumber.IsNone
+            not c.IsExtended
+            && c.ByNumber.IsNone
             && c.ByString.IsNone
             && Seq.isEmpty c.Call
             && Seq.isEmpty c.New
@@ -223,7 +224,11 @@ module internal ReflectEmit =
         let reified = HashSet<N.Contract>()
 
         member private p.Contract(c: N.Contract) =
-            Seq.iter p.Type c.Extends
+            for ext in c.Extends do
+                match ext with
+                | N.Type.TNamed (c, _) -> c.IsExtended <- true
+                | _ -> ()
+                p.Type(ext)
             Option.iter p.Indexer c.ByNumber
             Option.iter p.Indexer c.ByString
             Seq.iter p.Signature c.Call
