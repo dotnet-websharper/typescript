@@ -58,13 +58,14 @@ module Naming =
             mutable Extends : seq<'T>
             mutable Generics : seq<Id>
             IsAnonymous : bool
+            mutable IsExtended : bool
             mutable Name : Id
             mutable New : seq<Signature<'T>>
             mutable Origin : option<NamePath>
             mutable Properties : seq<Property<'T>>
         }
 
-    let CreateContract isAnon name =
+    let CreateContract isAnon isExt name =
         {
             ByNumber = None
             ByString = None
@@ -72,6 +73,7 @@ module Naming =
             Extends = Seq.empty
             Generics = Seq.empty
             IsAnonymous = isAnon
+            IsExtended = isExt
             Name = name
             New = Seq.empty
             Origin = None
@@ -104,7 +106,7 @@ module Naming =
             | true, r -> r
             | _ ->
                 let map f xs = Seq.ofArray [| for x in xs -> f x |]
-                let r : Contract = CreateContract c.IsAnonymous (idB.Id c.HintPath.Name.Text)
+                let r : Contract = CreateContract c.IsAnonymous c.IsExtended (idB.Id c.HintPath.Name.Text)
                 contractMap.Add(c, r)
                 r.ByNumber <- Option.map p.Indexer c.ByNumber
                 r.ByString <- Option.map p.Indexer c.ByString
