@@ -441,7 +441,8 @@ module internal Analysis =
                     | i -> C.TGeneric i
                 | _ -> def ()
             | S.TQuery tQ ->
-                failwith "TODO: TypeQuery"
+                C.TAny
+                // failwith "TODO: TypeQuery"
             | S.TArray t -> C.TArray (this.Type t)
             | S.TObject ms -> this.AnonType(ms)
 
