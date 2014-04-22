@@ -2,7 +2,7 @@
 //
 // This file is part of WebSharper
 //
-// Copyright (c) 2008-2013 IntelliFactory
+// Copyright (c) 2008-2014 IntelliFactory
 //
 // GNU Affero General Public License Usage
 // WebSharper is free software: you can redistribute it and/or modify it under
@@ -20,6 +20,8 @@
 // $end{copyright}
 
 namespace IntelliFactory.WebSharper.TypeScript
+
+open System.Collections.Generic
 
 module GraphColoring =
 

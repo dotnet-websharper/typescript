@@ -4,14 +4,17 @@
     <OutputType>Exe</OutputType>
     <Name>WebSharper.TSC</Name>
     <ProjectGuid>63510d0c-4591-440b-bb71-96c37d58d8e0</ProjectGuid>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <OutputPath>../build/net45</OutputPath>
   </PropertyGroup>
-  <Import Project="../build/net40/$(Name).proj" />
-  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
+  <Import Project="../msbuild/FSharp.targets" />
   <ItemGroup>
     <Compile Include="Main.fs" />
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\main\IntelliFactory.WebSharper.TypeScript.fsproj">
+      <Name>IntelliFactory.WebSharper.TypeScript</Name>
+      <Project>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
 </Project>

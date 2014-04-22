@@ -1,0 +1,76 @@
+<!--
+// $begin{copyright}
+// 
+// This file is part of WebSharper
+// 
+// Copyright (c) 2008-2014 IntelliFactory
+// 
+// GNU Affero General Public License Usage
+// WebSharper is free software: you can redistribute it and/or modify it under
+// the terms of the GNU Affero General Public License, version 3, as published
+// by the Free Software Foundation.
+//
+// WebSharper is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+// for more details at <http://www.gnu.org/licenses/>.
+//
+// If you are unsure which license is appropriate for your use, please contact
+// IntelliFactory at http://intellifactory.com/contact.
+//
+// $end{copyright}
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.0</TargetFrameworkVersion>
+    <KeyOriginatorFile Condition=" '$(NoSigning)' == '' AND '$(INTELLIFACTORY)' != '' ">$(INTELLIFACTORY)/keys/IntelliFactory.snk</KeyOriginatorFile>
+    <KeyOriginatorFile Condition=" '$(NoSigning)' == '' AND '$(INTELLIFACTORY)' == '' ">$(MSBuildThisFileDirectory)/../tools/WebSharper.snk</KeyOriginatorFile>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Root>$(MSBuildThisFileDirectory)\..</Root>
+    <AssemblyName>$(Name)</AssemblyName>
+    <RootNamespace>$(Name)</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=4.3.0.0">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
+    <OutputPath>$(Root)\build\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <WarningLevel>3</WarningLevel>
+    <DocumentationFile>$(Root)\build\Debug\$(Name).xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <Tailcalls>true</Tailcalls>
+    <OutputPath>$(Root)\build\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <WarningLevel>3</WarningLevel>
+    <DocumentationFile>$(Root)\build\Release\$(Name).xml</DocumentationFile>
+  </PropertyGroup>
+  <Target Name="IncludeVersionFile" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <C Include="@(Compile)" />
+      <Compile Remove="@(C)" />
+      <Compile Include="$(MSBuildThisFileDirectory)/AssemblyInfo.fs" />
+      <Compile Include="@(C)" />
+    </ItemGroup>
+  </Target>
+  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.1/Framework/v4.0/Microsoft.FSharp.targets" />
+</Project>

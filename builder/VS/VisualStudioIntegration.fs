@@ -12,18 +12,18 @@
 // implied.  See the License for the specific language governing
 // permissions and limitations under the License.
 
-namespace IntelliFactory.WebSharper
+namespace IntelliFactory.WebSharper.TypeScript
 
 /// Defines VisualStudio templates for WebSharper.
 module VisualStudioIntegration =
     open System
     open System.IO
     open System.Text.RegularExpressions
-    module X = IntelliFactory.Core.XmlTools
-    module NG = IntelliFactory.VisualStudioTools.NuGet
-    module VST = IntelliFactory.VisualStudioTools.Templates
-    module VX = IntelliFactory.VisualStudioTools.Extensions
-    type Content = IntelliFactory.VisualStudioTools.Utils.Content
+    module X = XmlTools
+    module NG = NuGet
+    module VST = Templates
+    module VX = Extensions
+    type Content = Utils.Content
 
     let getExtensionName () =
         "WebSharper.TypeScript"
@@ -162,9 +162,3 @@ module VisualStudioIntegration =
         let ext = getWebSharperTypeScriptExtension com
         ext.WriteToDirectory(Path.GetDirectoryName(cfg.VsixPath))
 
-    let BuildContents cfg =
-        seq {
-            let sourcePath = cfg.RootPath +/ "msbuild" +/ "WebSharper.TypeScript.targets"
-            let targetPath = "build/WebSharper.TypeScript.targets"
-            yield IntelliFactory.Build.NuGetFile.Local(sourcePath, targetPath)
-        }

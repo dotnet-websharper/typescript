@@ -1,8 +1,7 @@
 ﻿/// Uses the IntelliFactory.WebSharper.TypeScript API to compile
 /// `Test.d.ts` to `Tests.dll`.
 
-#load "../build/prepareTests.includes.fsx"
-#r "../build/net40/IntelliFactory.WebSharper.TypeScript.dll"
+#r "../build/Release/IntelliFactory.WebSharper.TypeScript.dll"
 
 open System
 open System.IO

@@ -4,14 +4,9 @@
     <OutputType>Library</OutputType>
     <Name>IntelliFactory.WebSharper.TypeScript</Name>
     <ProjectGuid>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</ProjectGuid>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <OutputPath>../build/net40</OutputPath>
   </PropertyGroup>
-  <Import Project="../build/net40/$(Name).proj" />
-  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
+  <Import Project="../msbuild/FSharp.targets" />
   <ItemGroup>
-    <Compile Include="Properties/AssemblyInfo.fs" />
     <Compile Include="Utility/Abbreviations.fs" />
     <Compile Include="Utility/GraphColoring.fsi" />
     <Compile Include="Utility/GraphColoring.fs" />
@@ -63,18 +58,36 @@
     <Compile Include="CodeGen/CustomAttr.fs" />
     <Compile Include="CodeGen/ReflectEmit.fsi" />
     <Compile Include="CodeGen/ReflectEmit.fs" />
-    <Content Include="VS/VisualStudio.fsx" />
-    <Content Include="VS/VisualStudioIntegration.fsi" />
-    <Content Include="VS/VisualStudioIntegration.fs" />
-    <Content Include="VS/VisualStudioTools.Extensions.fsi" />
-    <Content Include="VS/VisualStudioTools.Extensions.fs" />
-    <Content Include="VS/VisualStudioTools.NuGet.fsi" />
-    <Content Include="VS/VisualStudioTools.NuGet.fs" />
-    <Content Include="VS/VisualStudioTools.Templates.fsi" />
-    <Content Include="VS/VisualStudioTools.Templates.fs" />
-    <Content Include="VS/VisualStudioTools.Utils.fsi" />
-    <Content Include="VS/VisualStudioTools.Utils.fs" />
     <Compile Include="Compiler.fsi" />
     <Compile Include="Compiler.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="FParsec">
+      <HintPath>..\packages\FParsec\lib\net40-client\FParsec.dll</HintPath>
+    </Reference>
+    <Reference Include="FParsecCS">
+      <HintPath>..\packages\FParsec\lib\net40-client\FParsecCS.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.Core">
+      <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.JavaScript">
+      <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.JavaScript.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Compiler">
+      <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.WebSharper.Compiler.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Core">
+      <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.WebSharper.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

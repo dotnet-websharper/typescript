@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Name>Builder</Name>
+    <ProjectGuid>{732043b7-2d87-4570-a978-fa783b655154}</ProjectGuid>
+    <ProjectType>Exe</ProjectType>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <Import Project="../msbuild/FSharp.targets" />
+  <ItemGroup>
+    <Compile Include="XmlTools.fs" />
+    <Compile Include="VS/VisualStudioTools.Utils.fsi" />
+    <Compile Include="VS/VisualStudioTools.Utils.fs" />
+    <Compile Include="VS/VisualStudioTools.NuGet.fsi" />
+    <Compile Include="VS/VisualStudioTools.NuGet.fs" />
+    <Compile Include="VS/VisualStudioTools.Templates.fsi" />
+    <Compile Include="VS/VisualStudioTools.Templates.fs" />
+    <Compile Include="VS/VisualStudioTools.Extensions.fsi" />
+    <Compile Include="VS/VisualStudioTools.Extensions.fs" />
+    <Compile Include="VS/VisualStudioIntegration.fsi" />
+    <Compile Include="VS/VisualStudioIntegration.fs" />
+    <Compile Include="PathUtility.fs" />
+    <Compile Include="Commands.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+  <Target Name="Configure">
+    <Exec Command="$(TargetPath) configure" ContinueOnError="false" />
+  </Target>
+  <Target Name="Pack">
+    <Exec Command="$(TargetPath) pack" ContinueOnError="false" />
+  </Target>
+  <Target Name="Test">
+    <Exec Command="$(TargetPath) prepareTests" ContinueOnError="false" />
+    <ItemGroup>
+      <T Include="../tests/*.fsproj" />
+    </ItemGroup>
+    <MSBuild Projects="@(T)" Properties="Configuration=$(Configuration)" />
+    <Exec Command="$(TargetPath) test" ContinueOnError="false" />
+  </Target>
+</Project>

@@ -12,16 +12,16 @@
 // implied.  See the License for the specific language governing
 // permissions and limitations under the License.
 
-namespace IntelliFactory.VisualStudioTools
+namespace IntelliFactory.WebSharper.TypeScript
 
 module Templates =
     open System
     open System.IO
     open System.Text
     open Microsoft.Win32
-    module X = IntelliFactory.Core.XmlTools
-    module NG = IntelliFactory.VisualStudioTools.NuGet
-    type Content = IntelliFactory.VisualStudioTools.Utils.Content
+    module X = XmlTools
+    module NG = NuGet
+    type Content = Utils.Content
 
     let xmlNamespace = "http://schemas.microsoft.com/developer/vstemplate/2005"
     let xmlElement name = X.XmlElement.Create(name, xmlNamespace)
