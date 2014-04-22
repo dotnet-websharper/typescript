@@ -4,12 +4,10 @@
     <SchemaVersion>2.0</SchemaVersion>
     <OutputType>Library</OutputType>
     <Name>IntelliFactory.WebSharper.TypeScript.Tests</Name>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <OutputPath>../build/net45</OutputPath>
     <ProjectGuid>1fef4cf6-91c4-4e83-b990-3ff27ce54d37</ProjectGuid>
     <WebSharperProject>Html</WebSharperProject>
     <WebSharperHtmlDirectory>..\build\html</WebSharperHtmlDirectory>
+    <NoSigning>true</NoSigning>
   </PropertyGroup>
   <ItemGroup>
     <None Include="extra.files" />
@@ -17,12 +15,39 @@
     <Content Include="Tests.js" />
     <Compile Include="ClientTests.fs" />
     <Compile Include="TestUtility.fs" />
+    <Compile Include="../main/Utility/Abbreviations.fs" />
+    <Compile Include="../main/Utility/GraphColoring.fs" />
+    <Compile Include="../main/Utility/Pickler.fs" />
+    <Compile Include="../main/Utility/Logging.fs" />
+    <Compile Include="../main/Utility/Names.fs" />
+    <Compile Include="../main/Utility/Memoization.fs" />
+    <Compile Include="../main/Utility/TopSort.fs" />
+    <Compile Include="../main/Utility/AppDomains.fs" />
+    <Compile Include="../main/Utility/ReflectionUtility.fs" />
+    <Compile Include="../main/Parsing/ExternalModuleNames.fs" />
+    <Compile Include="../main/Parsing/Lexer.fs" />
+    <Compile Include="../main/Parsing/Syntax.fs" />
+    <Compile Include="../main/Parsing/Parser.fs" />
     <Compile Include="GraphColoringTests.fs" />
     <Compile Include="ParserTests.fs" />
     <Compile Include="TestRunner.fs" />
     <Compile Include="Main.fs" />
     <Content Include="Main.html" />
   </ItemGroup>
-  <Import Project="../build/net40/$(Name).proj" />
-  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
+  <ItemGroup>
+    <Reference Include="FParsec">
+      <HintPath>..\packages\FParsec\lib\net40-client\FParsec.dll</HintPath>
+    </Reference>
+    <Reference Include="FParsecCS">
+      <HintPath>..\packages\FParsec\lib\net40-client\FParsecCS.dll</HintPath>
+    </Reference>
+    <Reference Include="Fuchu">
+      <HintPath>..\packages\Fuchu\lib\net40-client\Fuchu.dll</HintPath>
+    </Reference>
+    <Reference Include="Tests">
+      <HintPath>..\build\Tests.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Import Project="../msbuild/FSharp.targets" />
+  <Import Project="../packages/WebSharper/build/WebSharper.targets" />
 </Project>

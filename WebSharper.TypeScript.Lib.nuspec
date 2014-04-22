@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>WebSharper.TypeScript.Lib</id>
+    <version>2.5.0</version>
+    <title>WebSharper.TypeScript.Lib 0.9.7</title>
+    <authors>IntelliFactory</authors>
+    <owners>IntelliFactory</owners>
+    <copyright>2008-2014 IntelliFactory</copyright>
+    <projectUrl>http://websharper.com</projectUrl>
+    <summary>WebSharper-compiled TypeScript standard library (lib.d.ts)</summary>
+    <description>WebSharper-compiled TypeScript standard library (lib.d.ts)</description>
+  </metadata>
+  <files>
+    <file src="build\Release\IntelliFactory.WebSharper.TypeScript.dll" target="lib\net40" />
+  </files>
+</package>

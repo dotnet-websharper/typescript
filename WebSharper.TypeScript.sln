@@ -1,13 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2013 for Web
-VisualStudioVersion = 12.0.30110.0
+VisualStudioVersion = 12.0.30324.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{6DF6E294-0785-47E0-8AB9-3311307E1557}"
 	ProjectSection(SolutionItems) = preProject
 		.hgignore = .hgignore
+		build.cmd = build.cmd
 		Build.fsx = Build.fsx
 		README.md = README.md
+		WebSharper.TypeScript.Lib.nuspec = WebSharper.TypeScript.Lib.nuspec
+		WebSharper.TypeScript.nuspec = WebSharper.TypeScript.nuspec
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript", "main\IntelliFactory.WebSharper.TypeScript.fsproj", "{E7666B0F-B8FD-4147-87E8-A9100223A6F1}"
@@ -16,6 +19,9 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "msbuild", "msbuild", "{BDB6BFB2-7C83-4116-967C-5AE1811254D0}"
 	ProjectSection(SolutionItems) = preProject
+		msbuild\AssemblyInfo.fs = msbuild\AssemblyInfo.fs
+		msbuild\FSharp.targets = msbuild\FSharp.targets
+		msbuild\Main.proj = msbuild\Main.proj
 		msbuild\WebSharper.TypeScript.targets = msbuild\WebSharper.TypeScript.targets
 	EndProjectSection
 EndProject
@@ -39,6 +45,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ts-library", "ts-library", 
 		templates\ts-library\TypeScriptLibrary.fsproj = templates\ts-library\TypeScriptLibrary.fsproj
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Builder", "builder\Builder.fsproj", "{732043B7-2D87-4570-A978-FA783B655154}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +69,10 @@ Global
 		{D936C3E8-6F01-468B-BE56-8981F32FE860}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D936C3E8-6F01-468B-BE56-8981F32FE860}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D936C3E8-6F01-468B-BE56-8981F32FE860}.Release|Any CPU.Build.0 = Release|Any CPU
+		{732043B7-2D87-4570-A978-FA783B655154}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{732043B7-2D87-4570-A978-FA783B655154}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{732043B7-2D87-4570-A978-FA783B655154}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{732043B7-2D87-4570-A978-FA783B655154}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

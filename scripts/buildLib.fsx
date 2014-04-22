@@ -1,8 +1,8 @@
 ﻿/// Uses the IntelliFactory.WebSharper.TypeScript API to compile
 /// `lib.d.ts` to `IntelliFactory.WebSharper.TypeScript.Lib.dll`.
 
-#load "../build/buildLib.includes.fsx"
-#r "../build/net40/IntelliFactory.WebSharper.TypeScript.dll"
+#r "../build/Release/IntelliFactory.WebSharper.TypeScript.dll"
+#r "../build/Release/Mono.Cecil.dll"
 
 open System
 open System.IO
@@ -24,6 +24,32 @@ let snk =
         "IntelliFactory.snk"
     |]
 
+open Mono.Cecil
+
+let importType (asmd: AssemblyDefinition) (t: System.Type) =
+    let asm =
+        t.Assembly.Location
+        |> AssemblyDefinition.ReadAssembly
+    let ty =
+        asm.MainModule.GetType(t.FullName)
+        |> asmd.MainModule.Import
+    ty.Resolve()
+
+let fixup (path: string) =
+    let asm = AssemblyDefinition.ReadAssembly(path)
+    let stringType = importType asm typeof<string>
+    let targetFA = importType asm typeof<System.Runtime.Versioning.TargetFrameworkAttribute>
+    let ctor =
+        targetFA.Methods
+        |> Seq.find (fun m -> m.IsConstructor && not m.IsStatic && m.Parameters.Count = 1)
+        |> asm.MainModule.Import
+    let attr = CustomAttribute(ctor)
+    attr.ConstructorArguments.Add(CustomAttributeArgument(stringType, ".NETFramework,Version=v4.0"))
+    let namedArg = CustomAttributeNamedArgument("FrameworkDisplayName", CustomAttributeArgument(stringType, ".NET Framework 4"))
+    attr.Properties.Add(namedArg)
+    asm.CustomAttributes.Add(attr)
+    asm.Write(path)
+
 let main () =
     let result =
         {
@@ -33,7 +59,7 @@ let main () =
                 StrongNameKeyFile = Some snk
                 References =
                     [
-                        C.ReferenceAssembly.File @"C:\Program Files (x86)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\4.3.0.0\FSharp.Core.dll"
+                        C.ReferenceAssembly.File (p ["../build/Release/FSharp.Core.dll"])
                     ]
         }
         |> C.Compile
@@ -45,8 +71,11 @@ let main () =
     | None -> failwith "Failed to compile Lib.d.ts"
     | Some assem ->
         let bytes = assem.GetBytes()
-        let path = p [".."; "build"; "net40"; name + ".dll"]
+        let path = p [".."; "build"; "Release"; name + ".dll"]
         File.WriteAllBytes(path, bytes)
+        fixup path
         stdout.WriteLine("Written: {0}", path)
 
 do main ()
+
+

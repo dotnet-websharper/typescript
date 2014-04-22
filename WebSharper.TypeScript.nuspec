@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>WebSharper.TypeScript</id>
+    <version>2.5.0</version>
+    <title>WebSharper.TypeScript</title>
+    <authors>IntelliFactory</authors>
+    <owners>IntelliFactory</owners>
+    <copyright>2008-2014 IntelliFactory</copyright>
+    <projectUrl>http://websharper.com/</projectUrl>
+    <summary>Supports cross-compiling TypeScript definition files to WebSharper libraries</summary>
+    <description>Supports cross-compiling TypeScript definition files to WebSharper libraries</description>
+  </metadata>
+  <files>
+    <file src="build\Release\*.dll" target="tools\net40" />
+    <file src="build\Release\*.xml" target="tools\net40" />
+    <file src="build\Release\*.exe" target="tools\net40" />
+    <file src="build\Release\*.exe.config" target="tools\net40" />
+    <file src="msbuild\WebSharper.TypeScript.targets" target="build" />
+  </files>
+</package>
