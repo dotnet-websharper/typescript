@@ -102,6 +102,9 @@ module internal Pickler =
     /// Pickler for bytes.
     val Bytes : T<byte[]>
 
+    /// Pickler for booleans.
+    val Boolean : T<bool>
+
     /// Pickler for `System.Type` using the assembly-qualified name.
     val Type : T<Type>
 

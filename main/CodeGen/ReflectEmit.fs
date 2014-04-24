@@ -937,8 +937,9 @@ module internal ReflectEmit =
             | _ ->
                 failwith "Impossible"
             let ty = c.CreateType()
-            let attr = CustomAttributeBuilder(requireCtor, [| ty |])
-            assem.SetCustomAttribute(attr)
+            if r.IsAssemblyLevel then
+                let attr = CustomAttributeBuilder(requireCtor, [| ty |])
+                assem.SetCustomAttribute(attr)
 
     // TODO: does DefineDynamicAssembly leak any resources similar to Assembly.Load?
     let ConstructAssembly cfg =

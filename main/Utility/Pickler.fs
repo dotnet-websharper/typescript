@@ -80,6 +80,11 @@ module Pickler =
                     w.BinaryWriter.Write(true)
                     w.BinaryWriter.Write(s))
 
+    let Boolean =
+        FromPrimitives
+            (fun r -> r.BinaryReader.ReadBoolean())
+            (fun w x -> w.BinaryWriter.Write(x))
+
     let Wrap f1 f2 p =
         FromPrimitives
             (fun r -> f1 (p.Unpickle r))
