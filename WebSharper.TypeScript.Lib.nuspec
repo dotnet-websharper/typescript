@@ -12,6 +12,6 @@
     <description>WebSharper-compiled TypeScript standard library (lib.d.ts)</description>
   </metadata>
   <files>
-    <file src="build\Release\IntelliFactory.WebSharper.TypeScript.dll" target="lib\net40" />
+    <file src="build\Release\IntelliFactory.WebSharper.TypeScript.Lib.dll" target="lib\net40" />
   </files>
 </package>
