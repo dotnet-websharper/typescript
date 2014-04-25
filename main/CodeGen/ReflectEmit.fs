@@ -895,11 +895,6 @@ module internal ReflectEmit =
                 failwith "Could not compile the assembly with WebSharper"
             assem.Write snk fileName
 
-    let TryLoadTypeByFQN (fqn: string) =
-        match Type.GetType(fqn) with
-        | null -> None
-        | t -> Some t
-
     let AddWebSharperResources (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
         let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
         let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
@@ -942,8 +937,8 @@ module internal ReflectEmit =
             | _ ->
                 failwith "Impossible"
             for d in r.Deps do
-                match TryLoadTypeByFQN d with
-                | None -> () // TODO report
+                match d.TryLoadType() with
+                | None -> failwithf "Could not load: %O" d
                 | Some ty ->
                     let attr = CustomAttributeBuilder(requireCtor, [| ty |])
                     c.SetCustomAttribute(attr)

@@ -21,9 +21,47 @@
 
 namespace IntelliFactory.WebSharper.TypeScript
 
+type internal TypeReference =
+    private {
+        AssemblyLocation: option<string>
+        AssemblyName: string
+        TypeName: string
+    }
+
+    override tr.ToString() =
+        String.Format("{0}, {1}", tr.TypeName, tr.AssemblyName)
+
+    member tr.TryLoadType() =
+        match Type.GetType(string tr) with
+        | null ->
+            match tr.AssemblyLocation with
+            | None -> None
+            | Some loc ->
+                try Assembly.LoadFrom(loc).GetType(tr.TypeName, throwOnError = true) |> Some
+                with _ -> None
+        | t -> Some t
+
+    static member FromType(t: Type) =
+        let asm = t.Assembly
+        let asmName = asm.FullName
+        let tyName = t.FullName
+        let loc = try Some asm.Location with _ -> None
+        { AssemblyLocation = loc; AssemblyName = asmName; TypeName = tyName }
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module internal TypeReference =
+
+    let Pickler : Pickler.T<TypeReference> =
+        let ( ^. ) f x = f x
+        Pickler.DefProduct (fun x y z -> { AssemblyLocation = x; AssemblyName = y; TypeName = z })
+        ^. Pickler.Field (fun p -> p.AssemblyLocation) (Pickler.Option Pickler.String)
+        ^. Pickler.Field (fun p -> p.AssemblyName) Pickler.String
+        ^. Pickler.Field (fun p -> p.TypeName) Pickler.String
+        ^. Pickler.EndProduct()
+
 /// Represents an WebSharper resource declaration.
 [<Sealed>]
-type WebSharperResource private (name: string, args: string[], assemblyRequires: bool, deps: Set<string>) =
+type WebSharperResource private (name: string, args: string[], assemblyRequires: bool, deps: Set<TypeReference>) =
 
     static let ( ^. ) f x = f x
 
@@ -32,18 +70,18 @@ type WebSharperResource private (name: string, args: string[], assemblyRequires:
         ^. Pickler.Field (fun p -> p.Name) Pickler.String
         ^. Pickler.Field (fun p -> p.Args) (Pickler.Seq Pickler.String)
         ^. Pickler.Field (fun p -> p.IsAssemblyLevel) Pickler.Boolean
-        ^. Pickler.Field (fun p -> p.Deps) (Pickler.Seq Pickler.String)
+        ^. Pickler.Field (fun p -> p.Deps) (Pickler.Seq TypeReference.Pickler)
         ^. Pickler.EndProduct()
 
     /// Adds a resource requirement on this resource.
     member res.Require<'T>() =
-        WebSharperResource(name, args, assemblyRequires, Set.add typeof<'T>.AssemblyQualifiedName deps)
+        WebSharperResource(name, args, assemblyRequires, Set.add (TypeReference.FromType typeof<'T>) deps)
 
     /// Arguments passed to the BaseResource constructor.
     member r.Args : seq<string> = Seq.ofArray args
 
     /// FQN of dependent resources.
-    member internal r.Deps : seq<string> = Set.toSeq deps
+    member internal r.Deps = Set.toSeq deps
 
     /// The class name of the resource.
     member r.Name = name
