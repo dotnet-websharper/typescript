@@ -895,7 +895,13 @@ module internal ReflectEmit =
                 failwith "Could not compile the assembly with WebSharper"
             assem.Write snk fileName
 
+    let TryLoadTypeByFQN (fqn: string) =
+        match Type.GetType(fqn) with
+        | null -> None
+        | t -> Some t
+
     let AddWebSharperResources (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
+        printfn "AddWebSharperResources"
         let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
         let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
         let baseResource = ReflectionUtility.GetReflectionOnlyType<BaseResource>()
@@ -936,6 +942,12 @@ module internal ReflectEmit =
                 gen.Emit(OpCodes.Ret)
             | _ ->
                 failwith "Impossible"
+            for d in r.Deps do
+                match TryLoadTypeByFQN d with
+                | None -> () // TODO report
+                | Some ty ->
+                    let attr = CustomAttributeBuilder(requireCtor, [| ty |])
+                    c.SetCustomAttribute(attr)
             let ty = c.CreateType()
             if r.IsAssemblyLevel then
                 let attr = CustomAttributeBuilder(requireCtor, [| ty |])
@@ -966,6 +978,7 @@ module internal ReflectEmit =
                 AddEmbeddedResources aB mB opts.EmbeddedResources
                 AddWebSharperResources aB mB pC opts.WebSharperResources
                 aB.Save(fN)
+            printfn "COMPILING WITH WEBSHARPER"
             WebSharperCompiler.CompileAssemblyWithWebSharper opts fP
             File.ReadAllBytes(fP)
         finally
