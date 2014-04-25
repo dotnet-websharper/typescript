@@ -901,7 +901,6 @@ module internal ReflectEmit =
         | t -> Some t
 
     let AddWebSharperResources (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
-        printfn "AddWebSharperResources"
         let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
         let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
         let baseResource = ReflectionUtility.GetReflectionOnlyType<BaseResource>()
@@ -978,7 +977,6 @@ module internal ReflectEmit =
                 AddEmbeddedResources aB mB opts.EmbeddedResources
                 AddWebSharperResources aB mB pC opts.WebSharperResources
                 aB.Save(fN)
-            printfn "COMPILING WITH WEBSHARPER"
             WebSharperCompiler.CompileAssemblyWithWebSharper opts fP
             File.ReadAllBytes(fP)
         finally
