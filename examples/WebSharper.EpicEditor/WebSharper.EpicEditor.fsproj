@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
@@ -14,12 +14,12 @@
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <WarningLevel>3</WarningLevel>
   </PropertyGroup>
-  <Import Project="..\packages\WebSharper.TypeScript.2.5.1-alpha\build\WebSharper.TypeScript.targets" Condition="Exists('..\packages\WebSharper.TypeScript.2.5.1-alpha\build\WebSharper.TypeScript.targets')" />
+  <Import Project="..\packages\WebSharper.TypeScript.3.0.0-alpha\build\WebSharper.TypeScript.targets" Condition="Exists('..\packages\WebSharper.TypeScript.3.0.0-alpha\build\WebSharper.TypeScript.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\WebSharper.TypeScript.2.5.1-alpha\build\WebSharper.TypeScript.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WebSharper.TypeScript.2.5.1-alpha\build\WebSharper.TypeScript.targets'))" />
+    <Error Condition="!Exists('..\packages\WebSharper.TypeScript.3.0.0-alpha\build\WebSharper.TypeScript.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WebSharper.TypeScript.3.0.0-alpha\build\WebSharper.TypeScript.targets'))" />
   </Target>
   <ItemGroup>
     <Compile Include="Main.d.ts" />
@@ -28,7 +28,7 @@
   <ItemGroup>
     <Reference Include="FSharp.Core, Version=4.3.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="IntelliFactory.WebSharper.TypeScript.Lib">
-      <HintPath>..\packages\WebSharper.TypeScript.Lib.2.5.1-alpha\lib\net40\IntelliFactory.WebSharper.TypeScript.Lib.dll</HintPath>
+      <HintPath>..\packages\WebSharper.TypeScript.Lib.3.0.0-alpha\lib\net40\IntelliFactory.WebSharper.TypeScript.Lib.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />

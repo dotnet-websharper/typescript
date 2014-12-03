@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -55,7 +55,7 @@
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
-  <Import Project="..\packages\WebSharper.2.5.98.29\build\WebSharper.targets" />
+  <Import Project="..\packages\WebSharper.3.0.0-alpha\build\WebSharper.targets" />
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties Guid="{349c5851-65df-11da-9384-00065b846f21}">
@@ -106,11 +106,11 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="IntelliFactory.WebSharper.TypeScript.Lib">
-      <HintPath>..\packages\WebSharper.TypeScript.Lib.2.5.1-alpha\lib\net40\IntelliFactory.WebSharper.TypeScript.Lib.dll</HintPath>
+      <HintPath>..\packages\WebSharper.TypeScript.Lib.3.0.0-alpha\lib\net40\IntelliFactory.WebSharper.TypeScript.Lib.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="IntelliFactory.WebSharper.TypeScript">
-      <HintPath>..\packages\WebSharper.TypeScript.2.5.1-alpha\tools\net40\IntelliFactory.WebSharper.TypeScript.dll</HintPath>
+      <HintPath>..\packages\WebSharper.TypeScript.3.0.0-alpha\tools\net40\IntelliFactory.WebSharper.TypeScript.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
