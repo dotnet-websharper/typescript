@@ -22,7 +22,7 @@
 namespace IntelliFactory.WebSharper.TypeScript.Tests
 
 open IntelliFactory.WebSharper
-open IntelliFactory.WebSharper.Html
+open IntelliFactory.WebSharper.Html.Client
 open IntelliFactory.WebSharper.Testing
 
 [<JavaScript>]

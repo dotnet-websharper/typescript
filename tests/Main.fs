@@ -21,7 +21,7 @@
 
 namespace IntelliFactory.WebSharper.TypeScript.Tests
 
-open IntelliFactory.Html
+open IntelliFactory.WebSharper.Html.Server
 open IntelliFactory.WebSharper
 open IntelliFactory.WebSharper.Sitelets
 
@@ -29,7 +29,7 @@ type Action =
     | Main
 
 module Controls =
-    open IntelliFactory.WebSharper.Html
+    open IntelliFactory.WebSharper.Html.Client
 
     [<Sealed>]
     type EntryPoint() =
