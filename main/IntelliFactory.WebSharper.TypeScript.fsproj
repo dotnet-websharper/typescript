@@ -72,13 +72,13 @@
       <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.Core.dll</HintPath>
     </Reference>
     <Reference Include="IntelliFactory.JavaScript">
-      <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.JavaScript.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.JavaScript.dll</HintPath>
     </Reference>
     <Reference Include="IntelliFactory.WebSharper.Compiler">
       <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.WebSharper.Compiler.dll</HintPath>
     </Reference>
     <Reference Include="IntelliFactory.WebSharper.Core">
-      <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.WebSharper.Core.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Core.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.dll</HintPath>

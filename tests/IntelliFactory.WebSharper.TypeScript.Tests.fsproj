@@ -15,19 +15,45 @@
     <Content Include="Tests.js" />
     <Compile Include="ClientTests.fs" />
     <Compile Include="TestUtility.fs" />
-    <Compile Include="../main/Utility/Abbreviations.fs" />
-    <Compile Include="../main/Utility/GraphColoring.fs" />
-    <Compile Include="../main/Utility/Pickler.fs" />
-    <Compile Include="../main/Utility/Logging.fs" />
-    <Compile Include="../main/Utility/Names.fs" />
-    <Compile Include="../main/Utility/Memoization.fs" />
-    <Compile Include="../main/Utility/TopSort.fs" />
-    <Compile Include="../main/Utility/AppDomains.fs" />
-    <Compile Include="../main/Utility/ReflectionUtility.fs" />
-    <Compile Include="../main/Parsing/ExternalModuleNames.fs" />
-    <Compile Include="../main/Parsing/Lexer.fs" />
-    <Compile Include="../main/Parsing/Syntax.fs" />
-    <Compile Include="../main/Parsing/Parser.fs" />
+    <Compile Include="../main/Utility/Abbreviations.fs">
+      <Link>Abbreviations.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/GraphColoring.fs">
+      <Link>GraphColoring.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/Pickler.fs">
+      <Link>Pickler.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/Logging.fs">
+      <Link>Logging.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/Names.fs">
+      <Link>Names.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/Memoization.fs">
+      <Link>Memoization.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/TopSort.fs">
+      <Link>TopSort.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/AppDomains.fs">
+      <Link>AppDomains.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/ReflectionUtility.fs">
+      <Link>ReflectionUtility.fs</Link>
+    </Compile>
+    <Compile Include="../main/Parsing/ExternalModuleNames.fs">
+      <Link>ExternalModuleNames.fs</Link>
+    </Compile>
+    <Compile Include="../main/Parsing/Lexer.fs">
+      <Link>Lexer.fs</Link>
+    </Compile>
+    <Compile Include="../main/Parsing/Syntax.fs">
+      <Link>Syntax.fs</Link>
+    </Compile>
+    <Compile Include="../main/Parsing/Parser.fs">
+      <Link>Parser.fs</Link>
+    </Compile>
     <Compile Include="GraphColoringTests.fs" />
     <Compile Include="ParserTests.fs" />
     <Compile Include="TestRunner.fs" />
@@ -43,6 +69,57 @@
     </Reference>
     <Reference Include="Fuchu">
       <HintPath>..\packages\Fuchu\lib\net40-client\Fuchu.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.Formlets">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.Formlets.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.JavaScript">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.JavaScript.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.Reactive">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.Reactive.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Collections">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Control">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Control.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Core">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Formlets">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Formlets.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Html.Client">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Html.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Html.Server">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Html.Server.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.InterfaceGenerator">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.InterfaceGenerator.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.JavaScript">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.JavaScript.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.JQuery">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.JQuery.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Sitelets">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Sitelets.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Testing">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Testing.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.WebSharper.Web">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.Xml">
+      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.Xml.dll</HintPath>
     </Reference>
     <Reference Include="Tests">
       <HintPath>..\build\Tests.dll</HintPath>
