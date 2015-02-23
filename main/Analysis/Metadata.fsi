@@ -19,7 +19,7 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Support for metadata tables correlating TypeScript contracts to
 /// already compiled .NET types. This is important for separate compilation.

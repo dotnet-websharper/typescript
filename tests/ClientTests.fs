@@ -19,11 +19,11 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript.Tests
+namespace WebSharper.TypeScript.Tests
 
-open IntelliFactory.WebSharper
-open IntelliFactory.WebSharper.Html.Client
-open IntelliFactory.WebSharper.Testing
+open WebSharper
+open WebSharper.Html.Client
+open WebSharper.Testing
 
 [<JavaScript>]
 module ClientTests =

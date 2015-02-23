@@ -19,7 +19,7 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Represents an assembly referenced during the TypeScript compilation process.
 type ReferenceAssembly =

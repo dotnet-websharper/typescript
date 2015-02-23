@@ -19,12 +19,12 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
-module A = IntelliFactory.WebSharper.Core.Attributes
-module S = IntelliFactory.JavaScript.Syntax
-module W = IntelliFactory.JavaScript.Writer
-type P = IntelliFactory.JavaScript.Preferences
+module A = WebSharper.Core.Attributes
+module S = WebSharper.Core.JavaScript.Syntax
+module W = WebSharper.Core.JavaScript.Writer
+type P = WebSharper.Core.JavaScript.Preferences
 
 module CustomAttr =
 

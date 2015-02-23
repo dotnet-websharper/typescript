@@ -19,7 +19,7 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Specifies a renaming strategy applied to CLR names
 /// generated during TypeScript compilation.

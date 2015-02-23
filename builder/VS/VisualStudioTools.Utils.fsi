@@ -12,7 +12,7 @@
 // implied.  See the License for the specific language governing
 // permissions and limitations under the License.
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Utility module used by VisualStudioTools.
 module Utils =

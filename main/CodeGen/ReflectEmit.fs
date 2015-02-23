@@ -19,7 +19,7 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 module internal ReflectEmit =
     module N = Naming
@@ -875,7 +875,7 @@ module internal ReflectEmit =
 
     module WebSharperCompiler =
         open IntelliFactory.Core
-        module FE = IntelliFactory.WebSharper.Compiler.FrontEnd
+        module FE = WebSharper.Compiler.FrontEnd
 
         (* TODO: propagate error messsages better *)
         let CompileAssemblyWithWebSharper (cfg: CompilerOptions) (fileName: string) =

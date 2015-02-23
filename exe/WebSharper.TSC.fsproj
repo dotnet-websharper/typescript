@@ -11,8 +11,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\main\IntelliFactory.WebSharper.TypeScript.fsproj">
-      <Name>IntelliFactory.WebSharper.TypeScript</Name>
+    <ProjectReference Include="..\main\WebSharper.TypeScript.fsproj">
+      <Name>WebSharper.TypeScript</Name>
       <Project>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</Project>
       <Private>True</Private>
     </ProjectReference>

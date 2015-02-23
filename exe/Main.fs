@@ -26,7 +26,7 @@ open System.IO
 open System.Reflection
 open System.Text
 open System.Text.RegularExpressions
-module C = IntelliFactory.WebSharper.TypeScript.Compiler
+module C = WebSharper.TypeScript.Compiler
 
 module internal Main =
 

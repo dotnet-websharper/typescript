@@ -1,8 +1,8 @@
 namespace WebSharper.TypeScript.Examples
 
-open IntelliFactory.Html
-open IntelliFactory.WebSharper
-open IntelliFactory.WebSharper.Sitelets
+open WebSharper.Html.Server
+open WebSharper
+open WebSharper.Sitelets
 
 type Action =
     | Home

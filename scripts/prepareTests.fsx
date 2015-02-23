@@ -1,11 +1,11 @@
-﻿/// Uses the IntelliFactory.WebSharper.TypeScript API to compile
+﻿/// Uses the WebSharper.TypeScript API to compile
 /// `Test.d.ts` to `Tests.dll`.
 
-#r "../build/Release/IntelliFactory.WebSharper.TypeScript.dll"
+#r "../build/Release/WebSharper.TypeScript.dll"
 
 open System
 open System.IO
-module C = IntelliFactory.WebSharper.TypeScript.Compiler
+module C = WebSharper.TypeScript.Compiler
 
 let p xs =
     Path.Combine [|

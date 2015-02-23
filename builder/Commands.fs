@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 #nowarn "40"
 
