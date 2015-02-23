@@ -1,12 +1,12 @@
-﻿/// Uses the IntelliFactory.WebSharper.TypeScript API to compile
-/// `lib.d.ts` to `IntelliFactory.WebSharper.TypeScript.Lib.dll`.
+﻿/// Uses the WebSharper.TypeScript API to compile
+/// `lib.d.ts` to `WebSharper.TypeScript.Lib.dll`.
 
-#r "../build/Release/IntelliFactory.WebSharper.TypeScript.dll"
+#r "../build/Release/WebSharper.TypeScript.dll"
 #r "../build/Release/Mono.Cecil.dll"
 
 open System
 open System.IO
-module C = IntelliFactory.WebSharper.TypeScript.Compiler
+module C = WebSharper.TypeScript.Compiler
 
 let p xs =
     Path.Combine [|
@@ -15,7 +15,7 @@ let p xs =
     |]
 
 let name =
-    "IntelliFactory.WebSharper.TypeScript.Lib"
+    "WebSharper.TypeScript.Lib"
 
 let snk =
     Path.Combine [|

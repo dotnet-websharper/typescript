@@ -19,7 +19,7 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Solves a variant of graph coloring problem.
 /// Given an undirected graph, assign an integer color

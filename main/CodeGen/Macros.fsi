@@ -19,9 +19,9 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
-module M = IntelliFactory.WebSharper.Core.Macros
+module M = WebSharper.Core.Macros
 
 /// Implements WebSharper-related macros for compilation support.
 module internal Macros =

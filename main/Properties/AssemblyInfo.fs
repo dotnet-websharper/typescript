@@ -19,11 +19,11 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 open System
 open System.Runtime
 open System.Runtime.CompilerServices
 
-[<assembly: InternalsVisibleTo("IntelliFactory.WebSharper.TypeScript.Tests")>]
+[<assembly: InternalsVisibleTo("WebSharper.TypeScript.Tests")>]
 do ()

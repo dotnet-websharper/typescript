@@ -19,14 +19,14 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 open System
 open System.Collections
 open System.Reflection
 open System.Text
-module Attr = IntelliFactory.WebSharper.Core.Attributes
-module CRes = IntelliFactory.WebSharper.Core.Resources
+module Attr = WebSharper.Core.Attributes
+module CRes = WebSharper.Core.Resources
 
 [<AutoOpen>]
 module internal Abbreviations =

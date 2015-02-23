@@ -19,19 +19,19 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Provides the main functionality: cross-compiling TypeScript
 /// definitions for use in WebSharper.
 module Compiler =
-    type EmbeddedResource = global.IntelliFactory.WebSharper.TypeScript.EmbeddedResource
-    type Level = global.IntelliFactory.WebSharper.TypeScript.Logging.Level
-    type Message = global.IntelliFactory.WebSharper.TypeScript.Logging.Message
-    type Options = global.IntelliFactory.WebSharper.TypeScript.CompilerOptions
-    type ReferenceAssembly = global.IntelliFactory.WebSharper.TypeScript.ReferenceAssembly
-    type Renaming = global.IntelliFactory.WebSharper.TypeScript.Renaming
-    type Root = global.IntelliFactory.WebSharper.TypeScript.Root
-    type WebSharperResource = global.IntelliFactory.WebSharper.TypeScript.WebSharperResource
+    type EmbeddedResource = global.WebSharper.TypeScript.EmbeddedResource
+    type Level = global.WebSharper.TypeScript.Logging.Level
+    type Message = global.WebSharper.TypeScript.Logging.Message
+    type Options = global.WebSharper.TypeScript.CompilerOptions
+    type ReferenceAssembly = global.WebSharper.TypeScript.ReferenceAssembly
+    type Renaming = global.WebSharper.TypeScript.Renaming
+    type Root = global.WebSharper.TypeScript.Root
+    type WebSharperResource = global.WebSharper.TypeScript.WebSharperResource
 
     /// Represents a compiled assembly.
     [<Sealed>]

@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <Name>IntelliFactory.WebSharper.TypeScript</Name>
+    <Name>WebSharper.TypeScript</Name>
     <ProjectGuid>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</ProjectGuid>
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
@@ -71,14 +71,14 @@
     <Reference Include="IntelliFactory.Core">
       <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.Core.dll</HintPath>
     </Reference>
-    <Reference Include="IntelliFactory.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.JavaScript.dll</HintPath>
+    <Reference Include="WebSharper.Core.JavaScript">
+      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
     </Reference>
-    <Reference Include="IntelliFactory.WebSharper.Compiler">
-      <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.WebSharper.Compiler.dll</HintPath>
+    <Reference Include="WebSharper.Compiler">
+      <HintPath>..\packages\WebSharper\tools\net40\WebSharper.Compiler.dll</HintPath>
     </Reference>
-    <Reference Include="IntelliFactory.WebSharper.Core">
-      <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.WebSharper.Core.dll</HintPath>
+    <Reference Include="WebSharper.Core">
+      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.dll</HintPath>

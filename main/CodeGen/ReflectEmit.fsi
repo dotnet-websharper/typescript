@@ -19,7 +19,7 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Implements assembly generation via `System.Reflection.Emit`.
 module internal ReflectEmit =

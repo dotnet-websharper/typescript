@@ -19,7 +19,7 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Implements section 11.2.1 of of TypeScript manual 0.9.5.
 module internal ExternalModuleNames =

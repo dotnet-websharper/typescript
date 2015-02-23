@@ -19,7 +19,7 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript.Tests
+namespace WebSharper.TypeScript.Tests
 
 open Fuchu
 

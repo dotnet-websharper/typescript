@@ -20,7 +20,7 @@
 // $end{copyright}
 
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
 /// Constructs custom attribute values for WebSharper annotations.
 module internal CustomAttr =

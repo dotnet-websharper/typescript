@@ -19,11 +19,11 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript.Tests
+namespace WebSharper.TypeScript.Tests
 
 open System
 open Fuchu
-open IntelliFactory.WebSharper.TypeScript
+open WebSharper.TypeScript
 module C = GraphColoring
 
 module internal GraphColoringTests =

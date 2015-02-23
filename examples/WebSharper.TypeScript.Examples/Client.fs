@@ -1,13 +1,13 @@
 namespace WebSharper.TypeScript.Examples
 
-open IntelliFactory.WebSharper
-open IntelliFactory.WebSharper.Html
+open WebSharper
+open WebSharper.Html.Client
 type Epic = WebSharper.EpicEditor
 
 [<JavaScript>]
 module Client =
 
-    let AddEditor (el: Html.Element) =
+    let AddEditor (el: Element) =
         Epic.EpicEditorOptions(container = el.Dom,
             file =  Epic.Misc.file(name = "MyDocument",
                         defaultContent = "# My Document",

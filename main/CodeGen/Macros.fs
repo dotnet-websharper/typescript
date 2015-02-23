@@ -19,12 +19,12 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript
+namespace WebSharper.TypeScript
 
-module A = IntelliFactory.WebSharper.Core.Attributes
-module J = IntelliFactory.JavaScript.Core
-module M = IntelliFactory.WebSharper.Core.Macros
-module Q = IntelliFactory.WebSharper.Core.Quotations
+module A = WebSharper.Core.Attributes
+module J = WebSharper.Core.JavaScript.Core
+module M = WebSharper.Core.Macros
+module Q = WebSharper.Core.Quotations
 
 /// Implements WebSharper-related macros for compilation support.
 module Macros =

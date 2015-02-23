@@ -1,7 +1,7 @@
 ﻿#r "../build/Release/Fuchu.dll"
-#r "../build/Release/IntelliFactory.WebSharper.TypeScript.Tests.dll"
+#r "../build/Release/WebSharper.TypeScript.Tests.dll"
 
-open IntelliFactory.WebSharper.TypeScript.Tests
+open WebSharper.TypeScript.Tests
 
 TestRunner.RunAllTests [||]
 |> ignore

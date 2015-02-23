@@ -19,12 +19,12 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript.Tests
+namespace WebSharper.TypeScript.Tests
 
 open System
 open FParsec
 open Fuchu
-open IntelliFactory.WebSharper.TypeScript
+open WebSharper.TypeScript
 module P = Parser
 module S = Syntax
 

@@ -19,17 +19,17 @@
 //
 // $end{copyright}
 
-namespace IntelliFactory.WebSharper.TypeScript.Tests
+namespace WebSharper.TypeScript.Tests
 
-open IntelliFactory.WebSharper.Html.Server
-open IntelliFactory.WebSharper
-open IntelliFactory.WebSharper.Sitelets
+open WebSharper.Html.Server
+open WebSharper
+open WebSharper.Sitelets
 
 type Action =
     | Main
 
 module Controls =
-    open IntelliFactory.WebSharper.Html.Client
+    open WebSharper.Html.Client
 
     [<Sealed>]
     type EntryPoint() =

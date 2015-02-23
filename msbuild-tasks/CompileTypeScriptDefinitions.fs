@@ -1,4 +1,4 @@
-﻿namespace IntelliFactory.WebSharper.TypeScript.MSBuild
+﻿namespace WebSharper.TypeScript.MSBuild
 
 open System
 open System.IO
@@ -6,7 +6,7 @@ open System.Reflection
 open Microsoft.Build
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
-module C = IntelliFactory.WebSharper.TypeScript.Compiler
+module C = WebSharper.TypeScript.Compiler
 
 [<Sealed>]
 type BuildTypeScriptDefinitions() =
