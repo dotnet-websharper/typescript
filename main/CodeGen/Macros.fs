@@ -29,59 +29,40 @@ module Q = WebSharper.Core.Quotations
 /// Implements WebSharper-related macros for compilation support.
 module Macros =
 
-    let Def expand : M.Macro =
-        {
-            Body = None
-            Expand = expand
-            Requirements = []
-        }
-
-    let Call =
-        Def <| fun t e ->
+    let Call t e =
             match e with
             | Q.Call (_, target :: args) ->
                 J.Application (t target, List.map t args)
             | _ ->
                 failwith "Invalid application of the CallMacro"
 
-    let Item =
-        Def <| fun t e ->
+    let Item t e =
             match e with
             | Q.PropertyGet (_, [target; arg]) ->
-                (t target).[t arg]
+                (t target : J.Expression).[t arg]
             | Q.PropertySet (_, [target; arg; value]) ->
                 J.FieldSet (t target, t arg, t value)
             | _ ->
                 failwith "Invalid application of the ItemMacro"
 
-    let New =
-        Def <| fun t e ->
+    let New t e =
             match e with
             | Q.Call (_, target :: args) ->
                 J.New (t target, List.map t args)
             | _ ->
                 failwith "Invalid application of the NewMacro"
-//
-//    let NewConfigObject =
-//        Def <| fun t e ->
-//           J.NewObject []
 
     [<Sealed>]
     type CallMacro() =
-        interface M.IMacroDefinition with
-            member this.Macro = Call
+        interface M.IMacro with
+            member this.Translate(e, t) = Call t e
 
     [<Sealed>]
     type ItemMacro() =
-        interface M.IMacroDefinition with
-            member this.Macro = Item
+        interface M.IMacro with
+            member this.Translate(e, t) = Item t e
 
     [<Sealed>]
     type NewMacro() =
-        interface M.IMacroDefinition with
-            member this.Macro = New
-//
-//    [<Sealed>]
-//    type NewConfigObjectMacro() =
-//        interface M.IMacroDefinition with
-//            member this.Macro = NewConfigObject
+        interface M.IMacro with
+            member this.Translate(e, t) = New t e
