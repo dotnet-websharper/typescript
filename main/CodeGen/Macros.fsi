@@ -29,14 +29,14 @@ module internal Macros =
     [<Sealed>]
     type CallMacro =
         new : unit -> CallMacro
-        interface M.IMacroDefinition
+        interface M.IMacro
 
     [<Sealed>]
     type ItemMacro =
         new : unit -> ItemMacro
-        interface M.IMacroDefinition
+        interface M.IMacro
 
     [<Sealed>]
     type NewMacro =
         new : unit -> NewMacro
-        interface M.IMacroDefinition
+        interface M.IMacro
