@@ -72,5 +72,5 @@
       <Compile Include="@(C)" />
     </ItemGroup>
   </Target>
-  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.1/Framework/v4.0/Microsoft.FSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)/../Microsoft SDKs/F#/3.0/Framework/v4.0/Microsoft.FSharp.targets" />
 </Project>
