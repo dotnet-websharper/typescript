@@ -78,6 +78,14 @@ module AppDomains =
             else
                 null)
 
+        AppDomain.CurrentDomain.add_ReflectionOnlyAssemblyResolve(fun h ev ->
+            let name = AssemblyName(ev.Name)
+            if name.Name = "FSharp.Core" then
+                typedefof<list<_>>.Assembly |> ReflectionUtility.GetReflectionOnlyAssembly
+            else
+                ReflectionUtility.GetReflectionOnlyAssembly(name.Name))
+
+
     let CreateAppDomain () =
         let setup = AppDomainSetup()
         setup.ApplicationBase <-

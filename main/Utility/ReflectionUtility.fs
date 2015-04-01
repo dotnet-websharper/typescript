@@ -47,11 +47,27 @@ module private ReflectionUtilityModule =
             | None -> Assembly.ReflectionOnlyLoadFrom(a.Location)
             | Some r -> r
 
+    let GetReflectionOnlyByName (n: string) =
+        let ro =
+            GetAssemblies ReflectionOnly
+            |> Array.tryFind (fun a -> a.GetName().Name = n)
+        match ro with
+        | Some r -> r
+        | None ->
+        let r =
+            GetAssemblies Regular
+            |> Array.find (fun a -> a.GetName().Name = n)
+        Assembly.ReflectionOnlyLoadFrom(r.Location) 
+
+
 [<Sealed>]
 type internal ReflectionUtility =
 
     static member GetReflectionOnlyAssembly(a: Assembly) =
         GetReflectionOnly a
+
+    static member GetReflectionOnlyAssembly(n: string) =
+        GetReflectionOnlyByName n
 
     static member GetReflectionOnlyAssembly(t: Type) =
         ReflectionUtility.GetReflectionOnlyAssembly(t.Assembly)
