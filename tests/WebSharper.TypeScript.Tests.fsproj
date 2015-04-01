@@ -36,11 +36,11 @@
     <Compile Include="../main/Utility/TopSort.fs">
       <Link>TopSort.fs</Link>
     </Compile>
-    <Compile Include="../main/Utility/AppDomains.fs">
-      <Link>AppDomains.fs</Link>
-    </Compile>
     <Compile Include="../main/Utility/ReflectionUtility.fs">
       <Link>ReflectionUtility.fs</Link>
+    </Compile>
+    <Compile Include="../main/Utility/AppDomains.fs">
+      <Link>AppDomains.fs</Link>
     </Compile>
     <Compile Include="../main/Parsing/ExternalModuleNames.fs">
       <Link>ExternalModuleNames.fs</Link>
