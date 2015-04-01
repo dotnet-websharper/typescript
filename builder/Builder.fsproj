@@ -7,6 +7,20 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
+  <Target Name="Configure">
+    <Exec Command="$(TargetPath) configure" ContinueOnError="false" />
+  </Target>
+  <Target Name="Pack">
+    <Exec Command="$(TargetPath) pack" ContinueOnError="false" />
+  </Target>
+  <Target Name="Test">
+    <Exec Command="$(TargetPath) prepareTests" ContinueOnError="false" />
+    <ItemGroup>
+      <T Include="../tests/*.fsproj" />
+    </ItemGroup>
+    <MSBuild Projects="@(T)" Properties="Configuration=$(Configuration)" />
+    <Exec Command="$(TargetPath) test" ContinueOnError="false" />
+  </Target>
   <ItemGroup>
     <Compile Include="XmlTools.fs" />
     <Compile Include="VS/VisualStudioTools.Utils.fsi" />
@@ -22,23 +36,10 @@
     <Compile Include="PathUtility.fs" />
     <Compile Include="Commands.fs" />
     <Compile Include="Main.fs" />
+    <Content Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
-  <Target Name="Configure">
-    <Exec Command="$(TargetPath) configure" ContinueOnError="false" />
-  </Target>
-  <Target Name="Pack">
-    <Exec Command="$(TargetPath) pack" ContinueOnError="false" />
-  </Target>
-  <Target Name="Test">
-    <Exec Command="$(TargetPath) prepareTests" ContinueOnError="false" />
-    <ItemGroup>
-      <T Include="../tests/*.fsproj" />
-    </ItemGroup>
-    <MSBuild Projects="@(T)" Properties="Configuration=$(Configuration)" />
-    <Exec Command="$(TargetPath) test" ContinueOnError="false" />
-  </Target>
 </Project>
