@@ -13,9 +13,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{6DF6E294-0785-47
 		WebSharper.TypeScript.nuspec = WebSharper.TypeScript.nuspec
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript", "main\IntelliFactory.WebSharper.TypeScript.fsproj", "{E7666B0F-B8FD-4147-87E8-A9100223A6F1}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WebSharper.TypeScript", "main\WebSharper.TypeScript.fsproj", "{E7666B0F-B8FD-4147-87E8-A9100223A6F1}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.Tests", "tests\IntelliFactory.WebSharper.TypeScript.Tests.fsproj", "{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WebSharper.TypeScript.Tests", "tests\WebSharper.TypeScript.Tests.fsproj", "{1FEF4CF6-91C4-4E83-B990-3FF27CE54D37}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "msbuild", "msbuild", "{BDB6BFB2-7C83-4116-967C-5AE1811254D0}"
 	ProjectSection(SolutionItems) = preProject
@@ -35,7 +35,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{A2E9
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WebSharper.TSC", "exe\WebSharper.TSC.fsproj", "{63510D0C-4591-440B-BB71-96C37D58D8E0}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IntelliFactory.WebSharper.TypeScript.MSBuild", "msbuild-tasks\IntelliFactory.WebSharper.TypeScript.MSBuild.fsproj", "{D936C3E8-6F01-468B-BE56-8981F32FE860}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "WebSharper.TypeScript.MSBuild", "msbuild-tasks\WebSharper.TypeScript.MSBuild.fsproj", "{D936C3E8-6F01-468B-BE56-8981F32FE860}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{50449B79-CA5E-45BD-9E25-7322FC7EC6BB}"
 EndProject
