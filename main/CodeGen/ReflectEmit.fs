@@ -104,6 +104,7 @@ module internal ReflectEmit =
     type FuncView =
         {
             FuncArgs : list<N.Type>
+            FuncRest : option<N.Type>
             FuncRet : option<N.Type>
         }
 
@@ -148,7 +149,6 @@ module internal ReflectEmit =
                         | _ -> N.TAny
                     let ok =
                         s.MethodGenerics.IsEmpty
-                        && s.RestParameter.IsNone
                         && List.forall isSimpleParam s.Parameters
                     if ok then
                         let subst t = SubstituteTypeGenerics t args
@@ -157,6 +157,7 @@ module internal ReflectEmit =
                             |> List.map (getParamType >> subst)
                         Some {
                             FuncArgs = ps
+                            FuncRest = Option.map (getParamType >> subst) s.RestParameter
                             FuncRet = Option.map subst s.ReturnType
                         }
                     else None
@@ -278,6 +279,7 @@ module internal ReflectEmit =
                 match t with
                 | FuncType view ->
                     List.iter p.Type view.FuncArgs
+                    Option.iter p.Type view.FuncRest
                     Option.iter p.Type view.FuncRet
                 | _ ->
                     p.Mark(c)
@@ -563,7 +565,23 @@ module internal ReflectEmit =
                 | None -> ReflectionUtility.GetReflectionOnlyAssembly<list<_>>()
                 | Some r -> r
 
+        let wsCore =
+            st.References
+            |> Seq.tryFind (fun r -> r.GetName().Name = "WebSharper.Core")
+            |> function
+                | None -> ReflectionUtility.GetReflectionOnlyAssembly<WebSharper.JavaScript.Function>()
+                | Some r -> r
+
         let funTD = fsCore.GetType(typedefof<_->_>.FullName)
+        let funWA = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithArgs<_,_>>.FullName)
+        let funWR = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithRest<_,_>>.FullName)
+        let funW1R = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithRest<_,_,_>>.FullName)
+        let funW2R = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithRest<_,_,_,_>>.FullName)
+        let funW3R = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithRest<_,_,_,_,_>>.FullName)
+        let funW4R = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithRest<_,_,_,_,_,_>>.FullName)
+        let funW5R = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithRest<_,_,_,_,_,_,_>>.FullName)
+        let funW6R = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithRest<_,_,_,_,_,_,_,_>>.FullName)
+        let funWAR = wsCore.GetType(typedefof<WebSharper.JavaScript.FuncWithArgsRest<_,_,_>>.FullName)
         let unitT = fsCore.GetType(typedefof<unit>.FullName)
 
         let typeGenDummy = memo typeDigit
@@ -578,11 +596,19 @@ module internal ReflectEmit =
         let tupleType = memo <| fun ts ->
             tupleTypeDef.[Array.length ts].MakeGenericType(ts)
 
-        let funType = memo <| fun (dom, range) ->
-            match Array.length dom with
-            | 0 -> funTD.MakeGenericType(unitT, range)
-            | 1 -> funTD.MakeGenericType(dom.[0], range)
-            | ts -> funTD.MakeGenericType(tupleType.[dom], range)
+        let funType = memo <| fun (dom, rest, range) ->
+            match Array.length dom, rest with
+            | 0, None -> funTD.MakeGenericType(unitT, range)
+            | 1, None -> funTD.MakeGenericType(dom.[0], range)
+            | _, None -> funWA.MakeGenericType(tupleType.[dom], range)
+            | 0, Some r -> funWR.MakeGenericType(r, range)
+            | 1, Some r -> funW1R.MakeGenericType(dom.[0], r, range)
+            | 2, Some r -> funW2R.MakeGenericType(dom.[0], dom.[1], r, range)
+            | 3, Some r -> funW3R.MakeGenericType(dom.[0], dom.[1], dom.[2], r, range)
+            | 4, Some r -> funW4R.MakeGenericType(dom.[0], dom.[1], dom.[2], dom.[3], r, range)
+            | 5, Some r -> funW5R.MakeGenericType(dom.[0], dom.[1], dom.[2], dom.[3], dom.[4], r, range)
+            | 6, Some r -> funW6R.MakeGenericType(dom.[0], dom.[1], dom.[2], dom.[3], dom.[4], dom.[5], r, range)
+            | _, Some r -> funWAR.MakeGenericType(tupleType.[dom], r, range) 
 
         let genInst = memo <| fun (main: Type, args) ->
             main.MakeGenericType(args)
@@ -794,13 +820,14 @@ module internal ReflectEmit =
             | N.TGenericM k -> ctx.GenericsM.[k]
             | N.TNamed (c, xs) ->
                 match ty with
-                | FuncType { FuncArgs = dom; FuncRet = range } ->
+                | FuncType { FuncArgs = dom; FuncRest = rest; FuncRet = range } ->
                     let dom = [| for d in dom -> b.Type(ctx, d) |]
+                    let rest = rest |> Option.map (fun r -> b.Type(ctx, r))
                     let range =
                         match range with
                         | None -> unitT
                         | Some t -> b.Type(ctx, t)
-                    funType.[(dom, range)]
+                    funType.[(dom, rest, range)]
                 | _ ->
                     match xs with
                     | [] -> st.ContractTable.[c] :> Type
