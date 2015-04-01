@@ -49,7 +49,7 @@ module internal Main =
     let DownloadContrib =
         C.Command {
             if C.IsDir "contrib" |> not then
-                let url = "http://github.com/borisyankov/DefinitelyTyped/archive/master.zip"
+                let url = "http://github.com/borisyankov/DefinitelyTyped/archive/0.9.5.zip"
                 do! C.MakeDir "contrib"
                 do
                     let file = C.LocalPath "contrib/DefinitelyTyped.zip"
