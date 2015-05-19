@@ -40,7 +40,7 @@ let main () =
         {
             C.Options.Create(name, [p ["Lib.d.ts"]]) with
                 AssemblyName = name
-                AssemblyVersion = Some (Version "3.0.0.0")
+                AssemblyVersion = Some (Version "3.1.0.0")
                 StrongNameKeyFile = Some snk
                 References =
                     [
