@@ -373,7 +373,7 @@ module Templates =
                 PTNuGetPackages = None
                 PTProject = p
                 PTTemplateData = d
-                PTVersion = "3.0.0"
+                PTVersion = "3.1.0"
             }
 
         member this.ToXml() =
