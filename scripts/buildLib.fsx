@@ -4,6 +4,8 @@
 #r "../build/Release/WebSharper.TypeScript.dll"
 #r "../build/Release/Mono.Cecil.dll"
 
+#load "../msbuild/AssemblyInfo.fs"
+
 open System
 open System.IO
 module C = WebSharper.TypeScript.Compiler
@@ -40,7 +42,7 @@ let main () =
         {
             C.Options.Create(name, [p ["Lib.d.ts"]]) with
                 AssemblyName = name
-                AssemblyVersion = Some (Version "3.1.0.0")
+                AssemblyVersion = Some (Version WebSharper.TypeScript.Version.Version)
                 StrongNameKeyFile = Some snk
                 References =
                     [
