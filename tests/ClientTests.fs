@@ -33,19 +33,19 @@ module ClientTests =
         Test "Test0001" {
             let x = Tests.Test0001.x
             x.a <- 12.
-            Equal x.a 12.
-            Equal x.b "a"
-            Equal (box x.c) (box 0)
-            Equal x.d [||]
-            True x.e
-            Equal (x.incr(1., "A")) 2.
-            Equal (x.withRest(1., true, "A", "B")) "A,B,1,true"
+            equal x.a 12.
+            equal x.b "a"
+            equal (box x.c) (box 0)
+            equal x.d [||]
+            isTrue x.e
+            equal (x.incr(1., "A")) 2.
+            equal (x.withRest(1., true, "A", "B")) "A,B,1,true"
         }
 
         Test "Test0002" {
             let w = Tests.Pervasives.window
-            True (w.outerHeight > 0.)
-            True (w.location.href.Contains("://"))
-            False (Tests.Pervasives.isNaN(1.))
-            True (Tests.Pervasives.isNaN(nan))
+            isTrue (w.outerHeight > 0.)
+            isTrue (w.location.href.Contains("://"))
+            isFalse (Tests.Pervasives.isNaN(1.))
+            isTrue (Tests.Pervasives.isNaN(nan))
         }
