@@ -2,6 +2,14 @@ namespace WebSharper.TypeScript
 open System
 open System.Reflection
 
-[<assembly: AssemblyVersion("3.1.0.0")>]
+module internal Version =
+
+    [<Literal>]
+    let BaseVersion = "3.2"
+
+    [<Literal>]
+    let Version = BaseVersion + ".0.0"
+
+[<assembly: AssemblyVersion(Version.Version)>]
 do ()
 
