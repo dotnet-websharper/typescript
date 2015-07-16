@@ -5,7 +5,7 @@ open System.Reflection
 module internal Version =
 
     [<Literal>]
-    let BaseVersion = "3.2"
+    let BaseVersion = "3.3"
 
     [<Literal>]
     let Version = BaseVersion + ".0.0"
