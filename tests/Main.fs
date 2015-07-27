@@ -54,22 +54,23 @@ module Skin =
             .With("title", fun x -> x.Title)
             .With("body", fun x -> x.Body)
 
-    let WithTemplate title body : Content<Action> =
-        Content.WithTemplate MainTemplate <| fun context ->
+    let WithTemplate title body =
+        Content.WithTemplate MainTemplate
             {
                 Title = title
-                Body = body context
+                Body = body
             }
 
 module Site =
 
     let Main =
         let t = "WebSharper.TypeScript Tests"
-        Skin.WithTemplate t (fun ctx ->
-            [
-                Div [new Controls.EntryPoint()]
-            ])
-        |> Sitelet.Content "/" Main
+        let mainContent ctx =
+            Skin.WithTemplate t
+                [
+                    Div [new Controls.EntryPoint()]
+                ]
+        Sitelet.Content "/" Main mainContent
 
 [<Sealed>]
 type Website() =
