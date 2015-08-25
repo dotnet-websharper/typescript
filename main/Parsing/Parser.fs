@@ -359,8 +359,8 @@ module Parser =
             |>> ACBE.ClassConstructor
         let mem =
             (
-                attempt ctor <|>
-                (
+                choice [
+                    attempt ctor 
                     pipe4
                         gAccess
                         gMemberScope
@@ -372,8 +372,9 @@ module Parser =
                                 ACBE.ClassProperty (acc, sc, name, ty)
                             | Choice1Of2 cs ->
                                 ACBE.ClassMethod (acc, sc, name, cs))
-                    .>> gSemi
-                )
+                        .>> gSemi
+                    g.IndexSignature |>> ACBE.ClassIndex .>> gSemi
+                ]
             )
             <?> "member"
         let heritage =
