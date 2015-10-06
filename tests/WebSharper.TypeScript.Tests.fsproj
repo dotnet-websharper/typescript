@@ -112,6 +112,12 @@
     <Reference Include="IntelliFactory.Xml">
       <HintPath>..\packages\WebSharper\lib\net40\IntelliFactory.Xml.dll</HintPath>
     </Reference>
+    <Reference Include="WebSharper.Html.Client">
+      <HintPath>..\packages\WebSharper.Html\lib\net40\WebSharper.Html.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="WebSharper.Html.Server">
+      <HintPath>..\packages\WebSharper.Html\lib\net40\WebSharper.Html.Server.dll</HintPath>
+    </Reference>
     <Reference Include="Tests">
       <HintPath>..\build\Tests.dll</HintPath>
     </Reference>
