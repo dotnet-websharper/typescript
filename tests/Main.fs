@@ -46,7 +46,7 @@ module Skin =
     type Page =
         {
             Title : string
-            Body : list<Content.HtmlElement>
+            Body : list<Element>
         }
 
     let MainTemplate =

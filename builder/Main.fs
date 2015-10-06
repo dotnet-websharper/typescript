@@ -23,6 +23,7 @@ module internal Main =
     let PreReleaseDeps =
         [
             "WebSharper"
+            "WebSharper.Html"
         ]
 
     let ReleaseDeps =
