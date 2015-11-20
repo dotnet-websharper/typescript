@@ -24,6 +24,7 @@ module internal Main =
         [
             "WebSharper"
             "WebSharper.Html"
+            "WebSharper.Testing"
         ]
 
     let ReleaseDeps =
