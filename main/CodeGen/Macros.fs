@@ -21,6 +21,39 @@
 
 namespace WebSharper.TypeScript
 
+#if ZAFIR
+module Macros =
+    open WebSharper.Core
+    open WebSharper.Core.AST
+
+    [<Sealed>]
+    type CallMacro() =
+        inherit Macro()
+
+        override this.TranslateCall(_, _, _, e, _) =
+            match e with
+            | target :: args -> MacroOk <| Application(target, args)  
+            | _ -> MacroError "Invalid application of the CallMacro"
+
+    [<Sealed>]
+    type ItemMacro() =
+        inherit Macro()
+
+        override this.TranslateCall(_, _, _, e, _) =
+            match e with
+            | [ target; arg ] -> MacroOk <| ItemGet(target, arg)  
+            | [ target; arg; value ] -> MacroOk <| ItemSet(target, arg, value)  
+            | _ -> MacroError "Invalid application of the ItemMacro"
+
+    [<Sealed>]
+    type NewMacro() =
+        inherit Macro()
+
+        override this.TranslateCall(_, _, _, e, _) =
+            match e with
+            | target :: args -> MacroOk <| New(target, args)  
+            | _ -> MacroError "Invalid application of the NewMacro"
+#else
 module A = WebSharper.Core.Attributes
 module J = WebSharper.Core.JavaScript.Core
 module M = WebSharper.Core.Macros
@@ -66,3 +99,4 @@ module Macros =
     type NewMacro() =
         interface M.IMacro with
             member this.Translate(e, t) = New t e
+#endif
