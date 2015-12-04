@@ -21,7 +21,10 @@
     <MSBuild Projects="@(T)" Properties="Configuration=$(Configuration)" />
     <Exec Command="$(TargetPath) test" ContinueOnError="false" />
   </Target>
-  <ItemGroup>
+ <PropertyGroup Condition="'$(Zafir)' == 'True'">
+  <DefineConstants>$(DefineConstants);ZAFIR</DefineConstants>
+ </PropertyGroup>
+ <ItemGroup>
     <Compile Include="XmlTools.fs" />
     <Compile Include="VS/VisualStudioTools.Utils.fsi" />
     <Compile Include="VS/VisualStudioTools.Utils.fs" />

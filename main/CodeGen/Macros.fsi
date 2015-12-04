@@ -21,6 +21,25 @@
 
 namespace WebSharper.TypeScript
 
+#if ZAFIR
+/// Implements WebSharper-related macros for compilation support.
+module internal Macros =
+
+    [<Sealed>]
+    type CallMacro =
+        inherit WebSharper.Core.Macro
+        new : unit -> CallMacro
+
+    [<Sealed>]
+    type ItemMacro =
+        inherit WebSharper.Core.Macro
+        new : unit -> ItemMacro
+
+    [<Sealed>]
+    type NewMacro =
+        inherit WebSharper.Core.Macro
+        new : unit -> NewMacro
+#else
 module M = WebSharper.Core.Macros
 
 /// Implements WebSharper-related macros for compilation support.
@@ -40,3 +59,4 @@ module internal Macros =
     type NewMacro =
         new : unit -> NewMacro
         interface M.IMacro
+#endif

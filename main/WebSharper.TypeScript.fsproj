@@ -6,7 +6,10 @@
     <ProjectGuid>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</ProjectGuid>
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
-  <ItemGroup>
+ <PropertyGroup Condition="'$(Zafir)' == 'True'">
+  <DefineConstants>$(DefineConstants);ZAFIR</DefineConstants>
+ </PropertyGroup>
+ <ItemGroup>
     <Compile Include="Utility/Abbreviations.fs" />
     <Compile Include="Utility/GraphColoring.fsi" />
     <Compile Include="Utility/GraphColoring.fs" />
@@ -68,6 +71,8 @@
     <Reference Include="FParsecCS">
       <HintPath>..\packages\FParsec\lib\net40-client\FParsecCS.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Zafir)' != 'True'">
     <Reference Include="IntelliFactory.Core">
       <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.Core.dll</HintPath>
     </Reference>
@@ -88,6 +93,26 @@
     </Reference>
     <Reference Include="Mono.Cecil.Pdb">
       <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Zafir)' == 'True'">
+    <Reference Include="WebSharper.Core.JavaScript">
+      <HintPath>..\packages\Zafir\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
+    </Reference>
+    <Reference Include="WebSharper.Compiler">
+      <HintPath>..\packages\Zafir.FSharp\tools\net40\WebSharper.Compiler.dll</HintPath>
+    </Reference>
+    <Reference Include="WebSharper.Core">
+      <HintPath>..\packages\Zafir\lib\net40\WebSharper.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>..\packages\Zafir.FSharp\tools\net40\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Mdb">
+      <HintPath>..\packages\Zafir.FSharp\tools\net40\Mono.Cecil.Mdb.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil.Pdb">
+      <HintPath>..\packages\Zafir.FSharp\tools\net40\Mono.Cecil.Pdb.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
