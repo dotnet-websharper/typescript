@@ -911,10 +911,10 @@ module internal ReflectEmit =
             let snk =
                 cfg.StrongNameKeyFile
                 |> Option.map (fun f -> StrongNameKeyPair(File.ReadAllBytes(f)))
+#if ZAFIR
             let resolver = WebSharper.Compiler.AssemblyResolver.Create()
             let loader = FE.Loader.Create resolver stdout.WriteLine
             let assem = loader.LoadFile fileName
-#if ZAFIR
             let meta = WebSharper.Compiler.Reflector.transformWSAssembly assem
             WebSharper.Compiler.FrontEnd.modifyTSAssembly meta assem |> ignore
 #else
@@ -925,6 +925,9 @@ module internal ReflectEmit =
                 }
 
             let compiler = FE.Prepare opts stdout.WriteLine
+            let resolver = AssemblyResolution.AssemblyResolver.Create()
+            let loader = FE.Loader.Create resolver stdout.WriteLine
+            let assem = loader.LoadFile fileName
             if not (compiler.CompileAndModify assem) then
                 failwith "Could not compile the assembly with WebSharper"
 #endif
