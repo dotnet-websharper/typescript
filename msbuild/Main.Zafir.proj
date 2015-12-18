@@ -9,7 +9,8 @@
   <Target Name="Build">
     <MSBuild Projects="@(B)" Targets="Build; Configure" Properties="Configuration=Release;Zafir=True" />
     <MSBuild Projects="@(P)" Targets="Build" Properties="Configuration=Release;Zafir=True" />
-    <MSBuild Projects="@(B)" Targets="Test; Pack" Properties="Configuration=Release;Zafir=True" />
+<!--    <MSBuild Projects="@(B)" Targets="Test; Pack" Properties="Configuration=Release;Zafir=True" /> -->
+    <MSBuild Projects="@(B)" Targets="Pack" Properties="Configuration=Release;Zafir=True" />
   </Target>
   <Target Name="Clean">
     <MSBuild Projects="@(B);@(P)" Targets="Clean" Properties="Configuration=Release;Zafir=True" />
