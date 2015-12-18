@@ -6,7 +6,7 @@ module internal Version =
 
     [<Literal>]
 #if ZAFIR
-    let BaseVersion = "0.9"
+    let BaseVersion = "4.0"
 #else
     let BaseVersion = "3.6"
 #endif

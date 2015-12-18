@@ -901,7 +901,8 @@ module internal ReflectEmit =
             |> Metadata.Table.Create
 
     module WebSharperCompiler =
-#if !ZAFIR
+#if ZAFIR
+#else
         open IntelliFactory.Core
 #endif
         module FE = WebSharper.Compiler.FrontEnd
