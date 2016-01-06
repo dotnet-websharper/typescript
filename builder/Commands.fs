@@ -139,7 +139,11 @@ module internal Commands =
     let FsiExec script args =
         Command {
             let fsi = PathUtility.GetFsiPath()
-            do! Execute fsi "--exec %s %s" script args
+#if ZAFIR
+            do! Execute fsi "--exec --define:ZAFIR %s %s" script args
+#else
+            do! Execute fsi "--exec %s %s" script args    
+#endif
         }
 
     let CopyFileToDir file dir =
