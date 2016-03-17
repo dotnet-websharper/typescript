@@ -21,7 +21,8 @@
 
 namespace WebSharper.TypeScript
 
-module A = WebSharper.Core.Attributes
+open WebSharper
+
 module S = WebSharper.Core.JavaScript.Syntax
 module W = WebSharper.Core.JavaScript.Writer
 type P = WebSharper.Core.JavaScript.Preferences
@@ -32,7 +33,7 @@ module CustomAttr =
         ReflectionUtility.GetReflectionOnlyType<'T>()
 
     let Macro =
-        let ctor = T<A.MacroAttribute>.GetConstructor([| typeof<Type> |])
+        let ctor = T<MacroAttribute>.GetConstructor([| typeof<Type> |])
         fun (t: Type) -> CustomAttributeBuilder(ctor, [| t |])
 
     let Call = Macro T<Macros.CallMacro>
@@ -43,7 +44,7 @@ module CustomAttr =
     let ParamArray = CustomAttributeBuilder(ParamArrayCtor, [||])
 
     let InlineCtor =
-        T<A.InlineAttribute>.GetConstructor([|typeof<string>|])
+        T<InlineAttribute>.GetConstructor([|typeof<string>|])
 
     let ExprToString e =
         W.ExpressionToString P.Compact e
