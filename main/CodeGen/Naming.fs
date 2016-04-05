@@ -56,7 +56,6 @@ module Naming =
             mutable ByString : option<Indexer<'T>>
             mutable Call : seq<Signature<'T>>
             mutable Extends : seq<'T>
-            mutable ClassExtends : option<'T>
             mutable Generics : seq<Id>
             IsAnonymous : bool
             mutable IsExtended : bool
@@ -72,7 +71,6 @@ module Naming =
             ByString = None
             Call = Seq.empty
             Extends = Seq.empty
-            ClassExtends = None
             Generics = Seq.empty
             IsAnonymous = isAnon
             IsExtended = isExt
@@ -114,7 +112,6 @@ module Naming =
                 r.ByString <- Option.map p.Indexer c.ByString
                 r.Call <- map p.Signature c.Call
                 r.Extends <- map p.Type c.Extends
-                r.ClassExtends <- Option.map p.Type c.ClassExtends
                 r.Generics <- [| for g in c.Generics -> idB.Id(g.Text) |]
                 r.New <- map p.Signature c.New
                 r.Origin <- Some c.HintPath

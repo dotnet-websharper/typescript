@@ -56,7 +56,6 @@ module internal Contracts =
 
         /// Whether other contracts extend this one.
         member IsExtended : bool with get, set
-        member ClassExtends : option<'T> with get,set
 
         /// The contract describes a syntactic entity found in 
         /// an anonymous position (not a named position such as an
