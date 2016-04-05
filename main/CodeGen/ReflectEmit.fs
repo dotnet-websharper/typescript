@@ -647,16 +647,6 @@ module internal ReflectEmit =
                         b.Signatures(CallMethod, ctx, tB, N.Id.Call, c.Call)
                     if Seq.isEmpty c.New |> not then
                         b.Signatures(NewMethod, ctx, tB, N.Id.New, c.New)
-                    else
-                        let rec addInheritedCtors (c: N.Contract) = 
-                            match c.ClassExtends with
-                            | Some (N.TNamed (bc, _)) -> 
-                                if Seq.isEmpty bc.New |> not then
-                                    b.Signatures(NewMethod, ctx, tB, N.Id.New, bc.New)
-                                else
-                                    addInheritedCtors bc
-                            | _ -> ()
-                        addInheritedCtors c
                     let declaring = Some c
                     for prop in c.Properties do
                         match GetMethodView declaring prop.Type with

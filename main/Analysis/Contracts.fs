@@ -59,7 +59,6 @@ module Contracts =
         let mutable generics : list<Name> = []
 
         member val IsExtended = false with get, set
-        member val ClassExtends : option<'T> = None with get,set
         member c.AddByNumber(n, t) = byNumber <- Some (indexer n t)
         member c.AddByString(n, t) = byString <- Some (indexer n t)
         member c.AddCall(s) = call.Add(s)

@@ -52,7 +52,6 @@ module internal Naming =
             mutable ByString : option<Indexer<'T>>
             mutable Call : seq<Signature<'T>>
             mutable Extends : seq<'T>
-            mutable ClassExtends : option<'T>
             mutable Generics : seq<Id>
             IsAnonymous : bool
             mutable IsExtended : bool
