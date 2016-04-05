@@ -129,6 +129,7 @@ module internal Syntax =
             InterfaceName : Identifier
             InterfaceTypeParameters : list<TypeParameter>
             InterfaceExtends : list<TypeReference>
+            ClassExtends : option<TypeReference>
             InterfaceBody : list<TypeMember>
         }
 
