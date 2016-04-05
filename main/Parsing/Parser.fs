@@ -214,6 +214,7 @@ module Parser =
                         match ext with
                         | None -> []
                         | Some xs -> xs
+                    ClassExtends = None
                     InterfaceBody = ms
                 })
 

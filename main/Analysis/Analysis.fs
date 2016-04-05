@@ -224,6 +224,7 @@ module internal Analysis =
                 InterfaceName = c.ClassName
                 InterfaceTypeParameters = c.ClassTypeParameters
                 InterfaceExtends = Option.toList c.ClassExtends @ c.ClassImplements
+                ClassExtends = c.ClassExtends
                 InterfaceBody =
                     [
                         for m in c.ClassBody do
@@ -296,6 +297,7 @@ module internal Analysis =
                 InterfaceName = e.EnumName
                 InterfaceTypeParameters = []
                 InterfaceExtends = []
+                ClassExtends = None
                 InterfaceBody = []
             }
 
@@ -349,6 +351,7 @@ module internal Analysis =
                 vis.BuildContract(c, i.InterfaceBody)
                 for r in i.InterfaceExtends do
                     c.Extend(vis.TypeRef(r))
+                c.ClassExtends <- i.ClassExtends |> Option.map vis.TypeRef
                 ctx.LocalScope.BindContract(i.InterfaceName, Sc.Local c)
                 this.ExportContract(exp, i.InterfaceName, c)
             | _ ->
