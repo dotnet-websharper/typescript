@@ -74,6 +74,25 @@ module internal Analysis =
             TName : Name
         }
 
+    type Context =
+        {
+            AnonNameHint : option<Name>
+            CurrentModule : Sc.Module
+            ExportedRoot : Sc.Root
+            ExportedScope : Sc.Scope
+            Generics : S.Identifier []
+            GenericsM : S.Identifier []
+            LocalRoot : Sc.Root
+            LocalScope : Sc.Scope
+            Path : option<NamePath>
+            ScopeChain : Sc.ScopeChain
+        }
+
+        member x.SubPath(n) =
+            match x.Path with
+            | None -> Names.NP1 n
+            | Some p -> Names.NP2 (p, n)
+
     type State =
         {
             Contracts : C.Contracts
@@ -81,7 +100,7 @@ module internal Analysis =
             NameBuilder : Names.NameBuilder
             SharedNames : SharedNames
             ValueBuilder : ValueBuilder
-            ClassCtors : Dictionary<S.Identifier, S.AmbientClassDeclaration * ref<bool * list<S.Parameters>>>
+            ClassCtors : Dictionary<S.Identifier, S.AmbientClassDeclaration * Context * ref<bool * list<S.Parameters>>>
         }
 
         static member Create(logger, names) =
@@ -104,25 +123,6 @@ module internal Analysis =
 
         member st.NamedContract(hintPath) =
             st.Contracts.NamedContract(hintPath)
-
-    type Context =
-        {
-            AnonNameHint : option<Name>
-            CurrentModule : Sc.Module
-            ExportedRoot : Sc.Root
-            ExportedScope : Sc.Scope
-            Generics : S.Identifier []
-            GenericsM : S.Identifier []
-            LocalRoot : Sc.Root
-            LocalScope : Sc.Scope
-            Path : option<NamePath>
-            ScopeChain : Sc.ScopeChain
-        }
-
-        member x.SubPath(n) =
-            match x.Path with
-            | None -> Names.NP1 n
-            | Some p -> Names.NP2 (p, n)
 
     [<Sealed>]
     type Visit(st: State, ctx: Context) =
@@ -269,7 +269,7 @@ module internal Analysis =
                             S.TM3 (S.CS (selfTP, ps, selfType))
                     ]
                 this.Var(S.Export, s.ClassName, contract, ctorSuffix = true)
-            st.ClassCtors.Add(s.ClassName, (s, ref (true, ctors)))
+            st.ClassCtors.Add(s.ClassName, (s, ctx, ref (true, ctors)))
             
             let elements : list<S.AmbientModuleElement> =
                 [
@@ -290,7 +290,7 @@ module internal Analysis =
                 ]
             S.AMD (s.ClassName, elements)
 
-        member this.CreateClassInherit (cId, c: S.AmbientClassDeclaration, ctorsRef) =
+        member this.CreateClassInherit (c: S.AmbientClassDeclaration, ctorsRef) =
             if fst !ctorsRef then
                 let mutable ctors = snd !ctorsRef
 
@@ -302,8 +302,8 @@ module internal Analysis =
                         | S.TN1 bId
                         | S.TN2 (_, bId) ->
                             match st.ClassCtors.TryGetValue bId with
-                            | true, (b, bCtorsRef) ->
-                                this.CreateClassInherit(bId, b, bCtorsRef)
+                            | true, (b, origCtx, bCtorsRef) ->
+                                Visit(st, origCtx).CreateClassInherit(b, bCtorsRef)
                                 let bCtors = snd !bCtorsRef
                                 if List.isEmpty bCtors |> not then
                                     let selfTP = c.ClassTypeParameters
@@ -346,8 +346,8 @@ module internal Analysis =
                 ctorsRef := false, ctors  
         
         member this.CreateClassInherits() =
-            for KeyValue(cId, (c, ctorsRef)) in st.ClassCtors do
-                this.CreateClassInherit(cId, c, ctorsRef)
+            for KeyValue(_, (c, origCtx, ctorsRef)) in st.ClassCtors do
+                Visit(st, origCtx).CreateClassInherit(c, ctorsRef)
 
         member this.Enum(e: S.AmbientEnumDeclaration) =
             let c = this.Interface(S.Export, this.EnumToInterface(e))
