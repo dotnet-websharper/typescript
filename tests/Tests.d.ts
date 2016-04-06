@@ -35,6 +35,13 @@ declare module Test0001 {
     }
 
     export var x: I1;
+
+    class MyBaseClass<T> {
+        constructor(x: T)
+    }
+
+    class MyClass extends MyBaseClass<number> {
+    }
 }
 
 //declare function mapArray<A1, A2>(f: (x: A1) => A2, values: A1[]): A2[];
