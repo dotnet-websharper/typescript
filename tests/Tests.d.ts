@@ -44,6 +44,15 @@ declare module Test0001 {
     }
 }
 
+declare module Test0002 {
+    class MyBaseClass<T> {
+        constructor(x: T, y: T)
+    }
+
+    class MyClass extends MyBaseClass<string> {
+    }
+}
+
 //declare function mapArray<A1, A2>(f: (x: A1) => A2, values: A1[]): A2[];
 
 //declare function f<T>(x: T): void;
