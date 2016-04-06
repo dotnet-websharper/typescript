@@ -93,6 +93,16 @@ module internal Analysis =
             | None -> Names.NP1 n
             | Some p -> Names.NP2 (p, n)
 
+        member x.GetTypeNameInCurrentModule(n) =
+            match x.Path with
+            | None -> S.TN1 n
+            | Some p -> 
+                let rec mdlName (p: NamePath) =
+                    match p with
+                    | Names.NP1 r -> S.MN1 r
+                    | Names.NP2 (r, h) -> S.MN2(mdlName r, h)
+                S.TN2 (mdlName p, n)
+
     type State =
         {
             Contracts : C.Contracts
@@ -100,7 +110,7 @@ module internal Analysis =
             NameBuilder : Names.NameBuilder
             SharedNames : SharedNames
             ValueBuilder : ValueBuilder
-            ClassCtors : Dictionary<S.Identifier, S.AmbientClassDeclaration * Context * ref<bool * list<S.Parameters>>>
+            ClassCtors : Dictionary<S.TypeName, S.AmbientClassDeclaration * Context * ref<bool * list<S.Parameters>>>
         }
 
         static member Create(logger, names) =
@@ -269,7 +279,8 @@ module internal Analysis =
                             S.TM3 (S.CS (selfTP, ps, selfType))
                     ]
                 this.Var(S.Export, s.ClassName, contract, ctorSuffix = true)
-            st.ClassCtors.Add(s.ClassName, (s, ctx, ref (true, ctors)))
+            
+            st.ClassCtors.Add(ctx.GetTypeNameInCurrentModule(s.ClassName), (s, ctx, ref (true, ctors)))
             
             let elements : list<S.AmbientModuleElement> =
                 [
@@ -298,49 +309,50 @@ module internal Analysis =
                 if List.isEmpty ctors then
                     match c.ClassExtends with
                     | Some (S.TRef (bn, tparams)) ->
-                        match bn with
-                        | S.TN1 bId
-                        | S.TN2 (_, bId) ->
-                            match st.ClassCtors.TryGetValue bId with
-                            | true, (b, origCtx, bCtorsRef) ->
-                                Visit(st, origCtx).CreateClassInherit(b, bCtorsRef)
-                                let bCtors = snd !bCtorsRef
-                                if List.isEmpty bCtors |> not then
-                                    let selfTP = c.ClassTypeParameters
-                                    let mkT (t: S.TypeParameter) =
-                                        match t with
-                                        | S.TP1 n
-                                        | S.TP2 (n, _) -> S.TReference (S.TRef (S.TN1 n, []))
-                                    let selfType = S.TReference (S.TRef (S.TN1 c.ClassName, List.map mkT selfTP))
-                                    let typeMap =
-                                        Seq.zip (b.ClassTypeParameters |> Seq.map (function S.TP1 n | S.TP2 (n, _) -> n)) tparams |> Map.ofSeq
-                                    let rec trType t = 
-                                        match t with
-                                        | S.TReference (S.TRef (S.TN1 p, _)) ->
-                                            match typeMap.TryFind p with
-                                            | Some px -> px
-                                            | _ -> t 
-                                        | S.TArray a -> S.TArray (trType a)
-//                                        | S.TObject o -> // TODO: recursively transform object types
-                                        | _ -> t
-                                    let trP p =
-                                        match p with
-                                        | S.P1 (n, t) -> S.P1 (n, trType t)
-                                        | _ -> p
-                                    ctors <- 
-                                        bCtors |> List.map (fun ps ->
-                                            match ps with
-                                            | S.Ps1 ps -> S.Ps1 (ps |> List.map trP)
-                                            | S.Ps2 (ps, opts) -> S.Ps2 (ps |> List.map trP, opts |> List.map trP)
-                                            | S.Ps3 (ps, opts, rest) -> S.Ps3 (ps |> List.map trP, opts |> List.map trP, rest |> trP)
-                                        )   
-                                    let contract =
-                                        S.TObject [
-                                            for ps in ctors ->
-                                                S.TM3 (S.CS (selfTP, ps, selfType))
-                                        ]
-                                    this.Var(S.Export, c.ClassName, contract, ctorSuffix = true)
-                            | _ -> ()
+                        let bn =
+                            match bn with
+                            | S.TN1 bId -> ctx.GetTypeNameInCurrentModule(bId)
+                            | _ -> bn 
+                        match st.ClassCtors.TryGetValue bn with
+                        | true, (b, origCtx, bCtorsRef) ->
+                            Visit(st, origCtx).CreateClassInherit(b, bCtorsRef)
+                            let bCtors = snd !bCtorsRef
+                            if List.isEmpty bCtors |> not then
+                                let selfTP = c.ClassTypeParameters
+                                let mkT (t: S.TypeParameter) =
+                                    match t with
+                                    | S.TP1 n
+                                    | S.TP2 (n, _) -> S.TReference (S.TRef (S.TN1 n, []))
+                                let selfType = S.TReference (S.TRef (S.TN1 c.ClassName, List.map mkT selfTP))
+                                let typeMap =
+                                    Seq.zip (b.ClassTypeParameters |> Seq.map (function S.TP1 n | S.TP2 (n, _) -> n)) tparams |> Map.ofSeq
+                                let rec trType t = 
+                                    match t with
+                                    | S.TReference (S.TRef (S.TN1 p, _)) ->
+                                        match typeMap.TryFind p with
+                                        | Some px -> px
+                                        | _ -> t 
+                                    | S.TArray a -> S.TArray (trType a)
+//                                    | S.TObject o -> // TODO: recursively transform object types
+                                    | _ -> t
+                                let trP p =
+                                    match p with
+                                    | S.P1 (n, t) -> S.P1 (n, trType t)
+                                    | _ -> p
+                                ctors <- 
+                                    bCtors |> List.map (fun ps ->
+                                        match ps with
+                                        | S.Ps1 ps -> S.Ps1 (ps |> List.map trP)
+                                        | S.Ps2 (ps, opts) -> S.Ps2 (ps |> List.map trP, opts |> List.map trP)
+                                        | S.Ps3 (ps, opts, rest) -> S.Ps3 (ps |> List.map trP, opts |> List.map trP, rest |> trP)
+                                    )   
+                                let contract =
+                                    S.TObject [
+                                        for ps in ctors ->
+                                            S.TM3 (S.CS (selfTP, ps, selfType))
+                                    ]
+                                this.Var(S.Export, c.ClassName, contract, ctorSuffix = true)
+                        | _ -> ()
                     | _ -> ()
 
                 ctorsRef := false, ctors  
