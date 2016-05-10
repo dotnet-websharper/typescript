@@ -34,7 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=4.3.0.0">
+    <Reference Include="FSharp.Core, Version=4.4.0.0">
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -63,6 +63,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>$(Root)\build\Release\$(Name).xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Zafir)' == 'True'">
+    <DefineConstants>$(DefineConstants);ZAFIR</DefineConstants>
   </PropertyGroup>
   <Target Name="IncludeVersionFile" BeforeTargets="CoreCompile">
     <ItemGroup>

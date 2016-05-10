@@ -30,8 +30,11 @@ module internal Main =
     let PreReleaseDeps =
         [
             wsName
-            wsName + ".Html"
+#if ZAFIR
+            "Zafir.FSharp"
+#endif
             wsName + ".Testing"
+            wsName + ".Html"
         ]
 
     let ReleaseDeps =
