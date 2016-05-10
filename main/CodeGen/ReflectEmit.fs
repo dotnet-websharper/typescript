@@ -916,8 +916,8 @@ module internal ReflectEmit =
             let resolver = WebSharper.Compiler.AssemblyResolver.Create()
             let loader = FE.Loader.Create resolver stdout.WriteLine
             let assem = loader.LoadFile fileName
-            let meta = WebSharper.Compiler.Reflector.transformWSAssembly assem
-            WebSharper.Compiler.FrontEnd.modifyTSAssembly meta assem |> ignore
+            let meta = WebSharper.Compiler.Reflector.TransformWSAssembly assem
+            WebSharper.Compiler.FrontEnd.ModifyTSAssembly meta assem |> ignore
 #else
             let opts =
                 {
