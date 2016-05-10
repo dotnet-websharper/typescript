@@ -30,8 +30,8 @@ module Macros =
     type CallMacro() =
         inherit Macro()
 
-        override this.TranslateCall(_, _, _, e, _) =
-            match e with
+        override this.TranslateCall(c) =
+            match c.Arguments with
             | target :: args -> MacroOk <| Application(target, args)  
             | _ -> MacroError "Invalid application of the CallMacro"
 
@@ -39,8 +39,8 @@ module Macros =
     type ItemMacro() =
         inherit Macro()
 
-        override this.TranslateCall(_, _, _, e, _) =
-            match e with
+        override this.TranslateCall(c) =
+            match c.Arguments with
             | [ target; arg ] -> MacroOk <| ItemGet(target, arg)  
             | [ target; arg; value ] -> MacroOk <| ItemSet(target, arg, value)  
             | _ -> MacroError "Invalid application of the ItemMacro"
@@ -49,8 +49,8 @@ module Macros =
     type NewMacro() =
         inherit Macro()
 
-        override this.TranslateCall(_, _, _, e, _) =
-            match e with
+        override this.TranslateCall(c) =
+            match c.Arguments with
             | target :: args -> MacroOk <| New(target, args)  
             | _ -> MacroError "Invalid application of the NewMacro"
 #else
