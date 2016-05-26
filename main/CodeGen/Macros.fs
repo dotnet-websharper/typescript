@@ -32,7 +32,7 @@ module Macros =
 
         override this.TranslateCall(c) =
             match c.Arguments with
-            | target :: args -> MacroOk <| Application(target, args)  
+            | target :: args -> MacroOk <| Application(target, args, false, None)  
             | _ -> MacroError "Invalid application of the CallMacro"
 
     [<Sealed>]
