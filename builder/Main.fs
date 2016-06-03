@@ -53,7 +53,7 @@ module internal Main =
         NuGet "install %s -version %s -excludeVersion -o packages" name ver
 
     let Version =
-        sprintf "%s.%s.0-alpha" Version.BaseVersion (C.Env "BUILD_NUMBER" "0")
+        sprintf "%s.%s-alpha" Version.BaseVersion (C.Env "BUILD_NUMBER" "0")
 
     let NuGetPackageOutputPath =
         C.Env "NuGetPackageOutputPath" (C.LocalPath "build")
