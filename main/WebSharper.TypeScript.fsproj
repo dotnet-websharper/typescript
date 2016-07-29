@@ -72,25 +72,25 @@
   </ItemGroup>
   <ItemGroup Condition="'$(Zafir)' != 'True'">
     <Reference Include="IntelliFactory.Core">
-      <HintPath>..\packages\WebSharper\tools\net40\IntelliFactory.Core.dll</HintPath>
+      <HintPath>..\packages\WebSharper\tools\IntelliFactory.Core.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Core.JavaScript">
       <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Compiler">
-      <HintPath>..\packages\WebSharper\tools\net40\WebSharper.Compiler.dll</HintPath>
+      <HintPath>..\packages\WebSharper\tools\WebSharper.Compiler.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Core">
       <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
-      <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.dll</HintPath>
+      <HintPath>..\packages\WebSharper\tools\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.Mdb.dll</HintPath>
+      <HintPath>..\packages\WebSharper\tools\Mono.Cecil.Mdb.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\packages\WebSharper\tools\net40\Mono.Cecil.Pdb.dll</HintPath>
+      <HintPath>..\packages\WebSharper\tools\Mono.Cecil.Pdb.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup Condition="'$(Zafir)' == 'True'">
@@ -98,19 +98,19 @@
       <HintPath>..\packages\Zafir\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Compiler">
-      <HintPath>..\packages\Zafir.FSharp\tools\net40\WebSharper.Compiler.dll</HintPath>
+      <HintPath>..\packages\Zafir.FSharp\tools\WebSharper.Compiler.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Core">
       <HintPath>..\packages\Zafir\lib\net40\WebSharper.Core.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
-      <HintPath>..\packages\Zafir.FSharp\tools\net40\Mono.Cecil.dll</HintPath>
+      <HintPath>..\packages\Zafir.FSharp\tools\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\packages\Zafir.FSharp\tools\net40\Mono.Cecil.Mdb.dll</HintPath>
+      <HintPath>..\packages\Zafir.FSharp\tools\Mono.Cecil.Mdb.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\packages\Zafir.FSharp\tools\net40\Mono.Cecil.Pdb.dll</HintPath>
+      <HintPath>..\packages\Zafir.FSharp\tools\Mono.Cecil.Pdb.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
