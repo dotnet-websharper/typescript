@@ -69,31 +69,6 @@
     <Reference Include="FParsecCS">
       <HintPath>..\packages\FParsec\lib\net40-client\FParsecCS.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(Zafir)' != 'True'">
-    <Reference Include="IntelliFactory.Core">
-      <HintPath>..\packages\WebSharper\tools\IntelliFactory.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Core.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Compiler">
-      <HintPath>..\packages\WebSharper\tools\WebSharper.Compiler.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Core">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil">
-      <HintPath>..\packages\WebSharper\tools\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\packages\WebSharper\tools\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\packages\WebSharper\tools\Mono.Cecil.Pdb.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(Zafir)' == 'True'">
     <Reference Include="WebSharper.Core.JavaScript">
       <HintPath>..\packages\Zafir\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
     </Reference>

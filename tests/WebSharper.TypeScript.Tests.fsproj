@@ -76,49 +76,6 @@
     <Reference Include="Tests">
       <HintPath>..\build\Tests.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(Zafir)' != 'True'">
-    <Reference Include="WebSharper.Core.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Main">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Main.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Collections">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Collections.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Control">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Control.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Core">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.InterfaceGenerator">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.InterfaceGenerator.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.JavaScript.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.JQuery">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.JQuery.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Sitelets">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Sitelets.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Testing">
-      <HintPath>..\packages\WebSharper.Testing\lib\net40\WebSharper.Testing.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Web">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Web.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Html.Client">
-      <HintPath>..\packages\WebSharper.Html\lib\net40\WebSharper.Html.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Html.Server">
-      <HintPath>..\packages\WebSharper.Html\lib\net40\WebSharper.Html.Server.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(Zafir)' == 'True'">
     <Reference Include="WebSharper.Core.JavaScript">
       <HintPath>..\packages\Zafir\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
     </Reference>
@@ -160,6 +117,5 @@
     </Reference>
   </ItemGroup>
   <Import Project="../msbuild/FSharp.targets" />
-  <Import Condition="'$(Zafir)' != 'True'" Project="../packages/WebSharper/build/WebSharper.targets" />
-  <Import Condition="'$(Zafir)' == 'True'" Project="../packages/Zafir.FSharp/build/Zafir.FSharp.targets" />
+  <Import Project="../packages/Zafir.FSharp/build/Zafir.FSharp.targets" />
 </Project>
