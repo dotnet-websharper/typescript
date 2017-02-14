@@ -78,8 +78,11 @@ module internal Commands =
             { Execute = exec }
 
         member cmd.Run() =
-            if cmd.Execute() then () else
-                exit 1
+            try
+                if cmd.Execute() then 0 else 1
+            with e ->
+                eprintfn "%s at %s" e.Message e.StackTrace
+                1
 
     type CommandBuilder =
         | Command

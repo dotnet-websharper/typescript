@@ -140,11 +140,12 @@ module internal Main =
 
     [<EntryPoint>]
     let Start args =
-        let res x = if x then 0 else 1
         match List.ofArray args with
-        | ["buildLib"] -> BuildLib.Execute() |> res
-        | ["configure"] -> Configure.Execute() |> res
-        | ["pack"] -> Pack.Execute() |> res
-        | ["prepareTests"] -> PrepareTests.Execute() |> res
-        | ["test"] -> Test.Execute() |> res
-        | _ -> 1
+        | ["buildLib"] -> BuildLib.Run()
+        | ["configure"] -> Configure.Run()
+        | ["pack"] -> Pack.Run()
+        | ["prepareTests"] -> PrepareTests.Run()
+        | ["test"] -> Test.Run()
+        | _ -> 
+            eprintfn "unknown command line argument, use: buildLib/configure/pack/prepareTests/test"
+            1
