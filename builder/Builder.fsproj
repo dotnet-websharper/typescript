@@ -8,18 +8,18 @@
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
   <Target Name="Configure">
-    <Exec Command="$(TargetPath) configure" ContinueOnError="false" />
+    <Exec Command="&quot;$(TargetPath)&quot; configure" ContinueOnError="false" />
   </Target>
   <Target Name="Pack">
-    <Exec Command="$(TargetPath) pack" ContinueOnError="false" />
+    <Exec Command="&quot;$(TargetPath)&quot; pack" ContinueOnError="false" />
   </Target>
   <Target Name="Test">
-    <Exec Command="$(TargetPath) prepareTests" ContinueOnError="false" />
+    <Exec Command="&quot;$(TargetPath)&quot; prepareTests" ContinueOnError="false" />
     <ItemGroup>
       <T Include="../tests/*.fsproj" />
     </ItemGroup>
     <MSBuild Projects="@(T)" Properties="Configuration=$(Configuration)" />
-    <Exec Command="$(TargetPath) test" ContinueOnError="false" />
+    <Exec Command="&quot;$(TargetPath)&quot; test" ContinueOnError="false" />
   </Target>
  <PropertyGroup Condition="'$(Zafir)' == 'True'">
   <DefineConstants>$(DefineConstants);ZAFIR</DefineConstants>
