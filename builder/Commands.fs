@@ -127,6 +127,11 @@ module internal Commands =
         | null | "" -> d
         | v -> v
 
+    let EnvOpt x =
+        match Environment.GetEnvironmentVariable(x) with
+        | null | "" -> None
+        | s -> Some s
+
     let IsDir path =
         Path.Combine(SolutionDirectory, path)
         |> Directory.Exists
