@@ -53,8 +53,9 @@ module internal Main =
         NuGet "install %s -version %s -excludeVersion -o packages" name ver
 
     let Version =
-        if File.Exists "version.txt" then
-            File.ReadAllText "version.txt"
+        let f = Path.Combine(C.SolutionDirectory, "build", "version.txt")
+        if File.Exists f then
+            File.ReadAllText f
         else "4.0.0-alpha"
 
     let LocalNupkgPath p =

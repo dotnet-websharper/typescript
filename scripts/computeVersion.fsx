@@ -11,4 +11,4 @@ let version =
         .VersionFrom("Zafir", "alpha")
     |> PackageVersion.Full.Find
 
-File.WriteAllText(__SOURCE_DIRECTORY__ + "/../version.txt", version.ToString())
+File.WriteAllText(__SOURCE_DIRECTORY__ + "/../build/version.txt", version.ToString() + "-alpha")
