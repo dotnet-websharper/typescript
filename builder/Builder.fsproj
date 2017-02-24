@@ -44,5 +44,14 @@
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="IntelliFactory.Core">
+      <HintPath>../tools/packages/IntelliFactory.Core/lib/net40/IntelliFactory.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="NuGet.Core">
+      <HintPath>../tools/packages/NuGet.Core/lib/net40-Client/NuGet.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IntelliFactory.Build">
+      <HintPath>../tools/packages/IntelliFactory.Build/lib/net40/IntelliFactory.Build.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
