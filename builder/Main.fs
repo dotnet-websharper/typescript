@@ -53,12 +53,9 @@ module internal Main =
         NuGet "install %s -version %s -excludeVersion -o packages" name ver
 
     let Version =
-        let version =
-            IntelliFactory.Build.BuildTool()
-                .PackageId("Zafir.TypeScript")
-                .VersionFrom("Zafir", "alpha")
-            |> IntelliFactory.Build.PackageVersion.Full.Find
-        version.ToString()
+        if File.Exists "version.txt" then
+            File.ReadAllText "version.txt"
+        else "4.0.0-alpha"
 
     let LocalNupkgPath p =
         C.LocalPath "build/%s.%s.nupkg" p Version
@@ -91,6 +88,7 @@ module internal Main =
             for pkg in ReleaseDeps do
                 do! InstallRel pkg
             do! DownloadContrib
+            do! C.FsiExec "scripts/computeVersion.fsx" ""
         }
 
     let BuildLib =
