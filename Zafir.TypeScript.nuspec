@@ -2,6 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>Zafir.TypeScript</id>
+    <version>4.0.0.0-alpha</version>
     <title>Zafir.TypeScript</title>
     <authors>IntelliFactory</authors>
     <owners>IntelliFactory</owners>
