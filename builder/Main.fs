@@ -53,7 +53,12 @@ module internal Main =
         NuGet "install %s -version %s -excludeVersion -o packages" name ver
 
     let Version =
-        sprintf "%s.%s-alpha" Version.BaseVersion (C.Env "BUILD_NUMBER" "0")
+        let version =
+            IntelliFactory.Build.BuildTool()
+                .PackageId("Zafir.TypeScript")
+                .VersionFrom("Zafir", "alpha")
+            |> IntelliFactory.Build.PackageVersion.Full.Find
+        version.ToString()
 
     let LocalNupkgPath p =
         C.LocalPath "build/%s.%s.nupkg" p Version
