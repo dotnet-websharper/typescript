@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Name>WebSharper.TypeScript.MSBuild</Name>
     <ProjectGuid>{d936c3e8-6f01-468b-be56-8981f32fe860}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
