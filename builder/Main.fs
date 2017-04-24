@@ -50,10 +50,22 @@ module internal Main =
         NuGet "install %s -version %s -excludeVersion -o packages" name ver
 
     let Version =
-        sprintf "%s.%s" Version.BaseVersion (C.Env "BUILD_NUMBER" "0")
+        let f = Path.Combine(C.SolutionDirectory, "build", "version.txt")
+        if File.Exists f then
+            File.ReadAllText f
+        else "3.6.0"
+
+    let LocalNupkgPath p =
+        C.LocalPath "build/%s.%s.nupkg" p Version
 
     let NuGetPackageOutputPath =
         C.Env "NuGetPackageOutputPath" (C.LocalPath "build")
+
+    let NuGetPublishUrl =
+        C.EnvOpt "NuGetPublishUrl"
+
+    let NuGetApiKey =
+        C.Env "NuGetApiKey" ""
 
     let DownloadContrib =
         C.Command {
@@ -74,6 +86,7 @@ module internal Main =
             for pkg in ReleaseDeps do
                 do! InstallRel pkg
             do! DownloadContrib
+            do! C.FsiExec "scripts/computeVersion.fsx" ""
         }
 
     let BuildLib =
@@ -95,7 +108,7 @@ module internal Main =
                         for p in NuGetPackages ->
                             {
                                 Id = p
-                                Path = C.LocalPath "build/%s.%s.nupkg" p Version
+                                Path = LocalNupkgPath p
                             }
                     ]
                 RootPath = C.SolutionDirectory
@@ -111,8 +124,17 @@ module internal Main =
         C.Command {
             if NuGetPackageOutputPath <> C.LocalPath "build" then
                 for p in NuGetPackages do
-                    do! deploy (C.LocalPath "build/%s.%s.nupkg" p Version)
+                    do! deploy (LocalNupkgPath p)
                 do! deploy (C.LocalPath "build/%s.TypeScript.%s.vsix" wsName Version)
+        }
+
+    let Publish =
+        C.Command {
+            match NuGetPublishUrl with
+            | None -> ()
+            | Some url ->
+                for p in NuGetPackages do
+                    do! NuGet """push "%s" "%s" -Source %s""" (LocalNupkgPath p) NuGetApiKey url
         }
 
     let Pack =
@@ -123,6 +145,7 @@ module internal Main =
                 do! NuGet "pack %s.nuspec -outputDirectory build -Version %s" p Version
             do! MakeVsix
             do! Deploy
+            do! Publish
         }
 
     let PrepareTests =

@@ -7,6 +7,7 @@
     <ProjectGuid>1fef4cf6-91c4-4e83-b990-3ff27ce54d37</ProjectGuid>
     <WebSharperProject>Html</WebSharperProject>
     <WebSharperHtmlDirectory>..\build\html</WebSharperHtmlDirectory>
+    <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
     <NoSigning>true</NoSigning>
   </PropertyGroup>
   <ItemGroup>
