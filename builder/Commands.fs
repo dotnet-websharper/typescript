@@ -124,6 +124,11 @@ module internal Commands =
         | null | "" -> d
         | v -> v
 
+    let EnvOpt x =
+        match Environment.GetEnvironmentVariable(x) with
+        | null | "" -> None
+        | v -> Some v
+
     let IsDir path =
         Path.Combine(SolutionDirectory, path)
         |> Directory.Exists
@@ -138,7 +143,15 @@ module internal Commands =
 
     let FsiExec script args =
         Command {
-            let fsi = PathUtility.GetFsiPath()
+            let fsiDir = Path.Combine(SolutionDirectory, "tools")
+            let fsi = Path.Combine(fsiDir, "fsi.exe")
+            let dir = Path.GetDirectoryName(PathUtility.GetFsiPath())
+            let copy x =
+                let o = Path.Combine(fsiDir, x)
+                if not (File.Exists(o)) then
+                    File.Copy(Path.Combine(dir, x), o)
+            copy "Fsi.exe"
+            copy "FSharp.Compiler.Interactive.Settings.dll"
             do! Execute fsi "--exec %s %s" script args
         }
 
