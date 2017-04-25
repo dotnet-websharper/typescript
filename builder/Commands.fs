@@ -152,6 +152,7 @@ module internal Commands =
                     File.Copy(Path.Combine(dir, x), o)
             copy "Fsi.exe"
             copy "FSharp.Compiler.Interactive.Settings.dll"
+            copy "FSharp.Compiler.dll"
             do! Execute fsi "--exec %s %s" script args
         }
 
