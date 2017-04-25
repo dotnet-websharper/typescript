@@ -155,11 +155,8 @@ module internal Commands =
                     File.Copy(Path.Combine(dir, x), o)
             copy "Fsi.exe"
             copy "FSharp.Compiler.Interactive.Settings.dll"
-#if ZAFIR
+            copy "FSharp.Compiler.dll"
             do! Execute fsi "--exec --define:ZAFIR %s %s" script args
-#else
-            do! Execute fsi "--exec %s %s" script args    
-#endif
         }
 
     let CopyFileToDir file dir =
