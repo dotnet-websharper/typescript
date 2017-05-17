@@ -42,6 +42,7 @@ module internal PathUtility =
             let pfx86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
             let dirs =
                 [
+                    Path.Combine(pfx86, "Microsoft SDKs/F#/4.1/Framework/v4.0")
                     Path.Combine(pfx86, "Microsoft SDKs/F#/4.0/Framework/v4.0")
                 ]
             LocateExecutableIn dirs "fsi"
