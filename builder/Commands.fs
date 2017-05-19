@@ -143,16 +143,8 @@ module internal Commands =
 
     let FsiExec script args =
         Command {
-            let fsiDir = Path.Combine(SolutionDirectory, "tools")
+            let fsiDir = Path.Combine(SolutionDirectory, "tools", "packages", "FSharp.Compiler.Tools", "tools")
             let fsi = Path.Combine(fsiDir, "fsi.exe")
-            let dir = Path.GetDirectoryName(PathUtility.GetFsiPath())
-            let copy x =
-                let o = Path.Combine(fsiDir, x)
-                if not (File.Exists(o)) then
-                    File.Copy(Path.Combine(dir, x), o)
-            copy "Fsi.exe"
-            copy "FSharp.Compiler.Interactive.Settings.dll"
-            copy "FSharp.Compiler.dll"
             do! Execute fsi "--exec %s %s" script args
         }
 
