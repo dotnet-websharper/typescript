@@ -31,7 +31,8 @@
     <Root>$(MSBuildThisFileDirectory)\..</Root>
     <AssemblyName>$(Name)</AssemblyName>
     <RootNamespace>$(Name)</RootNamespace>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
+    <TargetFSharpVersion>4.0</TargetFSharpVersion>
+    <TargetFSharpCoreVersion>4.$(TargetFSharpVersion).0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -77,10 +78,13 @@
     </ItemGroup>
   </Target>
   <!-- F# targets -->
+  <PropertyGroup>
+    <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
+  </PropertyGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '11.0'">
-      <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')">
-        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
+      <PropertyGroup Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\$(TargetFSharpVersion)\Framework\v4.0\Microsoft.FSharp.Targets')">
+        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\$(TargetFSharpVersion)\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
       </PropertyGroup>
     </When>
     <Otherwise>
