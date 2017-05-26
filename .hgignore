@@ -16,3 +16,5 @@ Content/WebSharper
 Scripts/WebSharper
 ^examples/.*/bin
 ^examples/.*/obj
+syntax: glob
+tools\Fsi.exe
