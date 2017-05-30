@@ -18,3 +18,4 @@ Scripts/WebSharper
 ^examples/.*/obj
 syntax: glob
 tools\Fsi.exe
+msbuild.log
