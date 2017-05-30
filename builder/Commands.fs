@@ -154,6 +154,7 @@ module internal Commands =
                 if not (File.Exists(o)) then
                     File.Copy(Path.Combine(dir, x), o)
             copy "Fsi.exe"
+            copy "Fsi.exe.config"
             copy "FSharp.Compiler.Interactive.Settings.dll"
             copy "FSharp.Compiler.dll"
             copy "FSharp.Core.dll"
