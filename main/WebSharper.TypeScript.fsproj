@@ -6,9 +6,11 @@
     <ProjectGuid>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</ProjectGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Zafir>True</Zafir>
+    <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
- <ItemGroup>
+  <ItemGroup>
     <Compile Include="Utility/Abbreviations.fs" />
     <Compile Include="Utility/GraphColoring.fsi" />
     <Compile Include="Utility/GraphColoring.fs" />

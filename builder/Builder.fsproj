@@ -5,6 +5,8 @@
     <ProjectGuid>{732043b7-2d87-4570-a978-fa783b655154}</ProjectGuid>
     <ProjectType>Exe</ProjectType>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
   <Target Name="Configure">

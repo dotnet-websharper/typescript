@@ -27,7 +27,7 @@ module Syntax =
 
     (* Identifiers, names and modifiers *)
 
-    type Identifier = Name
+    type internal Identifier = Name
 
     type ModuleName =
         | MN1 of Identifier

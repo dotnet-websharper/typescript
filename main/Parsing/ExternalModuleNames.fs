@@ -99,7 +99,7 @@ module ExternalModuleNames =
         override n.ToString() =
             n.Text
 
-    type P<'T> = Parser<'T,Names.NameBuilder>
+    type internal P<'T> = Parser<'T,Names.NameBuilder>
 
     let rec mapLoc f loc =
         match loc with

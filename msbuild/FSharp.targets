@@ -31,8 +31,6 @@
     <Root>$(MSBuildThisFileDirectory)\..</Root>
     <AssemblyName>$(Name)</AssemblyName>
     <RootNamespace>$(Name)</RootNamespace>
-    <TargetFSharpVersion>4.0</TargetFSharpVersion>
-    <TargetFSharpCoreVersion>4.$(TargetFSharpVersion).0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

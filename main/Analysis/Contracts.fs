@@ -25,9 +25,9 @@ module S = Shapes
 
 module Contracts =
 
-    type Indexer<'T> = S.Indexer<Name,'T>
-    type Parameter<'T> = S.Parameter<Name,'T>
-    type Signature<'T> = S.Signature<Name,'T>
+    type internal Indexer<'T> = S.Indexer<Name,'T>
+    type internal Parameter<'T> = S.Parameter<Name,'T>
+    type internal Signature<'T> = S.Signature<Name,'T>
 
     type Property<'T> =
         | OptProp of 'T
@@ -109,10 +109,10 @@ module Contracts =
 
     type Contract = Contract<Type>
     type Contracts = Contracts<Type>
-    type Indexer = Indexer<Type>
-    type Parameter = Parameter<Type>
+    type internal Indexer = Indexer<Type>
+    type internal Parameter = Parameter<Type>
     type Property = Property<Type>
-    type Signature = Signature<Type>
+    type internal Signature = Signature<Type>
 
     let TryGetAnonymousPropertyContract (c: Contract) name =
         c.Props.[name]
