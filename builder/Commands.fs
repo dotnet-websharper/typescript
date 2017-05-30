@@ -156,6 +156,7 @@ module internal Commands =
             copy "Fsi.exe"
             copy "FSharp.Compiler.Interactive.Settings.dll"
             copy "FSharp.Compiler.dll"
+            copy "FSharp.Core.dll"
             do! Execute fsi "--exec --define:ZAFIR %s %s" script args
         }
 
