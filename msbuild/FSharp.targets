@@ -31,10 +31,14 @@
     <Root>$(MSBuildThisFileDirectory)\..</Root>
     <AssemblyName>$(Name)</AssemblyName>
     <RootNamespace>$(Name)</RootNamespace>
+	<TargetFSharpCoreVersion Condition=" '$(TargetFSharpCoreVersion)' == '' ">4.3.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion)">
+    <Reference Include="FSharp.Core, Version=4.3.0.0" Condition=" '$(TargetFSharpCoreVersion)' == '4.3.0.0' ">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion)" Condition=" '$(TargetFSharpCoreVersion)' != '' ">
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
