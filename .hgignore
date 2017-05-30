@@ -18,4 +18,5 @@ Scripts/WebSharper
 ^examples/.*/obj
 syntax: glob
 tools\Fsi.exe
+tools\Fsi.exe.config
 msbuild.log
