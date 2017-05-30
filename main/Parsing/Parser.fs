@@ -29,8 +29,8 @@ module S = Syntax
 
 module Parser =
 
-    type UserState = Lexer.UserState
-    type Parser<'T> = Parser<'T,Lexer.UserState>
+    type internal UserState = Lexer.UserState
+    type internal Parser<'T> = Parser<'T,Lexer.UserState>
     type P<'T> = Parser<'T>
 
     type Grammar =
@@ -339,7 +339,7 @@ module Parser =
                 else
                     S.RequiredMethod name cs)
 
-    type ACBE = S.AmbientClassBodyElement
+    type internal ACBE = S.AmbientClassBodyElement
 
     let gAccess =
         opt (choice [Lexer.Public >>. preturn S.Public; Lexer.Private >>. preturn S.Private])

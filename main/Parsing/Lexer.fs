@@ -24,7 +24,7 @@ namespace WebSharper.TypeScript
 module Lexer =
     open FParsec
 
-    type Id = Names.Name
+    type internal Id = Names.Name
 
     type UserState =
         {

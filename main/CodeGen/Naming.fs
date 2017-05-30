@@ -28,7 +28,7 @@ module S = Shapes
 
 module Naming =
 
-    type Id = Ident.Id
+    type internal Id = Ident.Id
 
     let Memo f =
         M.Memoize M.Options.Default f
@@ -36,9 +36,9 @@ module Naming =
     let MemoRec f =
         M.MemoizeRecursive M.Options.Default f
 
-    type Indexer<'T> = Shapes.Indexer<Id,'T>
-    type Parameter<'T> = Shapes.Parameter<Id,'T>
-    type Signature<'T> = Shapes.Signature<Id,'T>
+    type internal Indexer<'T> = Shapes.Indexer<Id,'T>
+    type internal Parameter<'T> = Shapes.Parameter<Id,'T>
+    type internal Signature<'T> = Shapes.Signature<Id,'T>
 
     type Property<'T> =
         {
@@ -92,10 +92,10 @@ module Naming =
         | TString
 
     type Contract = Contract<Type>
-    type Indexer = Indexer<Type>
-    type Parameter = Parameter<Type>
+    type internal Indexer = Indexer<Type>
+    type internal Parameter = Parameter<Type>
     type Property = Property<Type>
-    type Signature = Signature<Type>
+    type internal Signature = Signature<Type>
 
     [<Sealed>]
     type ContractBuilder(idB: Ident.Builder) =
@@ -189,7 +189,7 @@ module Naming =
         member m.Modules = m.ModuleList :> seq<_>
         member m.Values = m.ValueList :> seq<_>
 
-    type NestedModule = Module<Id>
+    type internal NestedModule = Module<Id>
     type TopModule = Module<unit>
 
     let BuildModule (rename: NamePath -> NamePath) (idB: Ident.Builder) (cB: ContractBuilder) (out: A.Output) =

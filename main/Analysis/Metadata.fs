@@ -74,7 +74,7 @@ module Metadata =
     let inline ( ^ ) f x =
         f x
 
-    type N = Name
+    type internal N = Name
 
     let NamePickler (builder: Names.NameBuilder) : Pickler.T<Name> =
         Pickler.String
