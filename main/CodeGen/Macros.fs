@@ -32,7 +32,7 @@ module Macros =
 
         override this.TranslateCall(c) =
             match c.Arguments with
-            | target :: args -> MacroOk <| Application(target, args, false, None)  
+            | target :: args -> MacroOk <| Application(target, args, NonPure, None)  
             | _ -> MacroError "Invalid application of the CallMacro"
 
     [<Sealed>]
@@ -41,7 +41,7 @@ module Macros =
 
         override this.TranslateCall(c) =
             match c.Arguments with
-            | [ target; arg ] -> MacroOk <| ItemGet(target, arg)  
+            | [ target; arg ] -> MacroOk <| ItemGet(target, arg, Pure)  
             | [ target; arg; value ] -> MacroOk <| ItemSet(target, arg, value)  
             | _ -> MacroError "Invalid application of the ItemMacro"
 
