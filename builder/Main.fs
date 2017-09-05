@@ -44,7 +44,7 @@ module internal Main =
         C.Execute "tools/NuGet/NuGet.exe" args
 
     let InstallPre pkg =
-        NuGet "install %s -nocache -pre -excludeVersion -o packages" pkg
+        NuGet "install %s -nocache -pre -version (,4.0) -excludeVersion -o packages" pkg
 
     let InstallRel (name, ver) =
         NuGet "install %s -version %s -excludeVersion -o packages" name ver
