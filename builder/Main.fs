@@ -20,21 +20,12 @@ module C = Commands
 
 module internal Main =
 
-    let wsName =
-#if ZAFIR
-        "Zafir"
-#else
-        "WebSharper"
-#endif
-
     let PreReleaseDeps =
         [
-            wsName
-#if ZAFIR
-            "Zafir.FSharp"
-#endif
-            wsName + ".Testing"
-            wsName + ".Html"
+            "WebSharper"
+            "WebSharper.FSharp"
+            "WebSharper.Testing"
+            "WebSharper.Html"
         ]
 
     let ReleaseDeps =
@@ -99,8 +90,8 @@ module internal Main =
 
     let NuGetPackages =
         [
-            wsName + ".TypeScript"
-            wsName + ".TypeScript.Lib"
+            "WebSharper.TypeScript"
+            "WebSharper.TypeScript.Lib"
         ]
 
     let MakeVsix =
@@ -115,7 +106,7 @@ module internal Main =
                             }
                     ]
                 RootPath = C.SolutionDirectory
-                VsixPath = C.LocalPath "build/%s.TypeScript.%s.vsix" wsName Version
+                VsixPath = C.LocalPath "build/WebSharper.TypeScript.%s.vsix" Version
             }
         C.Command {
             do make ()
@@ -128,7 +119,7 @@ module internal Main =
             if NuGetPackageOutputPath <> C.LocalPath "build" then
                 for p in NuGetPackages do
                     do! deploy (LocalNupkgPath p)
-                do! deploy (C.LocalPath "build/%s.TypeScript.%s.vsix" wsName Version)
+                do! deploy (C.LocalPath "build/WebSharper.TypeScript.%s.vsix" Version)
         }
 
     let Publish =
