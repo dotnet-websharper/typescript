@@ -47,7 +47,7 @@ module internal Main =
         let f = Path.Combine(C.SolutionDirectory, "build", "version.txt")
         if File.Exists f then
             File.ReadAllText f
-        else "4.0.0-alpha"
+        else "4.0.0"
 
     let LocalNupkgPath p =
         C.LocalPath "build/%s.%s.nupkg" p Version
