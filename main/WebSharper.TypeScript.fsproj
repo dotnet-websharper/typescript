@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Utility/Abbreviations.fs" />
@@ -58,5 +58,6 @@
     <Compile Include="Compiler.fsi" />
     <Compile Include="Compiler.fs" />
   </ItemGroup>
+  <Import Project="../msbuild/FSharp.targets" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

@@ -44,7 +44,7 @@ module internal ReflectEmit =
             self.GetInterfaces()
 
     let AddWebResourceMarker (assem: AssemblyBuilder) (file: string) (mime: string) = // (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =
-        let webResource = ReflectionUtility.GetReflectionOnlyType<System.Web.UI.WebResourceAttribute>()
+        let webResource = ReflectionUtility.GetReflectionOnlyType<WebSharper.WebResourceAttribute>()
         let flags = BindingFlags.NonPublic ||| BindingFlags.Public ||| BindingFlags.Instance
         let getCtor (t: Type) ts = t.GetConstructor(flags, null, List.toArray ts, null)
         let ctor = getCtor webResource [typeof<string>; typeof<string>]
@@ -901,10 +901,6 @@ module internal ReflectEmit =
             |> Metadata.Table.Create
 
     module WebSharperCompiler =
-#if ZAFIR
-#else
-        open IntelliFactory.Core
-#endif
         module FE = WebSharper.Compiler.FrontEnd
 
         (* TODO: propagate error messsages better *)
@@ -912,26 +908,11 @@ module internal ReflectEmit =
             let snk =
                 cfg.StrongNameKeyFile
                 |> Option.map (fun f -> StrongNameKeyPair(File.ReadAllBytes(f)))
-#if ZAFIR
             let resolver = WebSharper.Compiler.AssemblyResolver.Create()
             let loader = FE.Loader.Create resolver stdout.WriteLine
             let assem = loader.LoadFile fileName
             let meta = WebSharper.Compiler.Reflector.TransformWSAssembly Map.empty assem
             WebSharper.Compiler.FrontEnd.ModifyTSAssembly meta assem |> ignore
-#else
-            let opts =
-                {
-                    FE.Options.Default with
-                        KeyPair = snk
-                }
-
-            let compiler = FE.Prepare opts stdout.WriteLine
-            let resolver = AssemblyResolution.AssemblyResolver.Create()
-            let loader = FE.Loader.Create resolver stdout.WriteLine
-            let assem = loader.LoadFile fileName
-            if not (compiler.CompileAndModify assem) then
-                failwith "Could not compile the assembly with WebSharper"
-#endif
             assem.Write snk fileName
 
     let AddWebSharperResources (assem: AssemblyBuilder) (mB: ModuleBuilder) (parent: ParentContext) (resources: seq<WebSharperResource>) =

@@ -2,18 +2,22 @@ version 5.122.3
 source https://api.nuget.org/v3/index.json
 source https://nuget.intellifactory.com/nuget username: "%IF_USER%" password: "%IF_PASS%"
 
-framework: net45, netstandard2.0
+framework: net461
+storage: none
 
 nuget IntelliFactory.Build
+nuget NuGet.Core 2.12.0
 nuget FSharp.Compiler.Tools 4.1.17
 nuget Mono.Cecil ~> 0.10-beta
 nuget Microsoft.Build.Utilities.Core ~> 15.3.0
-nuget Fuchu
-nuget FParsec
+nuget System.Reflection.Emit
+nuget Fuchu 0.3.0.1
+nuget FParsec 1.0.1
 nuget WebSharper alpha
 nuget WebSharper.FSharp alpha
 nuget WebSharper.Compiler alpha
 nuget WebSharper.Html alpha
+nuget WebSharper.Testing alpha
 
 group build
     framework: net45

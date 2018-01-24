@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
@@ -11,5 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="..\main\WebSharper.TypeScript.fsproj" />
   </ItemGroup>
+  <Import Project="../msbuild/FSharp.targets" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
