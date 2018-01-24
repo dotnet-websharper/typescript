@@ -1,16 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <SchemaVersion>2.0</SchemaVersion>
-    <OutputType>Library</OutputType>
-    <Name>WebSharper.TypeScript.Tests</Name>
-    <ProjectGuid>1fef4cf6-91c4-4e83-b990-3ff27ce54d37</ProjectGuid>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <WebSharperProject>Html</WebSharperProject>
-    <WebSharperHtmlDirectory>..\build\html</WebSharperHtmlDirectory>
-    <NoSigning>true</NoSigning>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Include="extra.files" />
@@ -63,62 +54,5 @@
     <Compile Include="Main.fs" />
     <Content Include="Main.html" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FParsec">
-      <HintPath>..\packages\FParsec\lib\net40-client\FParsec.dll</HintPath>
-    </Reference>
-    <Reference Include="FParsecCS">
-      <HintPath>..\packages\FParsec\lib\net40-client\FParsecCS.dll</HintPath>
-    </Reference>
-    <Reference Include="Fuchu">
-      <HintPath>..\packages\Fuchu\lib\net40-client\Fuchu.dll</HintPath>
-    </Reference>
-    <Reference Include="IntelliFactory.Xml">
-      <HintPath>..\packages\IntelliFactory.Xml\lib\net40\IntelliFactory.Xml.dll</HintPath>
-    </Reference>
-    <Reference Include="Tests">
-      <HintPath>..\build\Tests.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Core.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Main">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Main.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Collections">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Collections.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Control">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Control.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Core">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.InterfaceGenerator">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.InterfaceGenerator.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.JavaScript.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.JQuery">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.JQuery.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Sitelets">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Sitelets.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Testing">
-      <HintPath>..\packages\WebSharper.Testing\lib\net40\WebSharper.Testing.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Web">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Web.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Html.Client">
-      <HintPath>..\packages\WebSharper.Html\lib\net40\WebSharper.Html.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="WebSharper.Html.Server">
-      <HintPath>..\packages\WebSharper.Html\lib\net40\WebSharper.Html.Server.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <Import Project="../msbuild/FSharp.targets" />
-  <Import Project="../packages/WebSharper.FSharp/build/WebSharper.FSharp.targets" />
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

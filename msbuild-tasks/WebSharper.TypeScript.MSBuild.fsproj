@@ -1,26 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Name>WebSharper.TypeScript.MSBuild</Name>
-    <ProjectGuid>{d936c3e8-6f01-468b-be56-8981f32fe860}</ProjectGuid>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <OutputType>Library</OutputType>
-    <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
-    <TargetFrameworkProfile />
+    <TargetFrameworks>net45</TargetFrameworks>
   </PropertyGroup>
-  <Import Project="../msbuild/FSharp.targets" />
-  <ItemGroup>
-    <Reference Include="Microsoft.Build.Framework, Version=4.0.0.0" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="CompileTypeScriptDefinitions.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\main\WebSharper.TypeScript.fsproj">
-      <Name>WebSharper.TypeScript</Name>
-      <Project>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
