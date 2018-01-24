@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
     <WebSharperProject>Html</WebSharperProject>
   </PropertyGroup>
   <ItemGroup>
@@ -54,5 +54,6 @@
     <Compile Include="Main.fs" />
     <Content Include="Main.html" />
   </ItemGroup>
+  <Import Project="../msbuild/FSharp.targets" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

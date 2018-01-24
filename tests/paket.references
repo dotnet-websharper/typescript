@@ -3,3 +3,5 @@ Fuchu
 WebSharper
 WebSharper.Html
 WebSharper.FSharp
+WebSharper.Testing
+System.Reflection.Emit

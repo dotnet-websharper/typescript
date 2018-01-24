@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <Target Name="Configure">
@@ -36,11 +36,9 @@
     <Content Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\main\WebSharper.TypeScript.fsproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
+  <Import Project="../msbuild/FSharp.targets" />
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

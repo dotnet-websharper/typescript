@@ -5,11 +5,7 @@ open System.Reflection
 module internal Version =
 
     [<Literal>]
-#if ZAFIR
-    let BaseVersion = "4.0"
-#else
-    let BaseVersion = "3.6"
-#endif
+    let BaseVersion = "4.2"
 
     [<Literal>]
     let Version = BaseVersion + ".0.0"

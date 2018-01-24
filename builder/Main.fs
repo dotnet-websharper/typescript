@@ -20,28 +20,8 @@ module C = Commands
 
 module internal Main =
 
-    let PreReleaseDeps =
-        [
-            "WebSharper"
-            "WebSharper.FSharp"
-            "WebSharper.Testing"
-            "WebSharper.Html"
-        ]
-
-    let ReleaseDeps =
-        [
-            "FParsec", "1.0.1"
-            "Fuchu", "0.3.0.1"
-        ]
-
     let NuGet args =
         C.Execute "tools/NuGet/NuGet.exe" args
-
-    let InstallPre pkg =
-        NuGet "install %s -nocache -pre -excludeVersion -o packages" pkg
-
-    let InstallRel (name, ver) =
-        NuGet "install %s -version %s -excludeVersion -o packages" name ver
 
     let Version =
         let f = Path.Combine(C.SolutionDirectory, "build", "version.txt")
@@ -75,10 +55,6 @@ module internal Main =
 
     let Configure =
         C.Command {
-            for pkg in PreReleaseDeps do
-                do! InstallPre pkg
-            for pkg in ReleaseDeps do
-                do! InstallRel pkg
             do! DownloadContrib
             do! C.FsiExec "scripts/computeVersion.fsx" ""
         }
@@ -154,12 +130,17 @@ module internal Main =
 
     [<EntryPoint>]
     let Start args =
-        match List.ofArray args with
-        | ["buildLib"] -> BuildLib.Run()
-        | ["configure"] -> Configure.Run()
-        | ["pack"] -> Pack.Run()
-        | ["prepareTests"] -> PrepareTests.Run()
-        | ["test"] -> Test.Run()
-        | _ -> 
-            eprintfn "unknown command line argument, use: buildLib/configure/pack/prepareTests/test"
+        try
+            match List.ofArray args with
+            | ["buildLib"] -> BuildLib.Run()
+            | ["configure"] -> Configure.Run()
+            | ["pack"] -> Pack.Run()
+            | ["prepareTests"] -> PrepareTests.Run()
+            | ["test"] -> Test.Run()
+            | _ -> 
+                eprintfn "unknown command line argument, use: buildLib/configure/pack/prepareTests/test"
+                1
+        with e ->
+            eprintfn "Builder failed with %s at %s" e.Message e.StackTrace
             1
+            
