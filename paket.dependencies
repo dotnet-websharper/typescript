@@ -1,0 +1,26 @@
+version 5.122.3
+source https://api.nuget.org/v3/index.json
+source https://nuget.intellifactory.com/nuget username: "%IF_USER%" password: "%IF_PASS%"
+
+framework: net45, netstandard2.0
+
+nuget IntelliFactory.Build
+nuget FSharp.Compiler.Tools 4.1.17
+nuget Mono.Cecil ~> 0.10-beta
+nuget Microsoft.Build.Utilities.Core ~> 15.3.0
+nuget Fuchu
+nuget FParsec
+nuget WebSharper alpha
+nuget WebSharper.FSharp alpha
+nuget WebSharper.Compiler alpha
+nuget WebSharper.Html alpha
+
+group build
+    framework: net45
+    source https://api.nuget.org/v3/index.json
+
+    nuget FAKE
+    nuget Paket.Core 5.122.3
+    github intellifactory/websharper tools/WebSharper.Fake.fsx
+    github intellifactory/websharper tools/WebSharper.Fake.cmd
+    github intellifactory/websharper tools/WebSharper.Fake.sh

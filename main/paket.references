@@ -1,0 +1,5 @@
+FParsec
+Mono.Cecil
+  exclude Mono.Cecil.Rocks.dll
+WebSharper
+WebSharper.Compiler
