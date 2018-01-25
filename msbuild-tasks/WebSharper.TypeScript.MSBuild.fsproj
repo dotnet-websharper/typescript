@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Name>WebSharper.TypeScript.MSBuild</Name>
     <ProjectGuid>{d936c3e8-6f01-468b-be56-8981f32fe860}</ProjectGuid>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
     <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
     <TargetFrameworkProfile />

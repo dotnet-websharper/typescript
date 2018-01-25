@@ -8,7 +8,7 @@
     <WebSharperProject>Html</WebSharperProject>
     <WebSharperHtmlDirectory>..\build\html</WebSharperHtmlDirectory>
     <NoSigning>true</NoSigning>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
   </PropertyGroup>
@@ -80,43 +80,43 @@
       <HintPath>..\build\Tests.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Core.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Core.JavaScript.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Main">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Main.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Main.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Collections">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Collections.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Collections.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Control">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Control.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Control.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Core">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Core.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.InterfaceGenerator">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.InterfaceGenerator.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.InterfaceGenerator.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.JavaScript.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.JavaScript.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.JQuery">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.JQuery.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.JQuery.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Sitelets">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Sitelets.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Sitelets.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Testing">
-      <HintPath>..\packages\WebSharper.Testing\lib\net40\WebSharper.Testing.dll</HintPath>
+      <HintPath>..\packages\WebSharper.Testing\lib\netstandard2.0\WebSharper.Testing.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Web">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Web.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Web.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Html.Client">
-      <HintPath>..\packages\WebSharper.Html\lib\net40\WebSharper.Html.Client.dll</HintPath>
+      <HintPath>..\packages\WebSharper.Html\lib\net461\WebSharper.Html.Client.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Html.Server">
-      <HintPath>..\packages\WebSharper.Html\lib\net40\WebSharper.Html.Server.dll</HintPath>
+      <HintPath>..\packages\WebSharper.Html\lib\net461\WebSharper.Html.Server.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="../msbuild/FSharp.targets" />

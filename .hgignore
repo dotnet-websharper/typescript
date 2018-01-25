@@ -20,3 +20,8 @@ syntax: glob
 tools\Fsi.exe
 tools\Fsi.exe.config
 msbuild.log
+.fake/
+paket-files/
+.vscode/
+obj/
+bin/
