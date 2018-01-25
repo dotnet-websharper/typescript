@@ -4,7 +4,7 @@
     <OutputType>Library</OutputType>
     <Name>WebSharper.TypeScript</Name>
     <ProjectGuid>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</ProjectGuid>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <Zafir>True</Zafir>
     <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
     <TargetFrameworkProfile />
@@ -73,13 +73,13 @@
       <HintPath>..\packages\FParsec\lib\net40-client\FParsecCS.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Core.JavaScript">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.JavaScript.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Core.JavaScript.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Compiler">
       <HintPath>..\packages\WebSharper.FSharp\tools\WebSharper.Compiler.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Core">
-      <HintPath>..\packages\WebSharper\lib\net40\WebSharper.Core.dll</HintPath>
+      <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Core.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>..\packages\WebSharper.FSharp\tools\Mono.Cecil.dll</HintPath>
@@ -89,6 +89,9 @@
     </Reference>
     <Reference Include="Mono.Cecil.Pdb">
       <HintPath>..\packages\WebSharper.FSharp\tools\Mono.Cecil.Pdb.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Emit">
+      <HintPath>..\packages\System.Reflection.Emit\lib\netstandard1.3\System.Reflection.Emit.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

@@ -43,13 +43,13 @@ module private ReflectionUtilityModule =
     let GetReflectionOnly (a: Assembly) =
         if a.ReflectionOnly then a else
             let n = a.GetName()
-            match TryFind n ReflectionOnly with
-            | None -> Assembly.ReflectionOnlyLoadFrom(a.Location)
+            match TryFind n Regular with
+            | None -> Assembly.LoadFrom(a.Location)
             | Some r -> r
 
     let GetReflectionOnlyByName (n: string) =
         let ro =
-            GetAssemblies ReflectionOnly
+            GetAssemblies Regular
             |> Array.tryFind (fun a -> a.GetName().Name = n)
         match ro with
         | Some r -> r
@@ -57,7 +57,7 @@ module private ReflectionUtilityModule =
         let r =
             GetAssemblies Regular
             |> Array.find (fun a -> a.GetName().Name = n)
-        Assembly.ReflectionOnlyLoadFrom(r.Location) 
+        Assembly.LoadFrom(r.Location) 
 
 
 [<Sealed>]
@@ -79,5 +79,5 @@ type internal ReflectionUtility =
         ReflectionUtility.GetReflectionOnlyType(typeof<'T>)
 
     static member GetReflectionOnlyType(t: Type) =
-        let asm = ReflectionUtility.GetReflectionOnlyAssembly(t.Assembly)
-        asm.GetType(t.FullName)
+        // for .NET Standard-compatible Reflection.Emit, reflection-only is not good
+        t

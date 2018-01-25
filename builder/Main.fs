@@ -32,6 +32,7 @@ module internal Main =
         [
             "FParsec", "1.0.1"
             "Fuchu", "0.3.0.1"
+            "System.Reflection.Emit", "4.3.0"
         ]
 
     let NuGet args =
