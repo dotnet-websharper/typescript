@@ -22,6 +22,8 @@
 namespace WebSharper.TypeScript
 
 module internal ReflectEmit =
+    open System.Reflection
+
     module N = Naming
     module S = Shapes
 
@@ -993,12 +995,12 @@ module internal ReflectEmit =
         let name = opts.BuildAssemblyName()
         let n = name.Name
         let fN = n + ".dll"
-        let dom = AppDomain.CurrentDomain
-        let folder = Path.Combine(opts.TemporaryFolder, Path.GetRandomFileName())
+        let rn = Path.GetFileNameWithoutExtension(Path.GetRandomFileName())
+        let folder = Path.Combine(opts.TemporaryFolder, rn)
         let fP = Path.Combine(folder, fN)
         Directory.CreateDirectory(folder) |> ignore
         try
-            let aB = dom.DefineDynamicAssembly(name, AssemblyBuilderAccess.Save ||| AssemblyBuilderAccess.ReflectionOnly, folder)
+            let aB = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.Save)
             let mB = aB.DefineDynamicModule(name = n, fileName = fN, emitSymbolInfo = false)
             let st = State.Create(opts, topModule, mB, cfg.References)
             let pC = Pass1.Do st
@@ -1011,7 +1013,7 @@ module internal ReflectEmit =
                 AddEmbeddedResources aB mB opts.EmbeddedResources
                 AddWebSharperResources aB mB pC opts.WebSharperResources
                 aB.Save(fN)
-            WebSharperCompiler.CompileAssemblyWithWebSharper opts fP
-            File.ReadAllBytes(fP)
+            WebSharperCompiler.CompileAssemblyWithWebSharper opts fN
+            File.ReadAllBytes(fN)
         finally
             Directory.Delete(folder, true)
