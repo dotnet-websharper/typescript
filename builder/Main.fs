@@ -68,6 +68,7 @@ module internal Main =
                 do! C.MakeDir "contrib"
                 do
                     let file = C.LocalPath "contrib/DefinitelyTyped.zip"
+                    ServicePointManager.SecurityProtocol <- ServicePointManager.SecurityProtocol ||| SecurityProtocolType.Tls12
                     use c = new WebClient()
                     c.DownloadFile(url, file)
                     ZipFile.ExtractToDirectory(file, C.LocalPath "contrib")
