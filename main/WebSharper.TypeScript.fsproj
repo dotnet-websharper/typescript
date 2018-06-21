@@ -76,19 +76,19 @@
       <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Core.JavaScript.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Compiler">
-      <HintPath>..\packages\WebSharper.FSharp\tools\WebSharper.Compiler.dll</HintPath>
+      <HintPath>..\packages\WebSharper.FSharp\tools\net461\WebSharper.Compiler.dll</HintPath>
     </Reference>
     <Reference Include="WebSharper.Core">
       <HintPath>..\packages\WebSharper\lib\net461\WebSharper.Core.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil">
-      <HintPath>..\packages\WebSharper.FSharp\tools\Mono.Cecil.dll</HintPath>
+      <HintPath>..\packages\WebSharper.FSharp\tools\net461\Mono.Cecil.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Mdb">
-      <HintPath>..\packages\WebSharper.FSharp\tools\Mono.Cecil.Mdb.dll</HintPath>
+      <HintPath>..\packages\WebSharper.FSharp\tools\net461\Mono.Cecil.Mdb.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil.Pdb">
-      <HintPath>..\packages\WebSharper.FSharp\tools\Mono.Cecil.Pdb.dll</HintPath>
+      <HintPath>..\packages\WebSharper.FSharp\tools\net461\Mono.Cecil.Pdb.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
