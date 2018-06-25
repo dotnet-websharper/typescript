@@ -31,13 +31,22 @@
     <Root>$(MSBuildThisFileDirectory)\..</Root>
     <AssemblyName>$(Name)</AssemblyName>
     <RootNamespace>$(Name)</RootNamespace>
-	<TargetFSharpCoreVersion Condition=" '$(TargetFSharpCoreVersion)' == '' ">4.3.0.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion Condition=" '$(TargetFSharpCoreVersion)' == '' ">4.3.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
+  <ItemGroup Condition=" '$(UseCompilerFSharpVersion)' == 'True' ">
+    <Reference Include="FSharp.Core">
+      <HintPath>../packages/WebSharper.FSharp/tools/net461/FSharp.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(UseCompilerFSharpVersion)' != 'True' ">
     <Reference Include="FSharp.Core">
       <HintPath>../tools/packages/FSharp.Core/lib/net45/FSharp.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -51,7 +60,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>$(Root)\build\Debug\</OutputPath>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(Root)\build\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>$(Root)\build\Debug\$(Name).xml</DocumentationFile>
@@ -60,7 +69,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>$(Root)\build\Release\</OutputPath>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(Root)\build\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>$(Root)\build\Release\$(Name).xml</DocumentationFile>

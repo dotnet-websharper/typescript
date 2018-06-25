@@ -147,8 +147,12 @@ module internal Commands =
     let FsiExec script args =
         Command {
             let fsiDir = Path.Combine(SolutionDirectory, "tools", "packages", "FSharp.Compiler.Tools", "tools")
-            let fsi = Path.Combine(fsiDir, "fsi.exe")
-            do! Execute fsi "--exec --define:ZAFIR %s %s" script args
+            let fsc = Path.Combine(fsiDir, "fsc.exe")
+            let outDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location)
+            let out = Path.Combine(outDir, Path.GetFileNameWithoutExtension(script) + ".exe")
+            File.Copy(Path.Combine(outDir, "Builder.exe.config"), out + ".config", true)
+            do! Execute fsc """-o:"%s" --define:ZAFIR --nocopyfsharpcore %s""" out script
+            do! Execute out args
         }
 
     let CopyFileToDir file dir =

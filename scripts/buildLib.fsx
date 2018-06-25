@@ -46,7 +46,7 @@ let main () =
                 StrongNameKeyFile = Some snk
                 References =
                     [
-                        C.ReferenceAssembly.File (p ["../build/Release/FSharp.Core.dll"])
+                        C.ReferenceAssembly.File (p ["../tools/packages/FSharp.Core/lib/net45/FSharp.Core.dll"])
                     ]
         }
         |> C.Compile

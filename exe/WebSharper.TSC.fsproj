@@ -5,8 +5,9 @@
     <Name>WebSharper.TSC</Name>
     <ProjectGuid>63510d0c-4591-440b-bb71-96c37d58d8e0</ProjectGuid>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.5.0.0</TargetFSharpCoreVersion>
     <TargetFrameworkProfile />
+    <UseCompilerFSharpVersion>True</UseCompilerFSharpVersion>
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
   <ItemGroup>
