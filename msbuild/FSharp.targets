@@ -31,11 +31,11 @@
     <Root>$(MSBuildThisFileDirectory)\..</Root>
     <AssemblyName>$(Name)</AssemblyName>
     <RootNamespace>$(Name)</RootNamespace>
-    <TargetFSharpCoreVersion Condition=" '$(TargetFSharpCoreVersion)' == '' ">4.3.0.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion Condition=" '$(TargetFSharpCoreVersion)' == '' ">4.4.1.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <ItemGroup Condition=" '$(UseCompilerFSharpVersion)' == 'True' ">
     <Reference Include="FSharp.Core">
-      <HintPath>../packages/WebSharper.FSharp/tools/net461/FSharp.Core.dll</HintPath>
+      <HintPath>../tools/packages/FSharp.Core.4.5.0/lib/net45/FSharp.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

@@ -3,7 +3,6 @@
 (bin|obj)/(Debug|Release)
 /_
 ^Web/Scripts/
-^Web/bin/
 ^\.build
 ^\.nuget
 ^packages/
@@ -14,8 +13,6 @@ user$
 ^examples/packages/
 Content/WebSharper
 Scripts/WebSharper
-^examples/.*/bin
-^examples/.*/obj
 syntax: glob
 tools\Fsi.exe
 tools\Fsi.exe.config
@@ -25,3 +22,4 @@ paket-files/
 .vscode/
 obj/
 bin/
+.vs/
