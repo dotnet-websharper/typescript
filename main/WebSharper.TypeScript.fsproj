@@ -6,8 +6,9 @@
     <ProjectGuid>{e7666b0f-b8fd-4147-87e8-a9100223a6f1}</ProjectGuid>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <Zafir>True</Zafir>
-    <TargetFSharpCoreVersion>4.4.1.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.5.0.0</TargetFSharpCoreVersion>
     <TargetFrameworkProfile />
+    <UseCompilerFSharpVersion>True</UseCompilerFSharpVersion>
   </PropertyGroup>
   <Import Project="../msbuild/FSharp.targets" />
   <ItemGroup>
