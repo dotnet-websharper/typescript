@@ -14,8 +14,8 @@
   <files>
     <file src="build\Release\*.dll" target="tools\net40" />
     <file src="build\Release\*.xml" target="tools\net40" />
-    <file src="build\Release\*.exe" target="tools\net40" />
-    <file src="build\Release\*.exe.config" target="tools\net40" />
+    <file src="build\Release\WebSharper.TSC.exe" target="tools\net40" />
+    <file src="build\Release\WebSharper.TSC.exe.config" target="tools\net40" />
     <file src="msbuild\WebSharper.TypeScript.targets" target="build" />
   </files>
 </package>
