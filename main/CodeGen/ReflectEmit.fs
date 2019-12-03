@@ -909,16 +909,18 @@ module internal ReflectEmit =
 
         (* TODO: propagate error messsages better *)
         let CompileAssemblyWithWebSharper (cfg: CompilerOptions) (fileName: string) =
+#if ZAFIR
             let snk =
                 cfg.StrongNameKeyFile
-                |> Option.map (fun f -> StrongNameKeyPair(File.ReadAllBytes(f)))
-#if ZAFIR
             let resolver = WebSharper.Compiler.AssemblyResolver.Create()
             let loader = FE.Loader.Create resolver stdout.WriteLine
             let assem = loader.LoadFile fileName
             let meta = WebSharper.Compiler.Reflector.TransformWSAssembly Map.empty assem
             WebSharper.Compiler.FrontEnd.ModifyTSAssembly meta assem |> ignore
 #else
+            let snk =
+                cfg.StrongNameKeyFile
+                |> Option.map (fun f -> StrongNameKeyPair(File.ReadAllBytes(f)))
             let opts =
                 {
                     FE.Options.Default with
