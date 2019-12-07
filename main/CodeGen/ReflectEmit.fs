@@ -912,6 +912,7 @@ module internal ReflectEmit =
 #if ZAFIR
             let snk =
                 cfg.StrongNameKeyFile
+                |> Option.map (fun f -> File.ReadAllBytes(f))
             let resolver = WebSharper.Compiler.AssemblyResolver.Create()
             let loader = FE.Loader.Create resolver stdout.WriteLine
             let assem = loader.LoadFile fileName
