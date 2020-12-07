@@ -8,7 +8,6 @@ Web/Scripts/
 packages/
 tools/packages/
 build/
-contrib/
 *.user
 examples/packages/
 Content/WebSharper

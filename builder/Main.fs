@@ -61,18 +61,18 @@ module internal Main =
     let NuGetApiKey =
         C.Env "NuGetApiKey" ""
 
-    let DownloadContrib =
-        C.Command {
-            if C.IsDir "contrib" |> not then
-                let url = "http://github.com/borisyankov/DefinitelyTyped/archive/1.0.1.zip"
-                do! C.MakeDir "contrib"
-                do
-                    let file = C.LocalPath "contrib/DefinitelyTyped.zip"
-                    ServicePointManager.SecurityProtocol <- ServicePointManager.SecurityProtocol ||| SecurityProtocolType.Tls12
-                    use c = new WebClient()
-                    c.DownloadFile(url, file)
-                    ZipFile.ExtractToDirectory(file, C.LocalPath "contrib")
-        }
+    //let DownloadContrib =
+    //    C.Command {
+    //        if C.IsDir "contrib" |> not then
+    //            let url = "http://github.com/borisyankov/DefinitelyTyped/archive/1.0.1.zip"
+    //            do! C.MakeDir "contrib"
+    //            do
+    //                let file = C.LocalPath "contrib/DefinitelyTyped.zip"
+    //                ServicePointManager.SecurityProtocol <- ServicePointManager.SecurityProtocol ||| SecurityProtocolType.Tls12
+    //                use c = new WebClient()
+    //                c.DownloadFile(url, file)
+    //                ZipFile.ExtractToDirectory(file, C.LocalPath "contrib")
+    //    }
 
     let Configure =
         C.Command {
@@ -80,7 +80,7 @@ module internal Main =
                 do! InstallPre pkg
             for pkg in ReleaseDeps do
                 do! InstallRel pkg
-            do! DownloadContrib
+            //do! DownloadContrib
             do! C.FsiExec "scripts/computeVersion.fsx" ""
         }
 
