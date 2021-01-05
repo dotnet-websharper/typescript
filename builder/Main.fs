@@ -38,10 +38,10 @@ module internal Main =
         C.Execute "tools/NuGet/NuGet.exe" args
 
     let InstallPre pkg =
-        NuGet "install %s -nocache -pre -excludeVersion -o packages" pkg
+        NuGet "install %s -nocache -pre -framework net461 -excludeVersion -o packages" pkg
 
     let InstallRel (name, ver) =
-        NuGet "install %s -version %s -excludeVersion -o packages" name ver
+        NuGet "install %s -version %s -framework net461 -excludeVersion -o packages" name ver
 
     let Version =
         let f = Path.Combine(C.SolutionDirectory, "build", "version.txt")
