@@ -22,16 +22,16 @@ module internal Main =
 
     let PreReleaseDeps =
         [
-            "WebSharper"
-            "WebSharper.FSharp"
-            "WebSharper.Testing"
-            "WebSharper.Html"
         ]
 
     let ReleaseDeps =
         [
             "FParsec", "1.0.1"
             "Fuchu", "0.3.0.1"
+            "WebSharper", "4.7.0.423"
+            "WebSharper.FSharp", "4.7.0.423"
+            "WebSharper.Testing", "4.7.0.423"
+            "WebSharper.Html", "4.7.0.189"
         ]
 
     let NuGet args =
