@@ -8,7 +8,7 @@ open IntelliFactory.Build
 let version =
     BuildTool()
         .PackageId("WebSharper.TypeScript")
-        .VersionFrom("WebSharper")
+        .VersionFrom("WebSharper", "", "[4.0,5.0)")
     |> PackageVersion.Full.Find
 
 File.WriteAllText(__SOURCE_DIRECTORY__ + "/../build/version.txt", version.ToString())
